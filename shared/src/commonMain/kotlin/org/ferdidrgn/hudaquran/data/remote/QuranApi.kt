@@ -2,8 +2,13 @@ package org.ferdidrgn.hudaquran.data.remote
 
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import org.ferdidrgn.hudaquran.data.remote.dto.ApiResponseDto
 import org.ferdidrgn.hudaquran.data.remote.dto.AyahDto
+import org.ferdidrgn.hudaquran.data.remote.dto.EditionDto
+import org.ferdidrgn.hudaquran.data.remote.dto.JuzEditionDto
+import org.ferdidrgn.hudaquran.data.remote.dto.SearchResultDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahEditionDto
 
@@ -22,11 +27,34 @@ class QuranApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.c
         return response.data
     }
 
+    suspend fun getJuzWithEditions(juzNumber: Int, editions: List<String>): List<JuzEditionDto> {
+        val editionsPath = editions.joinToString(",")
+        val response: ApiResponseDto<List<JuzEditionDto>> =
+            client.get("${QuranHttpClient.BASE_URL}/juz/$juzNumber/editions/$editionsPath").body()
+        return response.data
+    }
+
     suspend fun getAyahWithEditions(globalAyahNumber: Int, editions: List<String>): List<AyahEditionResult> {
         val editionsPath = editions.joinToString(",")
         val response: ApiResponseDto<List<AyahEditionDto>> =
             client.get("${QuranHttpClient.BASE_URL}/ayah/$globalAyahNumber/editions/$editionsPath").body()
         return response.data.map { AyahEditionResult(it.surah, it.text, it.numberInSurah, it.audio) }
+    }
+
+    suspend fun getEditions(format: String? = null, language: String? = null, type: String? = null): List<EditionDto> {
+        val response: ApiResponseDto<List<EditionDto>> = client.get("${QuranHttpClient.BASE_URL}/edition") {
+            format?.let { parameter("format", it) }
+            language?.let { parameter("language", it) }
+            type?.let { parameter("type", it) }
+        }.body()
+        return response.data
+    }
+
+    suspend fun search(keyword: String, edition: String): SearchResultDto {
+        val encoded = keyword.encodeURLParameter(spaceToPlus = false)
+        val response: ApiResponseDto<SearchResultDto> =
+            client.get("${QuranHttpClient.BASE_URL}/search/$encoded/all/$edition").body()
+        return response.data
     }
 }
 

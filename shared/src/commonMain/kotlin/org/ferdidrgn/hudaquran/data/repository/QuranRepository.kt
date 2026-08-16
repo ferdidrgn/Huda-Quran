@@ -3,9 +3,13 @@ package org.ferdidrgn.hudaquran.data.repository
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.domain.model.Ayah
+import org.ferdidrgn.hudaquran.domain.model.JuzDetail
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
+import org.ferdidrgn.hudaquran.domain.model.Reciter
+import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
+import org.ferdidrgn.hudaquran.domain.model.Translation
 import kotlin.random.Random
 
 data class DailyAyah(
@@ -43,6 +47,7 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
             Ayah(
                 surahNumber = arabicEdition.number,
+                surahName = arabicEdition.englishName,
                 numberInSurah = ayahDto.numberInSurah,
                 globalNumber = ayahDto.number,
                 arabicText = ayahDto.text,
@@ -66,6 +71,76 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
             ayahs = ayahs,
             surahAudioUrl = QuranEditions.surahAudioUrl(surahNumber, reciterEdition),
         )
+    }
+
+    suspend fun getJuzDetail(
+        juzNumber: Int,
+        translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
+        reciterEdition: String = QuranEditions.DEFAULT_RECITER,
+    ): JuzDetail {
+        val editions = api.getJuzWithEditions(
+            juzNumber,
+            listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+        )
+        val arabicEdition = editions[0]
+        val translationEditionData = editions[1]
+        val audioEdition = editions[2]
+
+        val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
+            Ayah(
+                surahNumber = ayahDto.surah.number,
+                surahName = ayahDto.surah.englishName,
+                numberInSurah = ayahDto.numberInSurah,
+                globalNumber = ayahDto.number,
+                arabicText = ayahDto.text,
+                translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
+                audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
+                juz = juzNumber,
+                page = ayahDto.page,
+                isSajda = ayahDto.sajda,
+            )
+        }
+
+        return JuzDetail(juzNumber = juzNumber, ayahs = ayahs)
+    }
+
+    private var cachedReciters: List<Reciter>? = null
+    private var cachedTranslations: List<Translation>? = null
+
+    suspend fun getReciters(): List<Reciter> {
+        cachedReciters?.let { return it }
+        val loaded = runCatching {
+            api.getEditions(format = "audio", type = "versebyverse")
+                .map { Reciter(it.identifier, it.englishName.ifBlank { it.name }) }
+                .distinctBy { it.identifier }
+                .sortedBy { it.displayName }
+        }.getOrElse { QuranEditions.reciters }
+        cachedReciters = loaded
+        return loaded
+    }
+
+    suspend fun getTranslations(): List<Translation> {
+        cachedTranslations?.let { return it }
+        val loaded = runCatching {
+            api.getEditions(format = "text", type = "translation")
+                .map { Translation(it.identifier, it.language, it.englishName.ifBlank { it.name }) }
+                .distinctBy { it.identifier }
+                .sortedBy { it.language }
+        }.getOrElse { QuranEditions.translations }
+        cachedTranslations = loaded
+        return loaded
+    }
+
+    suspend fun searchQuran(keyword: String, edition: String = QuranEditions.DEFAULT_TRANSLATION): List<SearchMatch> {
+        val result = api.search(keyword, edition)
+        return result.matches.map {
+            SearchMatch(
+                surahNumber = it.surah.number,
+                surahName = it.surah.englishName,
+                numberInSurah = it.numberInSurah,
+                text = it.text,
+            )
+        }
     }
 
     suspend fun getDailyAyah(translationEdition: String = QuranEditions.DEFAULT_TRANSLATION): DailyAyah {

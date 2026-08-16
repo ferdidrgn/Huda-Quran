@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,16 +26,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.di.AppContainer
-import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    onOpenReciterPicker: () -> Unit,
+    onOpenTranslationPicker: () -> Unit,
+) {
     val preferences = AppContainer.preferences
-    var selectedReciter by remember { mutableStateOf(preferences.selectedReciter) }
-    var selectedTranslation by remember { mutableStateOf(preferences.selectedTranslation) }
+    val repository = AppContainer.repository
     val selectedTheme by preferences.themeMode.collectAsState()
+
+    var reciterName by remember { mutableStateOf(preferences.selectedReciter) }
+    var translationName by remember { mutableStateOf(preferences.selectedTranslation) }
+
+    LaunchedEffect(Unit) {
+        val reciter = repository.getReciters().firstOrNull { it.identifier == preferences.selectedReciter }
+        if (reciter != null) reciterName = reciter.displayName
+        val translation = repository.getTranslations().firstOrNull { it.identifier == preferences.selectedTranslation }
+        if (translation != null) translationName = "${translation.displayName} (${translation.language})"
+    }
 
     Column(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()),
@@ -59,37 +73,12 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        SectionTitle("Hafız (Sesli Okuyuş)")
+        SectionTitle("Sesli Okuyuş ve Meal")
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Column {
-                QuranEditions.reciters.forEachIndexed { index, reciter ->
-                    if (index > 0) HorizontalDivider()
-                    OptionRow(
-                        title = reciter.displayName,
-                        selected = selectedReciter == reciter.identifier,
-                        onClick = {
-                            selectedReciter = reciter.identifier
-                            preferences.selectedReciter = reciter.identifier
-                        },
-                    )
-                }
-            }
-        }
-
-        SectionTitle("Meal / Çeviri")
-        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Column {
-                QuranEditions.translations.forEachIndexed { index, translation ->
-                    if (index > 0) HorizontalDivider()
-                    OptionRow(
-                        title = translation.displayName,
-                        selected = selectedTranslation == translation.identifier,
-                        onClick = {
-                            selectedTranslation = translation.identifier
-                            preferences.selectedTranslation = translation.identifier
-                        },
-                    )
-                }
+                NavigationRow(title = "Hafız", value = reciterName, onClick = onOpenReciterPicker)
+                HorizontalDivider()
+                NavigationRow(title = "Meal / Çeviri", value = translationName, onClick = onOpenTranslationPicker)
             }
         }
 
@@ -122,5 +111,20 @@ private fun OptionRow(title: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         RadioButton(selected = selected, onClick = onClick)
+    }
+}
+
+@Composable
+private fun NavigationRow(title: String, value: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        }
+        Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
 }

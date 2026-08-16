@@ -11,6 +11,7 @@ data class Surah(
 
 data class Ayah(
     val surahNumber: Int,
+    val surahName: String,
     val numberInSurah: Int,
     val globalNumber: Int,
     val arabicText: String,
@@ -25,6 +26,18 @@ data class SurahDetail(
     val surah: Surah,
     val ayahs: List<Ayah>,
     val surahAudioUrl: String,
+)
+
+data class JuzDetail(
+    val juzNumber: Int,
+    val ayahs: List<Ayah>,
+)
+
+data class SearchMatch(
+    val surahNumber: Int,
+    val surahName: String,
+    val numberInSurah: Int,
+    val text: String,
 )
 
 data class Reciter(val identifier: String, val displayName: String)

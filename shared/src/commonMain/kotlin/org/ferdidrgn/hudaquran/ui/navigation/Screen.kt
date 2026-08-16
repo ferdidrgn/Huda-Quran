@@ -8,4 +8,9 @@ sealed class Screen {
     data class SurahDetail(val surahNumber: Int, val scrollToAyah: Int? = null) : Screen()
     data object Favorites : Screen()
     data object Settings : Screen()
+    data object ReciterPicker : Screen()
+    data object TranslationPicker : Screen()
+    data object Search : Screen()
+    data object JuzList : Screen()
+    data class JuzDetail(val juzNumber: Int) : Screen()
 }

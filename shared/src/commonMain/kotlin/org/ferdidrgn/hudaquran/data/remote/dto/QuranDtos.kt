@@ -66,6 +66,44 @@ data class SurahEditionDto(
     val edition: EditionDto? = null,
 )
 
+@Serializable
+data class AyahWithSurahDto(
+    val number: Int,
+    val text: String,
+    val surah: SurahDto,
+    val numberInSurah: Int,
+    val juz: Int,
+    val manzil: Int,
+    val page: Int,
+    val ruku: Int,
+    val hizbQuarter: Int,
+    @Serializable(with = SajdaSerializer::class)
+    val sajda: Boolean = false,
+    val audio: String? = null,
+)
+
+@Serializable
+data class JuzEditionDto(
+    val number: Int,
+    val ayahs: List<AyahWithSurahDto>,
+    val edition: EditionDto? = null,
+)
+
+@Serializable
+data class SearchMatchDto(
+    val number: Int,
+    val text: String,
+    val edition: EditionDto? = null,
+    val surah: SurahDto,
+    val numberInSurah: Int,
+)
+
+@Serializable
+data class SearchResultDto(
+    val count: Int,
+    val matches: List<SearchMatchDto>,
+)
+
 /** The `sajda` field is `false` or an object when the ayah requires prostration. */
 object SajdaSerializer : KSerializer<Boolean> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Sajda", PrimitiveKind.BOOLEAN)

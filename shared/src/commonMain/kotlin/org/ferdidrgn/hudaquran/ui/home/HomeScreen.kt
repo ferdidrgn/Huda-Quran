@@ -47,6 +47,8 @@ fun HomeScreen(
     onOpenSurahList: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onOpenJuzList: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -171,10 +173,12 @@ fun HomeScreen(
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                QuickAction("📖", "Sureler", Modifier.weight(1f), onOpenSurahList)
-                QuickAction("⭐", "Favorilerim", Modifier.weight(1f), onOpenFavorites)
-                QuickAction("⚙️", "Ayarlar", Modifier.weight(1f), onOpenSettings)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                item { QuickAction("📖", "Sureler", onClick = onOpenSurahList) }
+                item { QuickAction("🔢", "Cüzler", onClick = onOpenJuzList) }
+                item { QuickAction("🔍", "Ara", onClick = onOpenSearch) }
+                item { QuickAction("⭐", "Favorilerim", onClick = onOpenFavorites) }
+                item { QuickAction("⚙️", "Ayarlar", onClick = onOpenSettings) }
             }
         }
 
@@ -217,10 +221,10 @@ private fun StatTile(value: String, label: String, modifier: Modifier = Modifier
 }
 
 @Composable
-private fun QuickAction(emoji: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = modifier) {
+private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.width(96.dp)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(emoji, fontSize = 26.sp)

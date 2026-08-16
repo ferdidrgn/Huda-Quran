@@ -6,23 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,14 +28,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
-import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
+import org.ferdidrgn.hudaquran.ui.components.AyahCard
+import org.ferdidrgn.hudaquran.ui.components.MiniPlayerBar
 
 @Composable
 fun SurahDetailScreen(
@@ -229,89 +222,3 @@ fun SurahDetailScreen(
     }
 }
 
-@Composable
-private fun AyahCard(
-    ayah: Ayah,
-    isPlaying: Boolean,
-    isLoading: Boolean,
-    isFavorite: Boolean,
-    onPlayToggle: () -> Unit,
-    onFavoriteToggle: () -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = if (isPlaying) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(ayah.numberInSurah.toString(), color = MaterialTheme.colorScheme.onPrimary, fontSize = 11.sp)
-                }
-                Spacer(Modifier.weight(1f))
-                IconButton(onClick = onFavoriteToggle) {
-                    Text(if (isFavorite) "⭐" else "☆", fontSize = 18.sp)
-                }
-                IconButton(onClick = onPlayToggle) {
-                    when {
-                        isLoading -> CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        isPlaying -> Text("⏸️", fontSize = 18.sp)
-                        else -> Text("▶️", fontSize = 18.sp)
-                    }
-                }
-            }
-            Text(
-                ayah.arabicText,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.End,
-                lineHeight = 40.sp,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            )
-            if (ayah.translationText.isNotBlank()) {
-                Text(
-                    ayah.translationText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MiniPlayerBar(
-    label: String,
-    isPlaying: Boolean,
-    progress: Float,
-    onToggle: () -> Unit,
-    onStop: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp,
-    ) {
-        Column {
-            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                IconButton(onClick = onToggle) {
-                    Text(if (isPlaying) "⏸️" else "▶️", fontSize = 18.sp)
-                }
-                IconButton(onClick = onStop) {
-                    Text("⏹️", fontSize = 18.sp)
-                }
-            }
-        }
-    }
-}
