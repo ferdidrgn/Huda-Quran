@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.di
 
 import org.ferdidrgn.hudaquran.audio.AudioPlayer
+import org.ferdidrgn.hudaquran.audio.PlaybackManager
 import org.ferdidrgn.hudaquran.data.local.AppPreferences
 import org.ferdidrgn.hudaquran.data.repository.QuranRepository
 
@@ -9,4 +10,11 @@ object AppContainer {
     val preferences: AppPreferences by lazy { AppPreferences() }
     val repository: QuranRepository by lazy { QuranRepository() }
     val audioPlayer: AudioPlayer by lazy { AudioPlayer() }
+    val playbackManager: PlaybackManager by lazy {
+        PlaybackManager(audioPlayer).apply {
+            onSaveProgress = { surahNumber, numberInSurah, surahName ->
+                preferences.saveLastRead(surahNumber, numberInSurah, surahName)
+            }
+        }
+    }
 }

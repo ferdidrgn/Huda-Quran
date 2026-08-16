@@ -28,24 +28,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.JuzDetail
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
-import org.ferdidrgn.hudaquran.ui.components.MiniPlayerBar
 
 @Composable
 fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
-    val audioPlayer = AppContainer.audioPlayer
+    val playback = AppContainer.playbackManager
 
     var detail by remember(juzNumber) { mutableStateOf<JuzDetail?>(null) }
     var isLoading by remember(juzNumber) { mutableStateOf(true) }
     var loadError by remember(juzNumber) { mutableStateOf(false) }
-    var playingAyahIndex by remember(juzNumber) { mutableStateOf<Int?>(null) }
-    val playerState by audioPlayer.state.collectAsState()
+
+    val nowPlaying by playback.nowPlaying.collectAsState()
+    val playerState by playback.playerState.collectAsState()
     val favorites by preferences.favorites.collectAsState()
+
+    val currentAyah = if (nowPlaying?.mode == PlaybackMode.AYAH_QUEUE) {
+        nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
+    } else null
 
     LaunchedEffect(juzNumber) {
         isLoading = true
@@ -54,47 +59,6 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
             repository.getJuzDetail(juzNumber, preferences.selectedTranslation, preferences.selectedReciter)
         }.onSuccess { detail = it }.onFailure { loadError = true }
         isLoading = false
-    }
-
-    LaunchedEffect(playerState.status) {
-        if (playerState.status == PlaybackStatus.COMPLETED) {
-            val ayahs = detail?.ayahs.orEmpty()
-            val currentIndex = playingAyahIndex
-            if (currentIndex != null) {
-                val next = currentIndex + 1
-                if (next < ayahs.size) {
-                    playingAyahIndex = next
-                    audioPlayer.play(ayahs[next].audioUrl)
-                    preferences.saveLastRead(ayahs[next].surahNumber, ayahs[next].numberInSurah, ayahs[next].surahName)
-                } else {
-                    playingAyahIndex = null
-                }
-            }
-        }
-    }
-
-    fun playAyah(index: Int) {
-        val ayahs = detail?.ayahs ?: return
-        playingAyahIndex = index
-        audioPlayer.play(ayahs[index].audioUrl)
-        preferences.saveLastRead(ayahs[index].surahNumber, ayahs[index].numberInSurah, ayahs[index].surahName)
-    }
-
-    fun toggleAyah(index: Int) {
-        if (playingAyahIndex == index) {
-            when (playerState.status) {
-                PlaybackStatus.PLAYING -> audioPlayer.pause()
-                PlaybackStatus.PAUSED -> audioPlayer.resume()
-                else -> playAyah(index)
-            }
-        } else {
-            playAyah(index)
-        }
-    }
-
-    fun stopPlayback() {
-        audioPlayer.stop()
-        playingAyahIndex = null
     }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -112,41 +76,26 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
             loadError || detail == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Cüz yüklenemedi. İnternet bağlantınızı kontrol edin.", color = MaterialTheme.colorScheme.error)
             }
-            else -> Box(modifier = Modifier.weight(1f)) {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 90.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    items(detail!!.ayahs.size) { index ->
-                        val ayah = detail!!.ayahs[index]
-                        AyahCard(
-                            ayah = ayah,
-                            isPlaying = playingAyahIndex == index && playerState.status == PlaybackStatus.PLAYING,
-                            isLoading = playingAyahIndex == index && playerState.status == PlaybackStatus.LOADING,
-                            isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
-                            onPlayToggle = { toggleAyah(index) },
-                            onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
-                            showSurahLabel = true,
-                        )
-                    }
-                }
-
-                if (playerState.status != PlaybackStatus.IDLE && playingAyahIndex != null) {
-                    MiniPlayerBar(
-                        label = "${detail!!.ayahs[playingAyahIndex!!].surahName} • Ayet ${detail!!.ayahs[playingAyahIndex!!].numberInSurah}",
-                        isPlaying = playerState.status == PlaybackStatus.PLAYING,
-                        progress = if (playerState.durationMs > 0) {
-                            (playerState.positionMs.toFloat() / playerState.durationMs.toFloat()).coerceIn(0f, 1f)
-                        } else 0f,
-                        onToggle = {
-                            when (playerState.status) {
-                                PlaybackStatus.PLAYING -> audioPlayer.pause()
-                                PlaybackStatus.PAUSED -> audioPlayer.resume()
-                                else -> {}
-                            }
+            else -> LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                items(detail!!.ayahs.size) { index ->
+                    val ayah = detail!!.ayahs[index]
+                    AyahCard(
+                        ayah = ayah,
+                        isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
+                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            playerState.status == PlaybackStatus.PLAYING,
+                        isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
+                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            playerState.status == PlaybackStatus.LOADING,
+                        isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
+                        onPlayToggle = {
+                            playback.toggleAyahInQueue(detail!!.ayahs, index, ayah.surahNumber, ayah.surahName, preferences.selectedReciter)
                         },
-                        onStop = { stopPlayback() },
-                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
+                        showSurahLabel = true,
                     )
                 }
             }

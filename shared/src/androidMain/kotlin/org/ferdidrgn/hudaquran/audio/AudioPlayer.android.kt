@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.data.local.AppContextHolder
 
 actual class AudioPlayer actual constructor() {
     private var mediaPlayer: MediaPlayer? = null
@@ -22,6 +23,7 @@ actual class AudioPlayer actual constructor() {
     actual fun play(url: String) {
         releaseInternal()
         _state.value = PlaybackState(status = PlaybackStatus.LOADING, currentUrl = url)
+        PlaybackNotificationService.start(AppContextHolder.context)
         try {
             val mp = MediaPlayer()
             mediaPlayer = mp
