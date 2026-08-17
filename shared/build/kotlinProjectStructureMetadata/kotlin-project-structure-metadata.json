@@ -76,7 +76,16 @@
           "org.jetbrains.compose.components:components-resources",
           "org.jetbrains.compose.ui:ui-tooling-preview",
           "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
-          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose"
+          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",
+          "io.ktor:ktor-client-core",
+          "io.ktor:ktor-client-content-negotiation",
+          "io.ktor:ktor-serialization-kotlinx-json",
+          "io.ktor:ktor-client-logging",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "com.russhwolf:multiplatform-settings",
+          "com.russhwolf:multiplatform-settings-coroutines"
         ],
         "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
         "binaryLayout": "klib",
@@ -94,7 +103,16 @@
           "org.jetbrains.compose.components:components-resources",
           "org.jetbrains.compose.ui:ui-tooling-preview",
           "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
-          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose"
+          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",
+          "io.ktor:ktor-client-core",
+          "io.ktor:ktor-client-content-negotiation",
+          "io.ktor:ktor-serialization-kotlinx-json",
+          "io.ktor:ktor-client-logging",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "com.russhwolf:multiplatform-settings",
+          "com.russhwolf:multiplatform-settings-coroutines"
         ],
         "binaryLayout": "klib"
       },
@@ -111,7 +129,17 @@
           "org.jetbrains.compose.components:components-resources",
           "org.jetbrains.compose.ui:ui-tooling-preview",
           "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
-          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose"
+          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",
+          "io.ktor:ktor-client-core",
+          "io.ktor:ktor-client-content-negotiation",
+          "io.ktor:ktor-serialization-kotlinx-json",
+          "io.ktor:ktor-client-logging",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "com.russhwolf:multiplatform-settings",
+          "com.russhwolf:multiplatform-settings-coroutines",
+          "io.ktor:ktor-client-darwin"
         ],
         "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
         "binaryLayout": "klib",
@@ -130,7 +158,16 @@
           "org.jetbrains.compose.components:components-resources",
           "org.jetbrains.compose.ui:ui-tooling-preview",
           "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
-          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose"
+          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",
+          "io.ktor:ktor-client-core",
+          "io.ktor:ktor-client-content-negotiation",
+          "io.ktor:ktor-serialization-kotlinx-json",
+          "io.ktor:ktor-client-logging",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "com.russhwolf:multiplatform-settings",
+          "com.russhwolf:multiplatform-settings-coroutines"
         ],
         "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
         "binaryLayout": "klib",
@@ -150,7 +187,16 @@
           "org.jetbrains.compose.components:components-resources",
           "org.jetbrains.compose.ui:ui-tooling-preview",
           "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
-          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose"
+          "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose",
+          "io.ktor:ktor-client-core",
+          "io.ktor:ktor-client-content-negotiation",
+          "io.ktor:ktor-serialization-kotlinx-json",
+          "io.ktor:ktor-client-logging",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "com.russhwolf:multiplatform-settings",
+          "com.russhwolf:multiplatform-settings-coroutines"
         ],
         "binaryLayout": "klib"
       }
