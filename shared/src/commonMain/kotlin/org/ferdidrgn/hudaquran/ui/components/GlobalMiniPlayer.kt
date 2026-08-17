@@ -13,7 +13,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 
 @Composable
-fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenReciterPicker: () -> Unit) {
+fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit) {
     val playback = AppContainer.playbackManager
     val repository = AppContainer.repository
     val nowPlaying by playback.nowPlaying.collectAsState()
@@ -43,9 +43,9 @@ fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenReciterPicker: () -> U
         progress = if (playerState.durationMs > 0) {
             (playerState.positionMs.toFloat() / playerState.durationMs.toFloat()).coerceIn(0f, 1f)
         } else 0f,
+        onOpen = onOpenNowPlaying,
         onToggle = { playback.togglePlayPause() },
         onStop = { playback.stop() },
-        onSubtitleClick = onOpenReciterPicker,
         modifier = modifier,
     )
 }

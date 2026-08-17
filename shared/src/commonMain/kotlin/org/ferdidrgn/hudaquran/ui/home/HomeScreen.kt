@@ -14,14 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,10 +37,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
+import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.PrayerTimes
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
 
@@ -58,6 +65,7 @@ fun HomeScreen(
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
+    val prayerRepository = AppContainer.prayerRepository
 
     val lastRead by preferences.lastRead.collectAsState()
     val favorites by preferences.favorites.collectAsState()
@@ -67,17 +75,25 @@ fun HomeScreen(
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
+    var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
 
     LaunchedEffect(Unit) {
         runCatching { repository.getSurahList() }
             .onSuccess { surahs = it }
             .onFailure { loadError = true }
     }
-
     LaunchedEffect(Unit) {
         runCatching { repository.getReciters() }.onSuccess { reciters = it }
     }
-
+    LaunchedEffect(Unit) {
+        runCatching { prayerRepository.getTodayTimings(preferences.prayerCity, preferences.prayerCountry) }
+            .onSuccess { timings ->
+                prayerTimes = timings
+                if (preferences.prayerNotificationsEnabled.value) {
+                    PrayerNotificationScheduler().scheduleToday(timings)
+                }
+            }
+    }
     LaunchedEffect(isLoadingDaily) {
         if (isLoadingDaily) {
             runCatching { repository.getDailyAyah(preferences.selectedTranslation) }
@@ -90,81 +106,78 @@ fun HomeScreen(
         popularSurahNumbers.mapNotNull { number -> surahs.firstOrNull { it.number == number } }
     }
 
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Column {
-                Text("Esselamü Aleyküm 👋", style = MaterialTheme.typography.headlineMedium)
-                Text(
-                    "Bugün Kur'an ile başlayın",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                )
-            }
-        }
-
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { StatTile("114", "Sure") }
-                item { StatTile("6236", "Ayet") }
-                item { StatTile("30", "Cüz") }
-                item { StatTile(favorites.size.toString(), "Favori") }
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(0) {
+                Column {
+                    Text("Esselamü Aleyküm 👋", style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        "Bugün Kur'an ile başlayın",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
 
         val currentLastRead = lastRead
         if (currentLastRead != null) {
-            item {
-                Card(
-                    onClick = { onOpenSurah(currentLastRead.surahNumber, currentLastRead.numberInSurah) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+            item(span = { GridItemSpan(2) }) {
+                StaggeredEntrance(1) {
+                    GlassSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        onClick = { onOpenSurah(currentLastRead.surahNumber, currentLastRead.numberInSurah) },
                     ) {
-                        Box(
-                            modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text("▶️", fontSize = 20.sp)
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Kaldığınız yerden devam edin",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                            )
-                            Text(
-                                "${currentLastRead.surahName} • Ayet ${currentLastRead.numberInSurah}",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconBubble(emoji = "▶️")
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Kaldığınız yerden devam edin",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "${currentLastRead.surahName} • Ayet ${currentLastRead.numberInSurah}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(2) { PrayerWidget(prayerTimes) }
+        }
+
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+            StaggeredEntrance(3) {
+                StatBento(value = favorites.size.toString(), label = "Favori", emoji = "⭐", onClick = onOpenFavorites)
+            }
+        }
+        item {
+            StaggeredEntrance(3) {
+                StatBento(value = "30", label = "Cüz", emoji = "🔢", onClick = onOpenJuzList)
+            }
+        }
+
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(4) {
+                GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Günün Ayeti", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        IconButton(onClick = { isLoadingDaily = true }) {
-                            Text("🔄")
-                        }
+                        Text("🔄", fontSize = 16.sp, modifier = Modifier.clickable { isLoadingDaily = true })
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
                     when {
                         isLoadingDaily -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
@@ -194,66 +207,71 @@ fun HomeScreen(
             }
         }
 
-        item {
-            Column {
-                SectionHeader("Hafızlar", "Tümünü Gör", onOpenReciters)
-                Spacer(Modifier.height(10.dp))
-                if (reciters.isEmpty()) {
-                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    }
-                } else {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        items(reciters.take(10)) { reciter ->
-                            ReciterAvatarChip(reciter, onClick = onOpenReciters)
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(5) {
+                Column {
+                    SectionHeader("Hafızlar", "Tümünü Gör", onOpenReciters)
+                    Spacer(Modifier.height(10.dp))
+                    if (reciters.isEmpty()) {
+                        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        }
+                    } else {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            items(reciters.take(10)) { reciter ->
+                                ReciterAvatarChip(reciter, onClick = onOpenReciters)
+                            }
                         }
                     }
                 }
             }
         }
 
-        item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                item { QuickAction("📖", "Sureler", onClick = onOpenSurahList) }
-                item { QuickAction("🔢", "Cüzler", onClick = onOpenJuzList) }
-                item { QuickAction("🔍", "Ara", onClick = onOpenSearch) }
-                item { QuickAction("🎙️", "Hafızlar", onClick = onOpenReciters) }
-                item { QuickAction("⭐", "Favorilerim", onClick = onOpenFavorites) }
-                item { QuickAction("⚙️", "Ayarlar", onClick = onOpenSettings) }
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(6) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    item { QuickAction("📖", "Sureler", onClick = onOpenSurahList) }
+                    item { QuickAction("🔢", "Cüzler", onClick = onOpenJuzList) }
+                    item { QuickAction("🔍", "Ara", onClick = onOpenSearch) }
+                    item { QuickAction("🎙️", "Hafızlar", onClick = onOpenReciters) }
+                    item { QuickAction("⭐", "Favorilerim", onClick = onOpenFavorites) }
+                    item { QuickAction("⚙️", "Ayarlar", onClick = onOpenSettings) }
+                }
             }
         }
 
         if (popularSurahs.isNotEmpty()) {
-            item {
-                Column {
-                    SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
-                    Spacer(Modifier.height(10.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
-                            SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+            item(span = { GridItemSpan(2) }) {
+                StaggeredEntrance(7) {
+                    Column {
+                        SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
+                        Spacer(Modifier.height(10.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
+                                SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+                            }
                         }
                     }
                 }
             }
         }
 
-        item {
-            Column {
-                SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
-                Spacer(Modifier.height(10.dp))
-                if (loadError) {
-                    Text(
-                        "Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.",
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                } else if (surahs.isEmpty()) {
-                    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(surahs.take(10), key = { "all-${it.number}" }) { surah ->
-                            SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(8) {
+                Column {
+                    SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
+                    Spacer(Modifier.height(10.dp))
+                    if (loadError) {
+                        Text("Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.", color = MaterialTheme.colorScheme.error)
+                    } else if (surahs.isEmpty()) {
+                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(surahs.take(10), key = { "all-${it.number}" }) { surah ->
+                                SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+                            }
                         }
                     }
                 }
@@ -263,12 +281,63 @@ fun HomeScreen(
 }
 
 @Composable
+private fun PrayerWidget(prayerTimes: PrayerTimes?) {
+    GlassSurface(modifier = Modifier.fillMaxWidth()) {
+        if (prayerTimes == null) {
+            Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+            }
+            return@GlassSurface
+        }
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val next = prayerTimes.nextPrayer(now.hour, now.minute)
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Sonraki Namaz", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (next != null) {
+                    Text(
+                        "${next.prayer.label} • ${next.prayer.time}",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                    val h = next.minutesUntil / 60
+                    val m = next.minutesUntil % 60
+                    Text(
+                        if (h > 0) "$h sa $m dk kaldı" else "$m dk kaldı",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            IconBubble(emoji = "🕌", accent = true)
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            prayerTimes.prayers.forEach { prayer ->
+                val isNext = next?.prayer?.key == prayer.key
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        prayer.label,
+                        fontSize = 11.sp,
+                        color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
+                    )
+                    Text(
+                        prayer.time,
+                        fontSize = 12.sp,
+                        fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SectionHeader(title: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         if (actionLabel != null && onAction != null) {
             Text(
@@ -282,28 +351,41 @@ private fun SectionHeader(title: String, actionLabel: String? = null, onAction: 
 }
 
 @Composable
-private fun StatTile(value: String, label: String) {
-    Card(modifier = Modifier.width(84.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        }
+private fun IconBubble(emoji: String, accent: Boolean = false) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .background(
+                if (accent) MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(emoji, fontSize = 20.sp)
+    }
+}
+
+@Composable
+private fun StatBento(value: String, label: String, emoji: String, onClick: () -> Unit) {
+    GlassSurface(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+        Text(emoji, fontSize = 22.sp)
+        Spacer(Modifier.height(10.dp))
+        Text(value, style = MaterialTheme.typography.headlineMedium, fontSize = 24.sp, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.width(96.dp)) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(emoji, fontSize = 26.sp)
+    GlassSurface(
+        modifier = Modifier.width(88.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
+        onClick = onClick,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(emoji, fontSize = 24.sp)
             Spacer(Modifier.height(6.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
+            Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, fontSize = 11.sp)
         }
     }
 }
@@ -315,7 +397,7 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
+            modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -338,22 +420,23 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
 
 @Composable
 private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.size(width = 140.dp, height = 110.dp)) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Box(
-                modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(surah.number.toString(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-            Column {
-                Text(surah.englishName, style = MaterialTheme.typography.labelLarge, maxLines = 1)
-                Text(
-                    "${surah.numberOfAyahs} ayet",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-            }
+    GlassSurface(
+        modifier = Modifier.size(width = 148.dp, height = 116.dp),
+        contentPadding = PaddingValues(14.dp),
+        onClick = onClick,
+    ) {
+        Box(
+            modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(surah.number.toString(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
+        Spacer(Modifier.height(28.dp))
+        Text(surah.englishName, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(
+            "${surah.numberOfAyahs} ayet",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

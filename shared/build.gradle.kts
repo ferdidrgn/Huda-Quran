@@ -82,6 +82,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.multiplatformSettings)
             implementation(libs.multiplatformSettings.coroutines)
         }

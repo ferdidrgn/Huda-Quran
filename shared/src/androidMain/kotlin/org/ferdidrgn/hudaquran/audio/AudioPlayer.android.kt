@@ -105,6 +105,10 @@ actual class AudioPlayer actual constructor() {
         player.seekTo(positionMs)
     }
 
+    actual fun setPlaybackSpeed(speed: Float) {
+        player.setPlaybackSpeed(speed)
+    }
+
     actual fun release() {
         progressJob?.cancel()
         player.release()

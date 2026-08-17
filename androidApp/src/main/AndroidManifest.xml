@@ -37,6 +37,10 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name="org.ferdidrgn.hudaquran.notifications.PrayerAlarmReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

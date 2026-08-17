@@ -1,7 +1,10 @@
 package org.ferdidrgn.hudaquran
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +23,7 @@ import org.ferdidrgn.hudaquran.ui.juz.JuzDetailScreen
 import org.ferdidrgn.hudaquran.ui.juz.JuzListScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
+import org.ferdidrgn.hudaquran.ui.nowplaying.NowPlayingScreen
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
 import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
@@ -43,14 +47,16 @@ fun App() {
 
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
-        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding
+        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
 
         Scaffold(
             bottomBar = {
                 if (chromeVisible) {
-                    Column {
+                    Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
                         if (nowPlaying != null) {
-                            GlobalMiniPlayer(onOpenReciterPicker = { navigator.navigate(Screen.ReciterPicker) })
+                            GlobalMiniPlayer(
+                                onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) },
+                            )
                         }
                         if (screen.isBottomNavDestination()) {
                             AppBottomNavigationBar(navigator, screen)
@@ -143,6 +149,10 @@ fun App() {
                     juzNumber = screen.juzNumber,
                     onBack = { navigator.back() },
                     modifier = contentModifier,
+                )
+
+                is Screen.NowPlaying -> NowPlayingScreen(
+                    onClose = { navigator.back() },
                 )
             }
         }

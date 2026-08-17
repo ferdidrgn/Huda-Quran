@@ -19,5 +19,6 @@ actual class AudioPlayer actual constructor() {
         _state.value = PlaybackState()
     }
     actual fun seekTo(positionMs: Long) {}
+    actual fun setPlaybackSpeed(speed: Float) {}
     actual fun release() {}
 }

@@ -2,25 +2,27 @@ package org.ferdidrgn.hudaquran.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Soft sage green — primary
-val SageSoft = Color(0xFF7C9885)
-val SageDark = Color(0xFF4F6B58)
-val SageLight = Color(0xFFE3EDE5)
-val SageDeepText = Color(0xFF34433A)
+// Dark mode — deep modern canvas
+val Canvas = Color(0xFF09090B)
+val SurfaceDark = Color(0xFF18181B)
+val SurfaceHighlight = Color(0xFF27272A)
+val BorderDark = Color(0x14FFFFFF) // white 8%
+val BorderDarkStrong = Color(0x24FFFFFF) // white 14%
+val TextPrimaryDark = Color(0xFFFAFAFA)
+val TextSecondaryDark = Color(0xFFA1A1AA)
 
-// Warm soft amber — secondary / accent
-val AmberSoft = Color(0xFFE0A458)
-val AmberDeep = Color(0xFF9C6B2E)
-val AmberLight = Color(0xFFFBECD6)
+// Light mode — warm neutral canvas
+val CanvasLight = Color(0xFFF7F7F8)
+val SurfaceLightMode = Color(0xFFFFFFFF)
+val SurfaceHighlightLight = Color(0xFFF0F0F3)
+val BorderLight = Color(0x14000000)
+val TextPrimaryLight = Color(0xFF18181B)
+val TextSecondaryLight = Color(0xFF71717A)
 
-// Neutrals
-val CreamBg = Color(0xFFFAF6F0)
-val InkSoft = Color(0xFF3A3A35)
-val SurfaceWarm = Color(0xFFFFFEFC)
-
-// Dark mode
-val NightBg = Color(0xFF1B2420)
-val NightSurface = Color(0xFF232F29)
-val NightSagePrimary = Color(0xFFA3C2AB)
-
-val ErrorSoft = Color(0xFFC1666B)
+// Accents — shared across both modes
+val Indigo = Color(0xFF6366F1)
+val IndigoBright = Color(0xFF818CF8)
+val Emerald = Color(0xFF10B981)
+val EmeraldBright = Color(0xFF34D399)
+val Amber = Color(0xFFF59E0B)
+val Rose = Color(0xFFF43F5E)

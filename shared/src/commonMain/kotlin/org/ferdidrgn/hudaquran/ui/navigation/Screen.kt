@@ -13,4 +13,5 @@ sealed class Screen {
     data object Search : Screen()
     data object JuzList : Screen()
     data class JuzDetail(val juzNumber: Int) : Screen()
+    data object NowPlaying : Screen()
 }

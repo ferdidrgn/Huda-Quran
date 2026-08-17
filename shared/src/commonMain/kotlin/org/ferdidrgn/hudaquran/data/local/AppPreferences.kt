@@ -20,6 +20,25 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_RECITER = "selected_reciter"
         private const val KEY_TRANSLATION = "selected_translation"
         private const val KEY_THEME = "theme_mode"
+        private const val KEY_PRAYER_CITY = "prayer_city"
+        private const val KEY_PRAYER_COUNTRY = "prayer_country"
+        private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
+    }
+
+    var prayerCity: String
+        get() = settings.getString(KEY_PRAYER_CITY, "Istanbul")
+        set(value) = settings.putString(KEY_PRAYER_CITY, value)
+
+    var prayerCountry: String
+        get() = settings.getString(KEY_PRAYER_COUNTRY, "Turkey")
+        set(value) = settings.putString(KEY_PRAYER_COUNTRY, value)
+
+    private val _prayerNotificationsEnabled = MutableStateFlow(settings.getBoolean(KEY_PRAYER_NOTIFICATIONS, false))
+    val prayerNotificationsEnabled: StateFlow<Boolean> = _prayerNotificationsEnabled.asStateFlow()
+
+    fun setPrayerNotificationsEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_PRAYER_NOTIFICATIONS, enabled)
+        _prayerNotificationsEnabled.value = enabled
     }
 
     var onboardingCompleted: Boolean
