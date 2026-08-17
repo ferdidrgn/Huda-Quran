@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,11 +35,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.Surah
+
+private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
 
 @Composable
 fun HomeScreen(
@@ -49,6 +54,7 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
     onOpenJuzList: () -> Unit,
+    onOpenReciters: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -57,6 +63,7 @@ fun HomeScreen(
     val favorites by preferences.favorites.collectAsState()
 
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
+    var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
@@ -67,6 +74,10 @@ fun HomeScreen(
             .onFailure { loadError = true }
     }
 
+    LaunchedEffect(Unit) {
+        runCatching { repository.getReciters() }.onSuccess { reciters = it }
+    }
+
     LaunchedEffect(isLoadingDaily) {
         if (isLoadingDaily) {
             runCatching { repository.getDailyAyah(preferences.selectedTranslation) }
@@ -75,10 +86,14 @@ fun HomeScreen(
         }
     }
 
+    val popularSurahs = remember(surahs) {
+        popularSurahNumbers.mapNotNull { number -> surahs.firstOrNull { it.number == number } }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
             Column {
@@ -92,10 +107,11 @@ fun HomeScreen(
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatTile("114", "Sure", Modifier.weight(1f))
-                StatTile("6236", "Ayet", Modifier.weight(1f))
-                StatTile(favorites.size.toString(), "Favori", Modifier.weight(1f))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                item { StatTile("114", "Sure") }
+                item { StatTile("6236", "Ayet") }
+                item { StatTile("30", "Cüz") }
+                item { StatTile(favorites.size.toString(), "Favori") }
             }
         }
 
@@ -111,7 +127,12 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("▶️", fontSize = 28.sp)
+                        Box(
+                            modifier = Modifier.size(44.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("▶️", fontSize = 20.sp)
+                        }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -139,9 +160,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("Günün Ayeti", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        IconButton(onClick = {
-                            isLoadingDaily = true
-                        }) {
+                        IconButton(onClick = { isLoadingDaily = true }) {
                             Text("🔄")
                         }
                     }
@@ -164,9 +183,30 @@ fun HomeScreen(
                                 "${dailyAyah!!.surahName} ${dailyAyah!!.numberInSurah}",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.clickable {
+                                    dailyAyah?.let { onOpenSurah(it.surahNumber, it.numberInSurah) }
+                                },
                             )
                         }
                         else -> Text("Ayet yüklenemedi, tekrar deneyin.")
+                    }
+                }
+            }
+        }
+
+        item {
+            Column {
+                SectionHeader("Hafızlar", "Tümünü Gör", onOpenReciters)
+                Spacer(Modifier.height(10.dp))
+                if (reciters.isEmpty()) {
+                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    }
+                } else {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        items(reciters.take(10)) { reciter ->
+                            ReciterAvatarChip(reciter, onClick = onOpenReciters)
+                        }
                     }
                 }
             }
@@ -177,29 +217,44 @@ fun HomeScreen(
                 item { QuickAction("📖", "Sureler", onClick = onOpenSurahList) }
                 item { QuickAction("🔢", "Cüzler", onClick = onOpenJuzList) }
                 item { QuickAction("🔍", "Ara", onClick = onOpenSearch) }
+                item { QuickAction("🎙️", "Hafızlar", onClick = onOpenReciters) }
                 item { QuickAction("⭐", "Favorilerim", onClick = onOpenFavorites) }
                 item { QuickAction("⚙️", "Ayarlar", onClick = onOpenSettings) }
             }
         }
 
-        item {
-            Text("Sureler", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        if (popularSurahs.isNotEmpty()) {
+            item {
+                Column {
+                    SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
+                            SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+                        }
+                    }
+                }
+            }
         }
 
         item {
-            if (loadError) {
-                Text(
-                    "Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.",
-                    color = MaterialTheme.colorScheme.error,
-                )
-            } else if (surahs.isEmpty()) {
-                Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(surahs.take(10)) { surah ->
-                        SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+            Column {
+                SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
+                Spacer(Modifier.height(10.dp))
+                if (loadError) {
+                    Text(
+                        "Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.",
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                } else if (surahs.isEmpty()) {
+                    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(surahs.take(10), key = { "all-${it.number}" }) { surah ->
+                            SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+                        }
                     }
                 }
             }
@@ -208,8 +263,27 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatTile(value: String, label: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+private fun SectionHeader(title: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        if (actionLabel != null && onAction != null) {
+            Text(
+                actionLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable(onClick = onAction),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatTile(value: String, label: String) {
+    Card(modifier = Modifier.width(84.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -231,6 +305,34 @@ private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
         }
+    }
+}
+
+@Composable
+private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.width(72.dp).clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                reciter.displayName.take(1).uppercase(),
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            reciter.displayName,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

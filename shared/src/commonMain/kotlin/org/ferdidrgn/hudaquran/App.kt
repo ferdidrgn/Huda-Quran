@@ -21,6 +21,7 @@ import org.ferdidrgn.hudaquran.ui.juz.JuzListScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
+import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
 import org.ferdidrgn.hudaquran.ui.settings.EditionPickerScreen
 import org.ferdidrgn.hudaquran.ui.settings.PickerItem
@@ -82,6 +83,7 @@ fun App() {
                     onOpenSettings = { navigator.replaceAll(Screen.Settings) },
                     onOpenSearch = { navigator.navigate(Screen.Search) },
                     onOpenJuzList = { navigator.navigate(Screen.JuzList) },
+                    onOpenReciters = { navigator.navigate(Screen.ReciterPicker) },
                 )
 
                 is Screen.SurahList -> SurahListScreen(
@@ -100,16 +102,9 @@ fun App() {
                     onOpenTranslationPicker = { navigator.navigate(Screen.TranslationPicker) },
                 )
 
-                is Screen.ReciterPicker -> EditionPickerScreen(
-                    title = "Hafız Seçin",
-                    selectedId = preferences.selectedReciter,
-                    loadItems = { AppContainer.repository.getReciters().map { PickerItem(it.identifier, it.displayName) } },
-                    onSelect = { id ->
-                        preferences.selectedReciter = id
-                        navigator.back()
-                    },
-                    onBack = { navigator.back() },
+                is Screen.ReciterPicker -> RecitersScreen(
                     modifier = contentModifier,
+                    onBack = { navigator.back() },
                 )
 
                 is Screen.TranslationPicker -> EditionPickerScreen(
