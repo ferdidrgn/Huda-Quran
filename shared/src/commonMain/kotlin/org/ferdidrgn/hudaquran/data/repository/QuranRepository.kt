@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.data.repository
 
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
+import org.ferdidrgn.hudaquran.data.remote.retryOnce
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.JuzDetail
@@ -78,10 +79,12 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): JuzDetail {
-        val editions = api.getJuzWithEditions(
-            juzNumber,
-            listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
-        )
+        val editions = retryOnce {
+            api.getJuzWithEditions(
+                juzNumber,
+                listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+            )
+        }
         val arabicEdition = editions[0]
         val translationEditionData = editions[1]
         val audioEdition = editions[2]
@@ -132,7 +135,7 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
     }
 
     suspend fun searchQuran(keyword: String, edition: String = QuranEditions.DEFAULT_TRANSLATION): List<SearchMatch> {
-        val result = api.search(keyword, edition)
+        val result = retryOnce { api.search(keyword, edition) }
         return result.matches.map {
             SearchMatch(
                 surahNumber = it.surah.number,

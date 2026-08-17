@@ -11,9 +11,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.NowPlayingController
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
+import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.components.AppBottomNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
@@ -21,6 +25,7 @@ import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.juz.JuzDetailScreen
 import org.ferdidrgn.hudaquran.ui.juz.JuzListScreen
+import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.nowplaying.NowPlayingScreen
@@ -42,12 +47,18 @@ fun App() {
     val navigator = remember { AppNavigator() }
     val nowPlaying by AppContainer.playbackManager.nowPlaying.collectAsState()
     val nowPlayingController = remember { NowPlayingController(AppContainer.playbackManager) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { nowPlayingController.start() }
 
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
+
+        val canInterceptBack = navigator.canGoBack() || (screen.isBottomNavDestination() && screen != Screen.Home)
+        AppBackHandler(enabled = canInterceptBack) {
+            if (navigator.canGoBack()) navigator.back() else navigator.replaceAll(Screen.Home)
+        }
 
         Scaffold(
             bottomBar = {
@@ -106,6 +117,7 @@ fun App() {
                     modifier = contentModifier,
                     onOpenReciterPicker = { navigator.navigate(Screen.ReciterPicker) },
                     onOpenTranslationPicker = { navigator.navigate(Screen.TranslationPicker) },
+                    onOpenLocationPicker = { navigator.navigate(Screen.PrayerLocationPicker) },
                 )
 
                 is Screen.ReciterPicker -> RecitersScreen(
@@ -127,6 +139,30 @@ fun App() {
                     modifier = contentModifier,
                 )
 
+                is Screen.PrayerLocationPicker -> EditionPickerScreen(
+                    title = "Konum Seçin",
+                    selectedId = "${preferences.prayerCity}|${preferences.prayerCountry}",
+                    loadItems = {
+                        PrayerLocations.all.map { PickerItem("${it.city}|${it.country}", it.displayCity, it.countryDisplayName) }
+                    },
+                    onSelect = { id ->
+                        val (selectedCity, selectedCountry) = id.split("|", limit = 2)
+                        preferences.prayerCity = selectedCity
+                        preferences.prayerCountry = selectedCountry
+                        if (preferences.prayerNotificationsEnabled.value) {
+                            coroutineScope.launch {
+                                val timings = runCatching {
+                                    AppContainer.prayerRepository.getTodayTimings(selectedCity, selectedCountry)
+                                }.getOrNull()
+                                if (timings != null) PrayerNotificationScheduler().scheduleToday(timings)
+                            }
+                        }
+                        navigator.back()
+                    },
+                    onBack = { navigator.back() },
+                    modifier = contentModifier,
+                )
+
                 is Screen.SurahDetail -> SurahDetailScreen(
                     surahNumber = screen.surahNumber,
                     scrollToAyah = screen.scrollToAyah,
@@ -142,6 +178,7 @@ fun App() {
 
                 is Screen.JuzList -> JuzListScreen(
                     modifier = contentModifier,
+                    onBack = { navigator.back() },
                     onOpenJuz = { number -> navigator.navigate(Screen.JuzDetail(number)) },
                 )
 

@@ -76,7 +76,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) { Text("←", fontSize = 22.sp) }
+            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Column {
                 Text("Hafızlar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (!isLoading) {

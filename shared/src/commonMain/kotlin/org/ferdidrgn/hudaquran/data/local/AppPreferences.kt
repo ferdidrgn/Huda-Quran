@@ -23,6 +23,19 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_PRAYER_CITY = "prayer_city"
         private const val KEY_PRAYER_COUNTRY = "prayer_country"
         private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
+        private const val KEY_APP_LANGUAGE = "app_language"
+    }
+
+    private fun loadAppLanguage(): AppLanguage =
+        runCatching { AppLanguage.valueOf(settings.getString(KEY_APP_LANGUAGE, AppLanguage.TURKISH.name)) }
+            .getOrDefault(AppLanguage.TURKISH)
+
+    private val _appLanguage = MutableStateFlow(loadAppLanguage())
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    fun setAppLanguage(value: AppLanguage) {
+        settings.putString(KEY_APP_LANGUAGE, value.name)
+        _appLanguage.value = value
     }
 
     var prayerCity: String

@@ -46,7 +46,9 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerTimes
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 
@@ -69,6 +71,8 @@ fun HomeScreen(
 
     val lastRead by preferences.lastRead.collectAsState()
     val favorites by preferences.favorites.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = stringsFor(appLanguage)
 
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
@@ -116,7 +120,7 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(0) {
                 Column {
-                    Text("Esselamü Aleyküm 👋", style = MaterialTheme.typography.headlineMedium)
+                    Text("${strings.homeGreeting} 👋", style = MaterialTheme.typography.headlineMedium)
                     Text(
                         "Bugün Kur'an ile başlayın",
                         style = MaterialTheme.typography.bodyMedium,
@@ -145,7 +149,7 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    "${currentLastRead.surahName} • Ayet ${currentLastRead.numberInSurah}",
+                                    "${localizedSurahName(currentLastRead.surahNumber, currentLastRead.surahName, appLanguage)} • Ayet ${currentLastRead.numberInSurah}",
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }
@@ -193,7 +197,7 @@ fun HomeScreen(
                             Text(dailyAyah!!.translationText, style = MaterialTheme.typography.bodyMedium)
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                "${dailyAyah!!.surahName} ${dailyAyah!!.numberInSurah}",
+                                "${localizedSurahName(dailyAyah!!.surahNumber, dailyAyah!!.surahName, appLanguage)} ${dailyAyah!!.numberInSurah}",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable {
@@ -210,7 +214,7 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(5) {
                 Column {
-                    SectionHeader("Hafızlar", "Tümünü Gör", onOpenReciters)
+                    SectionHeader(strings.reciters, "Tümünü Gör", onOpenReciters)
                     Spacer(Modifier.height(10.dp))
                     if (reciters.isEmpty()) {
                         Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -230,12 +234,12 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(6) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    item { QuickAction("📖", "Sureler", onClick = onOpenSurahList) }
-                    item { QuickAction("🔢", "Cüzler", onClick = onOpenJuzList) }
-                    item { QuickAction("🔍", "Ara", onClick = onOpenSearch) }
-                    item { QuickAction("🎙️", "Hafızlar", onClick = onOpenReciters) }
-                    item { QuickAction("⭐", "Favorilerim", onClick = onOpenFavorites) }
-                    item { QuickAction("⚙️", "Ayarlar", onClick = onOpenSettings) }
+                    item { QuickAction("📖", strings.navSurahs, onClick = onOpenSurahList) }
+                    item { QuickAction("🔢", strings.juz, onClick = onOpenJuzList) }
+                    item { QuickAction("🔍", strings.search, onClick = onOpenSearch) }
+                    item { QuickAction("🎙️", strings.reciters, onClick = onOpenReciters) }
+                    item { QuickAction("⭐", strings.navFavorites, onClick = onOpenFavorites) }
+                    item { QuickAction("⚙️", strings.navSettings, onClick = onOpenSettings) }
                 }
             }
         }
@@ -420,6 +424,7 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
 
 @Composable
 private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
+    val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     GlassSurface(
         modifier = Modifier.size(width = 148.dp, height = 116.dp),
         contentPadding = PaddingValues(14.dp),
@@ -432,7 +437,7 @@ private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
             Text(surah.number.toString(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
         Spacer(Modifier.height(28.dp))
-        Text(surah.englishName, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.labelLarge, maxLines = 1)
         Text(
             "${surah.numberOfAyahs} ayet",
             style = MaterialTheme.typography.bodyMedium,

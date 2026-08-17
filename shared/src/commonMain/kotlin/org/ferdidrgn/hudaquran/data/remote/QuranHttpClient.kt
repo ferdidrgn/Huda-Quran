@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.data.remote
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -22,6 +23,11 @@ object QuranHttpClient {
             }
             install(Logging) {
                 level = LogLevel.INFO
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 20_000
+                connectTimeoutMillis = 12_000
+                socketTimeoutMillis = 20_000
             }
         }
     }

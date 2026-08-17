@@ -11,13 +11,16 @@ import androidx.compose.ui.Modifier
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 
 @Composable
 fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit) {
     val playback = AppContainer.playbackManager
     val repository = AppContainer.repository
+    val preferences = AppContainer.preferences
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
 
     val current = nowPlaying ?: return
 
@@ -30,9 +33,13 @@ fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit
 
     val title = if (current.mode == PlaybackMode.AYAH_QUEUE) {
         val ayah = current.queue.getOrNull(current.currentIndex)
-        if (ayah != null) "${ayah.surahName} • Ayet ${ayah.numberInSurah}" else current.surahName
+        if (ayah != null) {
+            "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} • Ayet ${ayah.numberInSurah}"
+        } else {
+            localizedSurahName(current.surahNumber, current.surahName, appLanguage)
+        }
     } else {
-        "${current.surahName} • Tüm sure"
+        "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • Tüm sure"
     }
 
     MiniPlayerBar(

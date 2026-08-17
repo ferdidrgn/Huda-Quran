@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 
 private val speedOptions = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
@@ -50,10 +51,12 @@ private val speedOptions = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
 fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     val playback = AppContainer.playbackManager
     val repository = AppContainer.repository
+    val preferences = AppContainer.preferences
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
     val repeatOne by playback.repeatOne.collectAsState()
     val speed by playback.speed.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
 
     val current = nowPlaying
     LaunchedEffect(current) {
@@ -69,7 +72,8 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     }
 
     val ayah = if (current.mode == PlaybackMode.AYAH_QUEUE) current.queue.getOrNull(current.currentIndex) else null
-    val title = ayah?.let { "${it.surahName} • Ayet ${it.numberInSurah}" } ?: "${current.surahName} • Tüm sure"
+    val title = ayah?.let { "${localizedSurahName(it.surahNumber, it.surahName, appLanguage)} • Ayet ${it.numberInSurah}" }
+        ?: "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • Tüm sure"
     val isPlaying = playerState.status == PlaybackStatus.PLAYING
     val hasNext = current.mode == PlaybackMode.AYAH_QUEUE && current.currentIndex + 1 < current.queue.size
     val hasPrevious = current.mode == PlaybackMode.AYAH_QUEUE && current.currentIndex > 0
@@ -83,13 +87,13 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("⌄", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("⌄", fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
             Text("Şimdi Çalıyor", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box(

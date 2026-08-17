@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
@@ -26,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
@@ -43,6 +48,7 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
     var detail by remember(juzNumber) { mutableStateOf<JuzDetail?>(null) }
     var isLoading by remember(juzNumber) { mutableStateOf(true) }
     var loadError by remember(juzNumber) { mutableStateOf(false) }
+    var reloadKey by remember(juzNumber) { mutableStateOf(0) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
@@ -52,7 +58,7 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
     } else null
 
-    LaunchedEffect(juzNumber) {
+    LaunchedEffect(juzNumber, reloadKey) {
         isLoading = true
         loadError = false
         runCatching {
@@ -66,15 +72,23 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) { Text("←", fontSize = 22.sp) }
+            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Text("Cüz $juzNumber", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         HorizontalDivider()
 
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            loadError || detail == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Cüz yüklenemedi. İnternet bağlantınızı kontrol edin.", color = MaterialTheme.colorScheme.error)
+            loadError || detail == null -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Cüz yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Button(onClick = { reloadKey++ }) { Text("Tekrar Dene") }
+                }
             }
             else -> LazyColumn(
                 contentPadding = PaddingValues(16.dp),

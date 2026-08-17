@@ -26,3 +26,8 @@ val Emerald = Color(0xFF10B981)
 val EmeraldBright = Color(0xFF34D399)
 val Amber = Color(0xFFF59E0B)
 val Rose = Color(0xFFF43F5E)
+
+// Splash — the app's original deep religious green, kept independent of the accent theme
+val SplashGreenDark = Color(0xFF0F4A2C)
+val SplashGreen = Color(0xFF1E7145)
+val SplashGold = Color(0xFFC9A227)

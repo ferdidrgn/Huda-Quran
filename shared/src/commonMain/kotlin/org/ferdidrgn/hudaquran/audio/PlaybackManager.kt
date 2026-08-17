@@ -2,12 +2,16 @@ package org.ferdidrgn.hudaquran.audio
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.domain.model.Ayah
+
+private const val LOADING_TIMEOUT_MS = 20_000L
 
 enum class PlaybackMode { AYAH_QUEUE, WHOLE_SURAH }
 
@@ -40,10 +44,28 @@ class PlaybackManager(private val player: AudioPlayer) {
 
     var onSaveProgress: ((surahNumber: Int, numberInSurah: Int, surahName: String) -> Unit)? = null
 
+    private var loadingWatchdog: Job? = null
+
     init {
         scope.launch {
             playerState.collect { state ->
                 if (state.status == PlaybackStatus.COMPLETED) advance()
+
+                loadingWatchdog?.cancel()
+                loadingWatchdog = if (state.status == PlaybackStatus.LOADING) {
+                    val stuckUrl = state.currentUrl
+                    scope.launch {
+                        delay(LOADING_TIMEOUT_MS)
+                        // Still loading the same track after the timeout: the stream never opened, so
+                        // stop and clear it rather than leave the UI spinning forever with no way to retry.
+                        if (playerState.value.status == PlaybackStatus.LOADING && playerState.value.currentUrl == stuckUrl) {
+                            player.stop()
+                            _nowPlaying.value = null
+                        }
+                    }
+                } else {
+                    null
+                }
             }
         }
     }

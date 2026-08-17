@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,12 +28,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 
 @Composable
 fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
     val repository = AppContainer.repository
+    val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
@@ -78,7 +82,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(filtered, key = { it.number }) { surah ->
-                    SurahRow(surah) { onOpenSurah(surah.number) }
+                    SurahRow(surah, appLanguage) { onOpenSurah(surah.number) }
                 }
             }
         }
@@ -86,7 +90,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
 }
 
 @Composable
-private fun SurahRow(surah: Surah, onClick: () -> Unit) {
+private fun SurahRow(surah: Surah, appLanguage: AppLanguage, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -99,7 +103,7 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
                 Text(surah.number.toString(), color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
-                Text(surah.englishName, style = MaterialTheme.typography.titleMedium)
+                Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.titleMedium)
                 Text(
                     "${surah.englishNameTranslation} • ${surah.numberOfAyahs} ayet • ${if (surah.revelationType == "Meccan") "Mekki" else "Medeni"}",
                     style = MaterialTheme.typography.bodyMedium,

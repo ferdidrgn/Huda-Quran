@@ -30,8 +30,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -39,9 +42,13 @@ private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Unit) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
-    val audioPlayer = AppContainer.audioPlayer
+    val playback = AppContainer.playbackManager
 
     val favorites by preferences.favorites.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val nowPlaying by playback.nowPlaying.collectAsState()
+    val playerState by playback.playerState.collectAsState()
+    val currentPlayingAyah = nowPlaying?.queue?.getOrNull(nowPlaying?.currentIndex ?: -1)
     val entries = remember(favorites) {
         favorites.mapNotNull { key ->
             val parts = key.split(":")
@@ -96,16 +103,33 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                val displayName = surahDetail?.surah?.let { localizedSurahName(it.number, it.englishName, appLanguage) }
+                                    ?: "Sure ${entry.surahNumber}"
                                 Text(
-                                    "${surahDetail?.surah?.englishName ?: "Sure ${entry.surahNumber}"} • Ayet ${entry.numberInSurah}",
+                                    "$displayName • Ayet ${entry.numberInSurah}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f),
                                 )
-                                if (ayah != null) {
-                                    IconButton(onClick = { audioPlayer.play(ayah.audioUrl) }) {
-                                        Text("▶️", fontSize = 16.sp)
-                                    }
+                                if (ayah != null && surahDetail != null) {
+                                    val isThisPlaying = currentPlayingAyah?.surahNumber == ayah.surahNumber &&
+                                        currentPlayingAyah.numberInSurah == ayah.numberInSurah
+                                    PlayToggleButton(
+                                        isPlaying = isThisPlaying && playerState.status == PlaybackStatus.PLAYING,
+                                        isLoading = isThisPlaying && playerState.status == PlaybackStatus.LOADING,
+                                        onClick = {
+                                            val index = surahDetail.ayahs.indexOfFirst { it.numberInSurah == ayah.numberInSurah }
+                                            if (index >= 0) {
+                                                playback.toggleAyahInQueue(
+                                                    surahDetail.ayahs,
+                                                    index,
+                                                    entry.surahNumber,
+                                                    surahDetail.surah.englishName,
+                                                    preferences.selectedReciter,
+                                                )
+                                            }
+                                        },
+                                    )
                                 }
                                 IconButton(onClick = { preferences.toggleFavorite(entry.surahNumber, entry.numberInSurah) }) {
                                     Text("⭐", fontSize = 16.sp)

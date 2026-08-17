@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -32,27 +30,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     onOpenReciterPicker: () -> Unit,
     onOpenTranslationPicker: () -> Unit,
+    onOpenLocationPicker: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
     val prayerRepository = AppContainer.prayerRepository
     val selectedTheme by preferences.themeMode.collectAsState()
     val notificationsEnabled by preferences.prayerNotificationsEnabled.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = stringsFor(appLanguage)
 
     var reciterName by remember { mutableStateOf(preferences.selectedReciter) }
     var translationName by remember { mutableStateOf(preferences.selectedTranslation) }
-    var city by remember { mutableStateOf(preferences.prayerCity) }
-    var country by remember { mutableStateOf(preferences.prayerCountry) }
+    val city = preferences.prayerCity
+    val country = preferences.prayerCountry
+    val locationDisplayName = PrayerLocations.all.firstOrNull { it.city == city && it.country == country }
+        ?.displayName ?: "$city, $country"
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -83,7 +89,19 @@ fun SettingsScreen(
             modifier = Modifier.padding(16.dp),
         )
 
-        SectionTitle("Görünüm")
+        SectionTitle(strings.language)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            AppLanguage.entries.forEachIndexed { index, lang ->
+                if (index > 0) Spacer(modifier = Modifier.height(4.dp))
+                OptionRow(
+                    title = lang.nativeName,
+                    selected = appLanguage == lang,
+                    onClick = { preferences.setAppLanguage(lang) },
+                )
+            }
+        }
+
+        SectionTitle(strings.appearance)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             ThemeMode.entries.forEachIndexed { index, mode ->
                 if (index > 0) Spacer(modifier = Modifier.height(4.dp))
@@ -99,14 +117,14 @@ fun SettingsScreen(
             }
         }
 
-        SectionTitle("Sesli Okuyuş ve Meal")
+        SectionTitle(strings.recitationAndTranslation)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             NavigationRow(title = "Hafız", value = reciterName, onClick = onOpenReciterPicker)
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(title = "Meal / Çeviri", value = translationName, onClick = onOpenTranslationPicker)
         }
 
-        SectionTitle("Namaz Vakti Bildirimleri")
+        SectionTitle(strings.prayerNotifications)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -131,39 +149,9 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            OutlinedTextField(
-                value = city,
-                onValueChange = {
-                    city = it
-                    preferences.prayerCity = it
-                },
-                label = { Text("Şehir") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-            )
-
             Spacer(modifier = Modifier.height(10.dp))
 
-            OutlinedTextField(
-                value = country,
-                onValueChange = {
-                    country = it
-                    preferences.prayerCountry = it
-                },
-                label = { Text("Ülke") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                ),
-            )
+            NavigationRow(title = "Konum", value = locationDisplayName, onClick = onOpenLocationPicker)
 
             if (notificationsEnabled) {
                 Spacer(modifier = Modifier.height(10.dp))
