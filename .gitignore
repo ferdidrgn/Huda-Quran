@@ -1,109 +1,89 @@
-# -----------------------
-# FLUTTER & DART ÇEKİRDEK
-# -----------------------
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-/build/
-.fvm/
+# ====================================================================
+# KOTLIN & GRADLE BUILD ARTIFACTS (Tüm modülleri kapsar)
+# ====================================================================
+# Tüm build dizinleri (kök, shared/build, androidApp/build, desktopApp/build vb.)
+**/build/
+build/
+bin/
 
-# DİKKAT: pubspec.lock ASLA buraya eklenmemeli!
+# Kotlin Multiplatform Cache & Metadata
+.kotlin/
+.konan/
+kotlin-js-store/
 
-# -----------------------
-# ANDROID
-# -----------------------
-# Derleme ve Önbellek Dosyaları
-/android/.gradle
-/android/captures/
+# Gradle Cache & Lock
 .gradle/
+**/build/intermediates/
+**/build/outputs/
+**/build/tmp/
 
-# Android Studio IDE Ayarları
-/android/.idea
-/android/.idea/modules.xml
-/android/.idea/runConfigurations.xml
+# ====================================================================
+# ANDROID
+# ====================================================================
+# Android Studio / Gradle artifacts
+captures/
+.externalNativeBuild/
+.cxx/
 
-# İmzalı APK ve Bundle Çıktıları
-/android/app/debug/
-/android/app/profile/
-/android/app/release/
+# İmzalı APK, AAB ve Çıktılar
+*.apk
+*.aab
+*.ap_
+*.dex
 
-# Gizli Anahtarlar (GÜVENLİK İÇİN ÖNEMLİ)
-/android/local.properties
-/android/key.properties
-/android/*.jks
-/android/*.keystore
-/android/**/*.jks
-/android/**/*.keystore
+# Güvenlik & Gizli Anahtarlar
+local.properties
+key.properties
+*.jks
+*.keystore
 
-# Not: gradlew ve gradlew.bat dosyalarını ignore'dan kaldırdım.
-# Çünkü projenin başka PC'de çalışması için onlar lazım.
+# Google Services (İhtiyaca göre private/public repo durumuna göre yönet)
+# google-services.json
+# GoogleService-Info.plist
 
-# -----------------------
-# iOS & MACOS
-# -----------------------
-/ios/Flutter/App.framework
-/ios/Flutter/Flutter.framework
-/ios/Flutter/Generated.xcconfig
-/ios/Flutter/app.flx
-/ios/Flutter/app.zip
-/ios/Flutter/flutter_assets/
-/ios/ServiceDefinitions.json
-/ios/Runner/GeneratedPluginRegistrant.*
-/ios/Pods/
-/macos/Pods/
-
-# Xcode Kullanıcı Verileri (Proje ayarı değil, senin kişisel ayarların)
+# ====================================================================
+# iOS, MACOS & APPLE TOOLCHAIN
+# ====================================================================
+# Xcode User Data & Caches
 **/DerivedData/
-**/xcshareddata/
-*.moved-aside
 *.pbxuser
 *.mode1v3
 *.mode2v3
 *.perspectivev3
-/ios/Runner.xcworkspace/xcuserdata/
-/macos/Runner.xcworkspace/xcuserdata/
+xcuserdata/
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcuserdatad/
 
-# -----------------------
-# WEB
-# -----------------------
-.web_config.dart
-/build/web/
-.webpack/
-.dwds/
+# CocoaPods & Frameworks
+Pods/
+**/Pods/
+*.framework
+*.xcframework
 
-# -----------------------
-# FIREBASE & GOOGLE SERVICES
-# -----------------------
-.firebase/
-firebase-debug.log
-firebase-debug.*.log
+# ====================================================================
+# FLUTTER & DART (Hibrit/Ek Projeler İçin)
+# ====================================================================
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.fvm/
 
-# Eğer projen herkese açıksa (Public Repo) bunları gizlemelisin.
-# Özel (Private) repo ise bunları açabilirsin (# işaretini kaldırarak).
-/android/app/google-services.json
-/ios/Runner/GoogleService-Info.plist
-
-# -----------------------
-# ÇEVRESEL DEĞİŞKENLER (.env)
-# -----------------------
-.env
-.env.*
-!.env.example
-
-# -----------------------
+# ====================================================================
 # IDE & EDİTÖR DOSYALARI
-# -----------------------
+# ====================================================================
 .idea/
-.vscode/
 *.iml
 *.ipr
 *.iws
+.vscode/
 .sublime*
 
-# -----------------------
-# İŞLETİM SİSTEMİ ÇÖPLERİ
-# -----------------------
+# ====================================================================
+# İŞLETİM SİSTEMİ & GEÇİCİ DOSYALAR
+# ====================================================================
 .DS_Store
 .DS_Store?
 ._*
@@ -113,22 +93,18 @@ firebase-debug.*.log
 ehthumbs.db
 desktop.ini
 
-# -----------------------
-# LOGLAR VE GEÇİCİ DOSYALAR
-# -----------------------
+# Loglar ve Geçici Dosyalar
 *.log
 *.tmp
 *.temp
 coverage/
 .lcov.info
 
-# -----------------------
-# DİĞER ARAÇLAR (Fastlane vb.)
-# -----------------------
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
-node_modules/
-.pnpm-store/
-android/app/google-services.json
+# Çevresel Değişkenler
+.env
+.env.*
+!.env.example
+
+# ====================================================================
+# NOT: gradlew, gradlew.bat ve gradle/wrapper/ ASLA ignore edilmemelidir.
+# ====================================================================
