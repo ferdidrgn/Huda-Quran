@@ -130,10 +130,10 @@ fun SurahDetailScreen(
                     AyahCard(
                         ayah = ayah,
                         isPlaying = currentAyah?.surahNumber == surahNumber &&
-                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            currentAyah.numberInSurah == ayah.numberInSurah &&
                             playerState.status == PlaybackStatus.PLAYING,
                         isLoading = currentAyah?.surahNumber == surahNumber &&
-                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            currentAyah.numberInSurah == ayah.numberInSurah &&
                             playerState.status == PlaybackStatus.LOADING,
                         isFavorite = "$surahNumber:${ayah.numberInSurah}" in favorites,
                         onPlayToggle = {

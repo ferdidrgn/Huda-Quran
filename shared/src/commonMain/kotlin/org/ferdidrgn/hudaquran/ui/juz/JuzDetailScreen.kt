@@ -85,10 +85,10 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
                     AyahCard(
                         ayah = ayah,
                         isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            currentAyah.numberInSurah == ayah.numberInSurah &&
                             playerState.status == PlaybackStatus.PLAYING,
                         isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah?.numberInSurah == ayah.numberInSurah &&
+                            currentAyah.numberInSurah == ayah.numberInSurah &&
                             playerState.status == PlaybackStatus.LOADING,
                         isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
                         onPlayToggle = {
