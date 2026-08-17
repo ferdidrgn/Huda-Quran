@@ -1,35 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2C8A5A"/>
-      <stop offset="1" stop-color="#0F4A2C"/>
-    </linearGradient>
-    <linearGradient id="pageLeft" x1="24" y1="32" x2="54" y2="82" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F4E4B0"/>
-      <stop offset="1" stop-color="#D8B84A"/>
-    </linearGradient>
-    <linearGradient id="pageRight" x1="84" y1="32" x2="54" y2="82" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#EBD68C"/>
-      <stop offset="1" stop-color="#C9A227"/>
+    <linearGradient id="bg2" x1="0" y1="0" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F3D9A8"/>
+      <stop offset="0.55" stop-color="#C7AD79"/>
+      <stop offset="1" stop-color="#5F7C67"/>
     </linearGradient>
   </defs>
 
-  <rect x="0" y="0" width="108" height="108" fill="url(#bg)"/>
+  <rect x="0" y="0" width="108" height="108" fill="url(#bg2)"/>
 
-  <path d="M68,30 A8,8 0 1,0 84,30 A8,8 0 1,0 68,30 Z
-           M73.9,28 A4.6,4.6 0 1,0 83.1,28 A4.6,4.6 0 1,0 73.9,28 Z"
-        fill="#E8C766" fill-rule="evenodd"/>
+  <path d="M23,54 A27,27 0 1,0 77,54 A27,27 0 1,0 23,54 Z
+           M34.95,49.05 A20,20 0 1,0 74.95,49.05 A20,20 0 1,0 34.95,49.05 Z"
+        fill="#FDFBF6" fill-rule="evenodd"/>
 
-  <path d="M54,36 L25,44 L25,79 L54,74 Z" fill="url(#pageLeft)"/>
-  <path d="M54,36 L83,44 L83,79 L54,74 Z" fill="url(#pageRight)"/>
-
-  <path d="M53,35.3 L53,74.7 L55,74.4 L55,35.6 Z" fill="#7A5E10"/>
-
-  <path d="M31,55 L47,51.5" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
-  <path d="M31,61.5 L47,58.5" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
-  <path d="M31,68 L47,65.5" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
-
-  <path d="M61,51.5 L77,55" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
-  <path d="M61,58.5 L77,61.5" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
-  <path d="M61,65.5 L77,68" stroke="#7A5E10" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
+  <path d="M70,22 L72.4,28.3 L79,30.6 L72.4,32.9 L70,39.2 L67.6,32.9 L61,30.6 L67.6,28.3 Z"
+        fill="#FDFBF6"/>
 </svg>
