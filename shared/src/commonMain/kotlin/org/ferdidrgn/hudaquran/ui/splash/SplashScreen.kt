@@ -22,12 +22,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.SplashGold
 import org.ferdidrgn.hudaquran.ui.theme.SplashGreen
 import org.ferdidrgn.hudaquran.ui.theme.SplashGreenDark
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
+    val strings = LocalStrings.current
     val scale = remember { Animatable(0.6f) }
     val alpha = remember { Animatable(0f) }
 
@@ -66,7 +68,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Kur'an-ı Kerim, her an yanınızda",
+                text = strings.appTagline,
                 color = SplashGold,
                 fontSize = 14.sp,
                 modifier = Modifier.graphicsLayer { this.alpha = alpha.value },

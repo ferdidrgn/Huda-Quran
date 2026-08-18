@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +43,8 @@ import org.ferdidrgn.hudaquran.ui.sajda.SajdaAyahsScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
 import org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen
 import org.ferdidrgn.hudaquran.ui.sections.SectionListScreen
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import org.ferdidrgn.hudaquran.ui.settings.EditionPickerScreen
 import org.ferdidrgn.hudaquran.ui.settings.PickerItem
 import org.ferdidrgn.hudaquran.ui.settings.SettingsScreen
@@ -54,6 +57,7 @@ import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
 fun App() {
     val preferences = AppContainer.preferences
     val themeMode by preferences.themeMode.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
     val navigator = remember { AppNavigator() }
     val nowPlaying by AppContainer.playbackManager.nowPlaying.collectAsState()
     val nowPlayingController = remember { NowPlayingController(AppContainer.playbackManager) }
@@ -71,6 +75,8 @@ fun App() {
         }
     }
 
+    val strings = stringsFor(appLanguage)
+    CompositionLocalProvider(LocalStrings provides strings) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
@@ -155,7 +161,7 @@ fun App() {
                 )
 
                 is Screen.TranslationPicker -> EditionPickerScreen(
-                    title = "Meal Seçin",
+                    title = strings.selectTranslationTitle,
                     selectedId = preferences.selectedTranslation,
                     loadItems = {
                         AppContainer.repository.getTranslations().map { PickerItem(it.identifier, it.displayName, it.language) }
@@ -169,7 +175,7 @@ fun App() {
                 )
 
                 is Screen.PrayerLocationPicker -> EditionPickerScreen(
-                    title = "Konum Seçin",
+                    title = strings.selectLocationTitle,
                     selectedId = "${preferences.prayerCity}|${preferences.prayerCountry}",
                     loadItems = {
                         PrayerLocations.all.map { PickerItem("${it.city}|${it.country}", it.displayCity, it.countryDisplayName) }
@@ -193,7 +199,7 @@ fun App() {
                 )
 
                 is Screen.LanguagePicker -> EditionPickerScreen(
-                    title = "Dil Seçin",
+                    title = strings.selectLanguageTitle,
                     selectedId = preferences.appLanguage.value.name,
                     loadItems = {
                         AppLanguage.entries.map { PickerItem(it.name, "${it.flag} ${it.nativeName}") }
@@ -255,5 +261,6 @@ fun App() {
                 )
             }
         }
+    }
     }
 }

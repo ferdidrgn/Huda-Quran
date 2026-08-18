@@ -52,8 +52,9 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
-import org.ferdidrgn.hudaquran.ui.localization.stringsFor
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 
@@ -80,7 +81,7 @@ fun HomeScreen(
     val lastRead by preferences.lastRead.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
-    val strings = stringsFor(appLanguage)
+    val strings = LocalStrings.current
 
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
@@ -136,7 +137,7 @@ fun HomeScreen(
                 Column {
                     Text("${strings.homeGreeting} 👋", style = MaterialTheme.typography.headlineMedium)
                     Text(
-                        "Bugün Kur'an ile başlayın",
+                        strings.homeSubtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -158,12 +159,12 @@ fun HomeScreen(
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Kaldığınız yerden devam edin",
+                                    strings.continueReading,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    "${localizedSurahName(currentLastRead.surahNumber, currentLastRead.surahName, appLanguage)} • Ayet ${currentLastRead.numberInSurah}",
+                                    "${localizedSurahName(currentLastRead.surahNumber, currentLastRead.surahName, appLanguage)} • ${strings.ayahWord} ${currentLastRead.numberInSurah}",
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }
@@ -179,12 +180,12 @@ fun HomeScreen(
 
         item {
             StaggeredEntrance(3) {
-                StatBento(value = favorites.size.toString(), label = "Favori", emoji = "⭐", onClick = onOpenFavorites)
+                StatBento(value = favorites.size.toString(), label = strings.favoriteLabel, emoji = "⭐", onClick = onOpenFavorites)
             }
         }
         item {
             StaggeredEntrance(3) {
-                StatBento(value = (meta?.juzCount ?: 30).toString(), label = "Cüz", emoji = "🔢", onClick = onOpenJuzList)
+                StatBento(value = (meta?.juzCount ?: 30).toString(), label = strings.statJuz, emoji = "🔢", onClick = onOpenJuzList)
             }
         }
 
@@ -192,7 +193,7 @@ fun HomeScreen(
             StaggeredEntrance(4) {
                 GlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Günün Ayeti", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(strings.dailyAyahTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text("🔄", fontSize = 16.sp, modifier = Modifier.clickable { isLoadingDaily = true })
                     }
                     Spacer(Modifier.height(10.dp))
@@ -219,7 +220,7 @@ fun HomeScreen(
                                 },
                             )
                         }
-                        else -> Text("Ayet yüklenemedi, tekrar deneyin.")
+                        else -> Text(strings.dailyAyahError)
                     }
                 }
             }
@@ -238,7 +239,7 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(5) {
                 Column {
-                    SectionHeader(strings.reciters, "Tümünü Gör", onOpenReciters)
+                    SectionHeader(strings.reciters, strings.viewAll, onOpenReciters)
                     Spacer(Modifier.height(10.dp))
                     if (reciters.isEmpty()) {
                         Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -279,9 +280,9 @@ fun HomeScreen(
                         IconBubble(emoji = "📝", accent = true)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Kur'an Okuma Dersleri", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(strings.readingLessonsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(
-                                "Elif-Ba'dan tecvide, sesli telaffuzlu 6 sıralı ders",
+                                strings.readingLessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -294,7 +295,7 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(8) {
                 Column {
-                    SectionHeader("Esma-ül Hüsna", null, null)
+                    SectionHeader(strings.esmaulHusnaTitle, null, null)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(esmaulHusna, key = { it.name }) { esma ->
@@ -308,14 +309,14 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(9) {
                 Column {
-                    SectionHeader("Kur'an'ı Keşfet")
+                    SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("📄", "Sayfalar", onClick = { onOpenSection(SectionKind.PAGE) }) }
-                        item { QuickAction("📆", "Menziller", onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                        item { QuickAction("📚", "Rükûlar", onClick = { onOpenSection(SectionKind.RUKU) }) }
-                        item { QuickAction("🔖", "Hizb Çeyrekleri", onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                        item { QuickAction("🕋", "Secde Ayetleri", onClick = onOpenSajdaAyahs) }
+                        item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                        item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                        item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                        item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                        item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
                     }
                 }
             }
@@ -325,17 +326,17 @@ fun HomeScreen(
             item(span = { GridItemSpan(2) }) {
                 StaggeredEntrance(10) {
                     GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                        Text("Kur'an-ı Kerim İstatistikleri", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(strings.quranStatsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
                         val stats = listOf(
-                            "Sure" to meta!!.surahCount,
-                            "Ayet" to meta!!.ayahCount,
-                            "Cüz" to meta!!.juzCount,
-                            "Sayfa" to meta!!.pageCount,
-                            "Rükû" to meta!!.rukuCount,
-                            "Hizb Çeyreği" to meta!!.hizbQuarterCount,
-                            "Menzil" to meta!!.manzilCount,
-                            "Secde" to meta!!.sajdaCount,
+                            strings.statSurah to meta!!.surahCount,
+                            strings.ayahWord to meta!!.ayahCount,
+                            strings.statJuz to meta!!.juzCount,
+                            strings.statPage to meta!!.pageCount,
+                            strings.statRuku to meta!!.rukuCount,
+                            strings.statHizbQuarter to meta!!.hizbQuarterCount,
+                            strings.statManzil to meta!!.manzilCount,
+                            strings.statSajda to meta!!.sajdaCount,
                         )
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             items(stats, key = { it.first }) { (label, value) ->
@@ -354,7 +355,7 @@ fun HomeScreen(
             item(span = { GridItemSpan(2) }) {
                 StaggeredEntrance(11) {
                     Column {
-                        SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
+                        SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
                         Spacer(Modifier.height(10.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
@@ -369,18 +370,18 @@ fun HomeScreen(
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(12) {
                 Column {
-                    SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
+                    SectionHeader(strings.navSurahs, strings.viewAll, onOpenSurahList)
                     Spacer(Modifier.height(10.dp))
                     if (loadError) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "Sureler yüklenemedi.",
+                                strings.surahsLoadErrorShort,
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
-                                "Tekrar Dene",
+                                strings.retry,
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.clickable { surahReloadKey++ },
@@ -405,6 +406,7 @@ fun HomeScreen(
 
 @Composable
 private fun PrayerWidget(prayerTimes: PrayerTimes?) {
+    val strings = LocalStrings.current
     GlassSurface(modifier = Modifier.fillMaxWidth()) {
         if (prayerTimes == null) {
             Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
@@ -417,7 +419,7 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("Sonraki Namaz", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(strings.nextPrayerLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (next != null) {
                     Text(
                         "${next.prayer.label} • ${next.prayer.time}",
@@ -427,7 +429,11 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
                     val h = next.minutesUntil / 60
                     val m = next.minutesUntil % 60
                     Text(
-                        if (h > 0) "$h sa $m dk kaldı" else "$m dk kaldı",
+                        if (h > 0) {
+                            strings.hoursMinutesLeftTemplate.replace("{h}", h.toString()).replace("{m}", m.toString())
+                        } else {
+                            strings.minutesLeftTemplate.replace("{m}", m.toString())
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -573,6 +579,7 @@ private fun EsmaChip(esma: EsmaName) {
 @Composable
 private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
+    val strings = LocalStrings.current
     GlassSurface(
         modifier = Modifier.size(width = 148.dp, height = 116.dp),
         contentPadding = PaddingValues(14.dp),
@@ -587,7 +594,7 @@ private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
         Spacer(Modifier.height(28.dp))
         Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.labelLarge, maxLines = 1)
         Text(
-            "${surah.numberOfAyahs} ayet",
+            "${surah.numberOfAyahs} ${strings.ayahWordLower}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

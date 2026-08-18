@@ -34,12 +34,12 @@ data class QuranSectionDetail(
 )
 
 /** Every alternate way the Quran is divided for browsing/recitation, beyond Surah. */
-enum class SectionKind(val apiPath: String, val titleSingular: String, val titlePlural: String) {
-    JUZ("juz", "Cüz", "Cüzler"),
-    PAGE("page", "Sayfa", "Sayfalar"),
-    MANZIL("manzil", "Menzil", "Menziller"),
-    RUKU("ruku", "Rükû", "Rükûlar"),
-    HIZB_QUARTER("hizbQuarter", "Hizb Çeyreği", "Hizb Çeyrekleri"),
+enum class SectionKind(val apiPath: String) {
+    JUZ("juz"),
+    PAGE("page"),
+    MANZIL("manzil"),
+    RUKU("ruku"),
+    HIZB_QUARTER("hizbQuarter"),
 }
 
 data class QuranMeta(

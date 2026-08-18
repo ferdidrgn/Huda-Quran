@@ -31,34 +31,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
 
 private data class OnboardingPage(val emoji: String, val title: String, val description: String)
 
-private val pages = listOf(
-    OnboardingPage(
-        emoji = "📖",
-        title = "Huda Qur'an'a Hoş Geldiniz",
-        description = "Kur'an-ı Kerim'i her zaman, her yerde, cebinizde taşıyın.",
-    ),
-    OnboardingPage(
-        emoji = "🎧",
-        title = "Sesli Dinleme",
-        description = "Ayet ayet veya sure sure, seçtiğiniz hafızlardan akıcı bir dille dinleyin.",
-    ),
-    OnboardingPage(
-        emoji = "🌍",
-        title = "Mealler ve Çeviriler",
-        description = "Türkçe ve diğer dillerdeki meallerle ayetleri anlayarak okuyun.",
-    ),
-    OnboardingPage(
-        emoji = "⭐",
-        title = "Favorileriniz, Kaldığınız Yer",
-        description = "Sevdiğiniz ayetleri kaydedin, okumaya kaldığınız yerden devam edin.",
-    ),
+private fun pagesFor(strings: Strings) = listOf(
+    OnboardingPage(emoji = "📖", title = strings.onboardTitle1, description = strings.onboardDesc1),
+    OnboardingPage(emoji = "🎧", title = strings.onboardTitle2, description = strings.onboardDesc2),
+    OnboardingPage(emoji = "🌍", title = strings.onboardTitle3, description = strings.onboardDesc3),
+    OnboardingPage(emoji = "⭐", title = strings.onboardTitle4, description = strings.onboardDesc4),
 )
 
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit) {
+    val strings = LocalStrings.current
+    val pages = remember(strings) { pagesFor(strings) }
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isLastPage by remember { derivedStateOf { pagerState.currentPage == pages.lastIndex } }
@@ -69,7 +57,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             horizontalArrangement = Arrangement.End,
         ) {
             TextButton(onClick = onFinished) {
-                Text("Geç", color = MaterialTheme.colorScheme.primary)
+                Text(strings.onboardingSkip, color = MaterialTheme.colorScheme.primary)
             }
         }
 
@@ -138,7 +126,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
         ) {
-            Text(if (isLastPage) "Başla" else "İleri")
+            Text(if (isLastPage) strings.onboardingStart else strings.onboardingNext)
         }
         Spacer(modifier = Modifier.height(24.dp))
     }

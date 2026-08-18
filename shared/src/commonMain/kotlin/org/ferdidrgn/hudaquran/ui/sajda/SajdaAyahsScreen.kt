@@ -36,7 +36,9 @@ import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -52,6 +54,7 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
     val favorites by preferences.favorites.collectAsState()
+    val strings = LocalStrings.current
 
     val currentAyah = if (nowPlaying?.mode == PlaybackMode.AYAH_QUEUE) {
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
@@ -73,9 +76,9 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Column {
-                Text("Secde Ayetleri", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(strings.sajdaTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "Kur'an'da tilavet secdesi gerektiren ayetler",
+                    strings.sajdaSubtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 )
@@ -87,34 +90,40 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             loadError -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Secde ayetleri yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
+                        strings.sajdaLoadErrorFull,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(14.dp))
-                    Button(onClick = { reloadKey++ }) { Text("Tekrar Dene") }
+                    Button(onClick = { reloadKey++ }) { Text(strings.retry) }
                 }
             }
-            else -> LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                itemsIndexed(ayahs, key = { _, ayah -> "${ayah.surahNumber}:${ayah.numberInSurah}" }) { index, ayah ->
-                    AyahCard(
-                        ayah = ayah,
-                        isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah.numberInSurah == ayah.numberInSurah &&
-                            playerState.status == PlaybackStatus.PLAYING,
-                        isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah.numberInSurah == ayah.numberInSurah &&
-                            playerState.status == PlaybackStatus.LOADING,
-                        isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
-                        onPlayToggle = {
-                            playback.toggleAyahInQueue(ayahs, index, ayah.surahNumber, ayah.surahName, preferences.selectedReciter)
-                        },
-                        onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
-                        showSurahLabel = true,
-                    )
+            else -> {
+                val showAds = !preferences.isAdFree()
+                val midIndex = ayahs.size / 2
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    itemsIndexed(ayahs, key = { _, ayah -> "${ayah.surahNumber}:${ayah.numberInSurah}" }) { index, ayah ->
+                        AyahCard(
+                            ayah = ayah,
+                            isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
+                                currentAyah.numberInSurah == ayah.numberInSurah &&
+                                playerState.status == PlaybackStatus.PLAYING,
+                            isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
+                                currentAyah.numberInSurah == ayah.numberInSurah &&
+                                playerState.status == PlaybackStatus.LOADING,
+                            isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
+                            onPlayToggle = {
+                                playback.toggleAyahInQueue(ayahs, index, ayah.surahNumber, ayah.surahName, preferences.selectedReciter)
+                            },
+                            onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
+                            showSurahLabel = true,
+                        )
+                        if (showAds && index == midIndex) AdBannerCard()
+                    }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,11 +31,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.sectionPlural
+import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
 @Composable
 fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSection: (Int) -> Unit) {
     val repository = AppContainer.repository
+    val preferences = AppContainer.preferences
+    val strings = LocalStrings.current
     var count by remember(kind) { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(kind) {
@@ -47,7 +54,7 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
-            Text(kind.titlePlural, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(strings.sectionPlural(kind), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         val total = count
         if (total == null) {
@@ -67,9 +74,12 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
                         onClick = { onOpenSection(number) },
                     ) {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("${kind.titleSingular} $number", style = MaterialTheme.typography.titleMedium)
+                            Text("${strings.sectionSingular(kind)} $number", style = MaterialTheme.typography.titleMedium)
                         }
                     }
+                }
+                if (!preferences.isAdFree()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
             }
         }

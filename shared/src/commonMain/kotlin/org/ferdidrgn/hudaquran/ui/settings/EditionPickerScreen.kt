@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 data class PickerItem(val id: String, val label: String, val sublabel: String? = null)
 
@@ -42,6 +43,7 @@ fun EditionPickerScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val strings = LocalStrings.current
     var items by remember { mutableStateOf<List<PickerItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var query by remember { mutableStateOf("") }
@@ -69,14 +71,14 @@ fun EditionPickerScreen(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text("Ara") },
+            placeholder = { Text(strings.editionSearchPlaceholder) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             singleLine = true,
         )
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             filtered.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text("Sonuç bulunamadı", textAlign = TextAlign.Center)
+                Text(strings.notFound, textAlign = TextAlign.Center)
             }
             else -> LazyColumn(contentPadding = PaddingValues(16.dp)) {
                 items(filtered, key = { it.id }) { item ->

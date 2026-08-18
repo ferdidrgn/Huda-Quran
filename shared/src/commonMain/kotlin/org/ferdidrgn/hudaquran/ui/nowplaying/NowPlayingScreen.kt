@@ -53,6 +53,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private val speedOptions = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
 
@@ -66,6 +67,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     val repeatOne by playback.repeatOne.collectAsState()
     val speed by playback.speed.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = LocalStrings.current
 
     val current = nowPlaying
     LaunchedEffect(current) {
@@ -81,8 +83,8 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     }
 
     val ayah = if (current.mode == PlaybackMode.AYAH_QUEUE) current.queue.getOrNull(current.currentIndex) else null
-    val title = ayah?.let { "${localizedSurahName(it.surahNumber, it.surahName, appLanguage)} • Ayet ${it.numberInSurah}" }
-        ?: "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • Tüm sure"
+    val title = ayah?.let { "${localizedSurahName(it.surahNumber, it.surahName, appLanguage)} • ${strings.ayahWord} ${it.numberInSurah}" }
+        ?: "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • ${strings.wholeSurahSuffix}"
     val isPlaying = playerState.status == PlaybackStatus.PLAYING
     val hasNext = current.mode == PlaybackMode.AYAH_QUEUE && current.currentIndex + 1 < current.queue.size
     val hasPrevious = current.mode == PlaybackMode.AYAH_QUEUE && current.currentIndex > 0
@@ -104,7 +106,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             ) {
                 Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(26.dp))
             }
-            Text("Şimdi Çalıyor", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(strings.nowPlayingTitle, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -227,7 +229,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
         Spacer(Modifier.height(24.dp))
 
         GlassSurface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
-            Text("Oynatma Hızı", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(strings.playbackSpeedTitle, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 speedOptions.forEach { option ->

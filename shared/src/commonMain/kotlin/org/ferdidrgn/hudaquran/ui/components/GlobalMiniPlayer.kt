@@ -12,6 +12,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit) {
@@ -21,6 +22,7 @@ fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = LocalStrings.current
 
     val current = nowPlaying ?: return
 
@@ -34,12 +36,12 @@ fun GlobalMiniPlayer(modifier: Modifier = Modifier, onOpenNowPlaying: () -> Unit
     val title = if (current.mode == PlaybackMode.AYAH_QUEUE) {
         val ayah = current.queue.getOrNull(current.currentIndex)
         if (ayah != null) {
-            "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} • Ayet ${ayah.numberInSurah}"
+            "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} • ${strings.ayahWord} ${ayah.numberInSurah}"
         } else {
             localizedSurahName(current.surahNumber, current.surahName, appLanguage)
         }
     } else {
-        "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • Tüm sure"
+        "${localizedSurahName(current.surahNumber, current.surahName, appLanguage)} • ${strings.wholeSurahSuffix}"
     }
 
     MiniPlayerBar(

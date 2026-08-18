@@ -26,9 +26,11 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun TajwidLessonListScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenLesson: (String) -> Unit) {
+    val strings = LocalStrings.current
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -36,9 +38,9 @@ fun TajwidLessonListScreen(modifier: Modifier = Modifier, onBack: () -> Unit, on
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Column {
-                Text("Kur'an Okuma Dersleri", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(strings.readingLessonsTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "Elif-Ba'dan tecvide, sıralı ${tajwidCourse.size} ders",
+                    strings.lessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 )

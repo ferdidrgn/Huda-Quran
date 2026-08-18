@@ -38,7 +38,10 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
 @Composable
 fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -54,6 +57,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
     val favorites by preferences.favorites.collectAsState()
+    val strings = LocalStrings.current
 
     val currentAyah = if (nowPlaying?.mode == PlaybackMode.AYAH_QUEUE) {
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
@@ -74,7 +78,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
-            Text("${kind.titleSingular} $number", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("${strings.sectionSingular(kind)} $number", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         HorizontalDivider()
 
@@ -83,35 +87,41 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
             loadError || detail == null -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "${kind.titleSingular} yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
+                        strings.sectionLoadErrorTemplate.replace("{title}", strings.sectionSingular(kind)),
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(14.dp))
-                    Button(onClick = { reloadKey++ }) { Text("Tekrar Dene") }
+                    Button(onClick = { reloadKey++ }) { Text(strings.retry) }
                 }
             }
-            else -> LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                items(detail!!.ayahs.size) { index ->
-                    val ayah = detail!!.ayahs[index]
-                    AyahCard(
-                        ayah = ayah,
-                        isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah.numberInSurah == ayah.numberInSurah &&
-                            playerState.status == PlaybackStatus.PLAYING,
-                        isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah.numberInSurah == ayah.numberInSurah &&
-                            playerState.status == PlaybackStatus.LOADING,
-                        isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
-                        onPlayToggle = {
-                            playback.toggleAyahInQueue(detail!!.ayahs, index, ayah.surahNumber, ayah.surahName, preferences.selectedReciter)
-                        },
-                        onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
-                        showSurahLabel = true,
-                    )
+            else -> {
+                val showAds = !preferences.isAdFree()
+                val midIndex = detail!!.ayahs.size / 2
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    items(detail!!.ayahs.size) { index ->
+                        val ayah = detail!!.ayahs[index]
+                        AyahCard(
+                            ayah = ayah,
+                            isPlaying = currentAyah?.surahNumber == ayah.surahNumber &&
+                                currentAyah.numberInSurah == ayah.numberInSurah &&
+                                playerState.status == PlaybackStatus.PLAYING,
+                            isLoading = currentAyah?.surahNumber == ayah.surahNumber &&
+                                currentAyah.numberInSurah == ayah.numberInSurah &&
+                                playerState.status == PlaybackStatus.LOADING,
+                            isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
+                            onPlayToggle = {
+                                playback.toggleAyahInQueue(detail!!.ayahs, index, ayah.surahNumber, ayah.surahName, preferences.selectedReciter)
+                            },
+                            onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
+                            showSurahLabel = true,
+                        )
+                        if (showAds && index == midIndex) AdBannerCard()
+                    }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }

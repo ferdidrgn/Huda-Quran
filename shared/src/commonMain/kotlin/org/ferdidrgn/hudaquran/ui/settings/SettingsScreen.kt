@@ -44,7 +44,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
-import org.ferdidrgn.hudaquran.ui.localization.stringsFor
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun SettingsScreen(
@@ -60,7 +60,7 @@ fun SettingsScreen(
     val selectedTheme by preferences.themeMode.collectAsState()
     val notificationsEnabled by preferences.prayerNotificationsEnabled.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
-    val strings = stringsFor(appLanguage)
+    val strings = LocalStrings.current
 
     var reciterName by remember { mutableStateOf(preferences.selectedReciter) }
     var translationName by remember { mutableStateOf(preferences.selectedTranslation) }
@@ -92,7 +92,7 @@ fun SettingsScreen(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()),
     ) {
         Text(
-            "Ayarlar",
+            strings.settingsTitle,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.padding(16.dp),
@@ -102,7 +102,7 @@ fun SettingsScreen(
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             NavigationRow(
                 title = "${appLanguage.flag} ${appLanguage.nativeName}",
-                value = "${AppLanguage.entries.size} dil arasından seçin",
+                value = strings.languagePickerSubtitleTemplate.replace("{n}", AppLanguage.entries.size.toString()),
                 onClick = onOpenLanguagePicker,
             )
         }
@@ -114,9 +114,9 @@ fun SettingsScreen(
 
         SectionTitle(strings.recitationAndTranslation)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            NavigationRow(title = "Hafız", value = reciterName, onClick = onOpenReciterPicker)
+            NavigationRow(title = strings.reciterLabel, value = reciterName, onClick = onOpenReciterPicker)
             Spacer(modifier = Modifier.height(4.dp))
-            NavigationRow(title = "Meal / Çeviri", value = translationName, onClick = onOpenTranslationPicker)
+            NavigationRow(title = strings.translationLabel, value = translationName, onClick = onOpenTranslationPicker)
         }
 
         SectionTitle(strings.prayerNotifications)
@@ -127,9 +127,9 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Bildirimleri Aç", style = MaterialTheme.typography.bodyLarge)
+                    Text(strings.notificationsToggleTitle, style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "Vakit girdiğinde bildirim gönder",
+                        strings.notificationsToggleSubtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
@@ -146,22 +146,22 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            NavigationRow(title = "Konum", value = locationDisplayName, onClick = onOpenLocationPicker)
+            NavigationRow(title = strings.locationLabel, value = locationDisplayName, onClick = onOpenLocationPicker)
 
             if (notificationsEnabled) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    "Konum kaydedildiğinde bildirimler otomatik güncellenir.",
+                    strings.locationAutoUpdateNote,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )
             }
         }
 
-        SectionTitle("Destek Ol")
+        SectionTitle(strings.supportUsTitle)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
-                if (preferences.isAdFree()) "Reklamsız üyeliğiniz aktif, teşekkürler! 💚" else "Uygulamayı geliştirmemize destek olun",
+                if (preferences.isAdFree()) strings.adFreeActiveMessage else strings.supportUsMessage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
@@ -170,17 +170,17 @@ fun SettingsScreen(
                 OutlinedButton(
                     onClick = { BillingManager.purchase(BillingProduct.DONATION_SMALL) },
                     modifier = Modifier.weight(1f),
-                ) { Text("☕ Küçük Bağış") }
+                ) { Text(strings.smallDonationButton) }
                 OutlinedButton(
                     onClick = { BillingManager.purchase(BillingProduct.DONATION_MEDIUM) },
                     modifier = Modifier.weight(1f),
-                ) { Text("🎁 Orta Bağış") }
+                ) { Text(strings.mediumDonationButton) }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Button(
                 onClick = { BillingManager.purchase(BillingProduct.NO_ADS_6_MONTHS) },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("✨ 6 Aylık Reklamsız Üyelik") }
+            ) { Text(strings.sixMonthAdFreeButton) }
         }
 
         Text(
@@ -194,10 +194,11 @@ fun SettingsScreen(
 
 @Composable
 private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    val strings = LocalStrings.current
     val options = listOf(
-        ThemeMode.SYSTEM to "🖥️ Sistem",
-        ThemeMode.LIGHT to "☀️ Açık",
-        ThemeMode.DARK to "🌙 Koyu",
+        ThemeMode.SYSTEM to strings.themeSystem,
+        ThemeMode.LIGHT to strings.themeLight,
+        ThemeMode.DARK to strings.themeDark,
     )
     Row(
         modifier = Modifier

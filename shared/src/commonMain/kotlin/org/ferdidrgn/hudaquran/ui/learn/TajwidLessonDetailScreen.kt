@@ -35,9 +35,11 @@ import org.ferdidrgn.hudaquran.audio.LetterPronouncer
 import org.ferdidrgn.hudaquran.domain.model.TajwidExample
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val strings = LocalStrings.current
     val lesson = tajwidCourse.firstOrNull { it.id == lessonId }
     val pronouncer = remember { LetterPronouncer() }
     DisposableEffect(Unit) {
@@ -51,7 +53,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Column {
-                Text(lesson?.title ?: "Ders", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(lesson?.title ?: strings.lessonFallback, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (lesson != null) {
                     Text(
                         lesson.summary,
@@ -64,7 +66,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
 
         if (lesson == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ders bulunamadı", color = MaterialTheme.colorScheme.error)
+                Text(strings.lessonNotFound, color = MaterialTheme.colorScheme.error)
             }
         } else {
             LazyVerticalGrid(
@@ -74,7 +76,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(lesson.examples, key = { it.arabic + it.transliteration }) { example ->
-                    ExampleCard(example) { pronouncer.speak(example.arabic) }
+                    ExampleCard(example, strings.pronounceContentDescription) { pronouncer.speak(example.arabic) }
                 }
             }
         }
@@ -82,7 +84,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
 }
 
 @Composable
-private fun ExampleCard(example: TajwidExample, onPronounce: () -> Unit) {
+private fun ExampleCard(example: TajwidExample, pronounceDescription: String, onPronounce: () -> Unit) {
     GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 14.dp, horizontal = 8.dp)) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(example.arabic, fontSize = 30.sp, color = MaterialTheme.colorScheme.primary)
@@ -104,7 +106,7 @@ private fun ExampleCard(example: TajwidExample, onPronounce: () -> Unit) {
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
-                    contentDescription = "Telaffuzu dinle",
+                    contentDescription = pronounceDescription,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),
                 )
