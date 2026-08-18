@@ -111,7 +111,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f),
                                 )
-                                if (ayah != null && surahDetail != null) {
+                                if (ayah != null) {
                                     val isThisPlaying = currentPlayingAyah?.surahNumber == ayah.surahNumber &&
                                         currentPlayingAyah.numberInSurah == ayah.numberInSurah
                                     PlayToggleButton(

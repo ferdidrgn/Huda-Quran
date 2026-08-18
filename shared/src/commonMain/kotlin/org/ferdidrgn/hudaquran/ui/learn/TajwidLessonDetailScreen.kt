@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -103,7 +103,7 @@ private fun ExampleCard(example: TajwidExample, onPronounce: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Filled.VolumeUp,
+                    Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = "Telaffuzu dinle",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp),

@@ -26,7 +26,7 @@ actual class LetterPronouncer actual constructor() {
     }
 
     private fun speakNow(arabicText: String) {
-        val arabicLocale = Locale("ar")
+        val arabicLocale = Locale.Builder().setLanguage("ar").build()
         val result = tts.setLanguage(arabicLocale)
         if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) return
         tts.setSpeechRate(0.8f)
