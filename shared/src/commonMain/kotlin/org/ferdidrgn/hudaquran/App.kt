@@ -25,6 +25,7 @@ import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.juz.JuzDetailScreen
 import org.ferdidrgn.hudaquran.ui.juz.JuzListScreen
+import org.ferdidrgn.hudaquran.ui.learn.ArabicAlphabetScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
@@ -101,6 +102,7 @@ fun App() {
                     onOpenSearch = { navigator.navigate(Screen.Search) },
                     onOpenJuzList = { navigator.navigate(Screen.JuzList) },
                     onOpenReciters = { navigator.navigate(Screen.ReciterPicker) },
+                    onOpenArabicAlphabet = { navigator.navigate(Screen.ArabicAlphabet) },
                 )
 
                 is Screen.SurahList -> SurahListScreen(
@@ -190,6 +192,11 @@ fun App() {
 
                 is Screen.NowPlaying -> NowPlayingScreen(
                     onClose = { navigator.back() },
+                )
+
+                is Screen.ArabicAlphabet -> ArabicAlphabetScreen(
+                    modifier = contentModifier,
+                    onBack = { navigator.back() },
                 )
             }
         }

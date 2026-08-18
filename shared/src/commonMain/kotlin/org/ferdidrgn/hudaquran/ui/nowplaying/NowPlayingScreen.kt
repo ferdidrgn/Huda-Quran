@@ -19,6 +19,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -93,7 +102,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("⌄", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(26.dp))
             }
             Text("Şimdi Çalıyor", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box(
@@ -104,7 +113,12 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                     .clickable { playback.toggleRepeatOne() },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("🔁", fontSize = 16.sp)
+                Icon(
+                    Icons.Filled.Repeat,
+                    contentDescription = null,
+                    tint = if (repeatOne) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
             }
         }
 
@@ -190,14 +204,24 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TransportButton(emoji = "⏮️", size = 48.dp, enabled = hasPrevious, onClick = { playback.skipPrevious() })
+            TransportButton(size = 48.dp, enabled = hasPrevious, onClick = { playback.skipPrevious() }) {
+                Icon(Icons.Filled.SkipPrevious, contentDescription = null, modifier = Modifier.size(24.dp))
+            }
             TransportButton(
-                emoji = if (isPlaying) "⏸️" else "▶️",
                 size = 72.dp,
                 filled = true,
+                isLoading = playerState.status == PlaybackStatus.LOADING,
                 onClick = { playback.togglePlayPause() },
-            )
-            TransportButton(emoji = "⏭️", size = 48.dp, enabled = hasNext, onClick = { playback.skipNext() })
+            ) {
+                if (isPlaying) {
+                    Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
+                } else {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
+                }
+            }
+            TransportButton(size = 48.dp, enabled = hasNext, onClick = { playback.skipNext() }) {
+                Icon(Icons.Filled.SkipNext, contentDescription = null, modifier = Modifier.size(24.dp))
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -229,7 +253,14 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
 }
 
 @Composable
-private fun TransportButton(emoji: String, size: Dp, enabled: Boolean = true, filled: Boolean = false, onClick: () -> Unit) {
+private fun TransportButton(
+    size: Dp,
+    enabled: Boolean = true,
+    filled: Boolean = false,
+    isLoading: Boolean = false,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+) {
     Box(
         modifier = Modifier
             .size(size)
@@ -243,7 +274,15 @@ private fun TransportButton(emoji: String, size: Dp, enabled: Boolean = true, fi
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, fontSize = if (filled) 26.sp else 18.sp)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(size * 0.4f),
+                strokeWidth = 2.5.dp,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        } else {
+            icon()
+        }
     }
 }
 

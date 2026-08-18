@@ -11,6 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -81,23 +87,27 @@ fun MiniPlayerBar(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            PlayerRoundButton(
-                emoji = if (isBuffering) "⏳" else if (isPlaying) "⏸️" else "▶️",
-                background = MaterialTheme.colorScheme.primary,
-                onClick = onToggle,
-            )
+            PlayerRoundButton(background = MaterialTheme.colorScheme.primary, onClick = onToggle) {
+                when {
+                    isBuffering -> CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    isPlaying -> Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                    else -> Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                }
+            }
             Box(modifier = Modifier.size(8.dp))
-            PlayerRoundButton(
-                emoji = "✕",
-                background = MaterialTheme.colorScheme.surfaceVariant,
-                onClick = onStop,
-            )
+            PlayerRoundButton(background = MaterialTheme.colorScheme.surfaceVariant, onClick = onStop) {
+                Icon(Icons.Filled.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
 
 @Composable
-private fun PlayerRoundButton(emoji: String, background: Color, onClick: () -> Unit) {
+private fun PlayerRoundButton(background: Color, onClick: () -> Unit, icon: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .size(38.dp)
@@ -106,6 +116,6 @@ private fun PlayerRoundButton(emoji: String, background: Color, onClick: () -> U
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, fontSize = 15.sp)
+        icon()
     }
 }

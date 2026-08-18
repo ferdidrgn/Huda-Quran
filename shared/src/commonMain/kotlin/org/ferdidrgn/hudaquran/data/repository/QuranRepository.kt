@@ -27,7 +27,7 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
 
     suspend fun getSurahList(): List<Surah> {
         cachedSurahList?.let { return it }
-        val list = api.getSurahList().map { it.toDomain() }
+        val list = retryOnce { api.getSurahList() }.map { it.toDomain() }
         cachedSurahList = list
         return list
     }
@@ -37,10 +37,12 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): SurahDetail {
-        val editions = api.getSurahWithEditions(
-            surahNumber,
-            listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
-        )
+        val editions = retryOnce {
+            api.getSurahWithEditions(
+                surahNumber,
+                listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+            )
+        }
         val arabicEdition = editions[0]
         val translationEditionData = editions[1]
         val audioEdition = editions[2]

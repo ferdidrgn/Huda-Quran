@@ -13,10 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,11 +63,14 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var loadError by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var selectedReciter by remember { mutableStateOf(preferences.selectedReciter) }
+    var reloadKey by remember { mutableStateOf(0) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reloadKey) {
+        isLoading = true
+        loadError = false
         runCatching { repository.getReciters() }
             .onSuccess { reciters = it }
             .onFailure { loadError = true }
@@ -99,11 +109,15 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             loadError && reciters.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    "Hafız listesi yüklenemedi. İnternet bağlantınızı kontrol edin.",
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Hafız listesi yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Button(onClick = { reloadKey++ }) { Text("Tekrar Dene") }
+                }
             }
             else -> LazyColumn(
                 contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 16.dp),
@@ -205,9 +219,23 @@ private fun ReciterRow(
                 contentAlignment = Alignment.Center,
             ) {
                 when {
-                    isPreviewLoading -> CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                    isPreviewPlaying -> Text("⏸️", fontSize = 14.sp)
-                    else -> Text("▶️", fontSize = 14.sp)
+                    isPreviewLoading -> CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    isPreviewPlaying -> Icon(
+                        Icons.Filled.Pause,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    else -> Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }

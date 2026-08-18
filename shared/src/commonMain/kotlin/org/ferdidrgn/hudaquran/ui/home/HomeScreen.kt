@@ -43,9 +43,11 @@ import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.EsmaName
 import org.ferdidrgn.hudaquran.domain.model.PrayerTimes
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.localization.stringsFor
@@ -64,6 +66,7 @@ fun HomeScreen(
     onOpenSearch: () -> Unit,
     onOpenJuzList: () -> Unit,
     onOpenReciters: () -> Unit,
+    onOpenArabicAlphabet: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -80,8 +83,10 @@ fun HomeScreen(
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
+    var surahReloadKey by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(surahReloadKey) {
+        loadError = false
         runCatching { repository.getSurahList() }
             .onSuccess { surahs = it }
             .onFailure { loadError = true }
@@ -244,9 +249,46 @@ fun HomeScreen(
             }
         }
 
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(7) {
+                GlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    onClick = onOpenArabicAlphabet,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconBubble(emoji = "📝", accent = true)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Elif-Ba Öğren", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Arap alfabesinin 28 harfini kolay bir derste keşfedin",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(8) {
+                Column {
+                    SectionHeader("Esma-ül Hüsna", null, null)
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        items(esmaulHusna, key = { it.name }) { esma ->
+                            EsmaChip(esma)
+                        }
+                    }
+                }
+            }
+        }
+
         if (popularSurahs.isNotEmpty()) {
             item(span = { GridItemSpan(2) }) {
-                StaggeredEntrance(7) {
+                StaggeredEntrance(9) {
                     Column {
                         SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
                         Spacer(Modifier.height(10.dp))
@@ -261,12 +303,25 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(2) }) {
-            StaggeredEntrance(8) {
+            StaggeredEntrance(10) {
                 Column {
                     SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
                     Spacer(Modifier.height(10.dp))
                     if (loadError) {
-                        Text("Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.", color = MaterialTheme.colorScheme.error)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "Sureler yüklenemedi.",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                "Tekrar Dene",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.clickable { surahReloadKey++ },
+                            )
+                        }
                     } else if (surahs.isEmpty()) {
                         Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
@@ -419,6 +474,35 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+private fun EsmaChip(esma: EsmaName) {
+    GlassSurface(
+        modifier = Modifier.width(118.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 10.dp),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(esma.arabic, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                esma.name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                esma.meaning,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

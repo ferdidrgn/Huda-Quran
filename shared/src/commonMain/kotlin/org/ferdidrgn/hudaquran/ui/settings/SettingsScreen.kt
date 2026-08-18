@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -26,12 +27,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
+import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
@@ -103,18 +107,7 @@ fun SettingsScreen(
 
         SectionTitle(strings.appearance)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            ThemeMode.entries.forEachIndexed { index, mode ->
-                if (index > 0) Spacer(modifier = Modifier.height(4.dp))
-                OptionRow(
-                    title = when (mode) {
-                        ThemeMode.SYSTEM -> "Sistem"
-                        ThemeMode.LIGHT -> "Açık"
-                        ThemeMode.DARK -> "Koyu"
-                    },
-                    selected = selectedTheme == mode,
-                    onClick = { preferences.setThemeMode(mode) },
-                )
-            }
+            ThemeSegmentedControl(selected = selectedTheme, onSelect = { preferences.setThemeMode(it) })
         }
 
         SectionTitle(strings.recitationAndTranslation)
@@ -164,11 +157,48 @@ fun SettingsScreen(
         }
 
         Text(
-            "Huda Qur'an v1.0",
+            "Huda Qur'an v${appVersionName()}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             modifier = Modifier.padding(16.dp),
         )
+    }
+}
+
+@Composable
+private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    val options = listOf(
+        ThemeMode.SYSTEM to "🖥️ Sistem",
+        ThemeMode.LIGHT to "☀️ Açık",
+        ThemeMode.DARK to "🌙 Koyu",
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEach { (mode, label) ->
+            val isSelected = selected == mode
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onSelect(mode) }
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    label,
+                    fontSize = 12.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
