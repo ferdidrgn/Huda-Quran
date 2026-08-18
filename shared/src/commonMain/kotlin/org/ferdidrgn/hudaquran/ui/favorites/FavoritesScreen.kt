@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
@@ -30,8 +30,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -39,9 +44,14 @@ private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Unit) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
-    val audioPlayer = AppContainer.audioPlayer
+    val playback = AppContainer.playbackManager
 
     val favorites by preferences.favorites.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = LocalStrings.current
+    val nowPlaying by playback.nowPlaying.collectAsState()
+    val playerState by playback.playerState.collectAsState()
+    val currentPlayingAyah = nowPlaying?.queue?.getOrNull(nowPlaying?.currentIndex ?: -1)
     val entries = remember(favorites) {
         favorites.mapNotNull { key ->
             val parts = key.split(":")
@@ -70,12 +80,12 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
     }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Text("Favorilerim", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
+        Text(strings.myFavoritesTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
 
         when {
             entries.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "Henüz favori ayetiniz yok. Sureleri okurken ⭐ ikonuna dokunarak buraya ekleyebilirsiniz.",
+                    strings.favoritesEmptyMessage,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 )
@@ -83,29 +93,49 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
             isLoading && detailsCache.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-            else -> LazyColumn(
+            else -> {
+                val showAds = !preferences.isAdFree()
+                LazyColumn(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(entries, key = { "${it.surahNumber}:${it.numberInSurah}" }) { entry ->
+                itemsIndexed(entries, key = { _, entry -> "${entry.surahNumber}:${entry.numberInSurah}" }) { itemIndex, entry ->
                     val surahDetail = detailsCache[entry.surahNumber]
                     val ayah = surahDetail?.ayahs?.firstOrNull { it.numberInSurah == entry.numberInSurah }
+                    if (showAds && itemIndex == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
                     Card(
                         onClick = { onOpenSurah(entry.surahNumber, entry.numberInSurah) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                val displayName = surahDetail?.surah?.let { localizedSurahName(it.number, it.englishName, appLanguage) }
+                                    ?: strings.surahFallbackNumberedTemplate.replace("{n}", entry.surahNumber.toString())
                                 Text(
-                                    "${surahDetail?.surah?.englishName ?: "Sure ${entry.surahNumber}"} • Ayet ${entry.numberInSurah}",
+                                    "$displayName • ${strings.ayahWord} ${entry.numberInSurah}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f),
                                 )
                                 if (ayah != null) {
-                                    IconButton(onClick = { audioPlayer.play(ayah.audioUrl) }) {
-                                        Text("▶️", fontSize = 16.sp)
-                                    }
+                                    val isThisPlaying = currentPlayingAyah?.surahNumber == ayah.surahNumber &&
+                                        currentPlayingAyah.numberInSurah == ayah.numberInSurah
+                                    PlayToggleButton(
+                                        isPlaying = isThisPlaying && playerState.status == PlaybackStatus.PLAYING,
+                                        isLoading = isThisPlaying && playerState.status == PlaybackStatus.LOADING,
+                                        onClick = {
+                                            val index = surahDetail.ayahs.indexOfFirst { it.numberInSurah == ayah.numberInSurah }
+                                            if (index >= 0) {
+                                                playback.toggleAyahInQueue(
+                                                    surahDetail.ayahs,
+                                                    index,
+                                                    entry.surahNumber,
+                                                    surahDetail.surah.englishName,
+                                                    preferences.selectedReciter,
+                                                )
+                                            }
+                                        },
+                                    )
                                 }
                                 IconButton(onClick = { preferences.toggleFavorite(entry.surahNumber, entry.numberInSurah) }) {
                                     Text("⭐", fontSize = 16.sp)
@@ -134,6 +164,8 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                             }
                         }
                     }
+                }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }

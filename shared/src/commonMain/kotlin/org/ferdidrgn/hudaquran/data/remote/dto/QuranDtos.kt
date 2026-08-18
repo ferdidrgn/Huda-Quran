@@ -45,10 +45,10 @@ data class AyahDto(
     val text: String,
     val numberInSurah: Int,
     val juz: Int,
-    val manzil: Int,
     val page: Int,
-    val ruku: Int,
-    val hizbQuarter: Int,
+    val manzil: Int = 0,
+    val ruku: Int = 0,
+    val hizbQuarter: Int = 0,
     @Serializable(with = SajdaSerializer::class)
     val sajda: Boolean = false,
     val audio: String? = null,
@@ -72,21 +72,42 @@ data class AyahWithSurahDto(
     val text: String,
     val surah: SurahDto,
     val numberInSurah: Int,
-    val juz: Int,
-    val manzil: Int,
     val page: Int,
-    val ruku: Int,
-    val hizbQuarter: Int,
+    val juz: Int = 0,
+    val manzil: Int = 0,
+    val ruku: Int = 0,
+    val hizbQuarter: Int = 0,
     @Serializable(with = SajdaSerializer::class)
     val sajda: Boolean = false,
     val audio: String? = null,
 )
 
 @Serializable
-data class JuzEditionDto(
+data class SectionEditionDto(
     val number: Int,
     val ayahs: List<AyahWithSurahDto>,
     val edition: EditionDto? = null,
+)
+
+@Serializable
+data class SajdaResponseDto(
+    val ayahs: List<AyahWithSurahDto>,
+    val edition: EditionDto? = null,
+)
+
+@Serializable
+data class MetaCountDto(val count: Int)
+
+@Serializable
+data class QuranMetaDto(
+    val ayahs: MetaCountDto,
+    val surahs: MetaCountDto,
+    val sajdas: MetaCountDto,
+    val rukus: MetaCountDto,
+    val pages: MetaCountDto,
+    val manzils: MetaCountDto,
+    val hizbQuarters: MetaCountDto,
+    val juzs: MetaCountDto,
 )
 
 @Serializable

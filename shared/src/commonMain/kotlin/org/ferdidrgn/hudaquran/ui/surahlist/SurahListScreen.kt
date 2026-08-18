@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -20,25 +23,38 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
 
 @Composable
 fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
     val repository = AppContainer.repository
+    val preferences = AppContainer.preferences
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val strings = LocalStrings.current
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
+    var reloadKey by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reloadKey) {
+        isLoading = true
+        loadError = false
         runCatching { repository.getSurahList() }
             .onSuccess { surahs = it }
             .onFailure { loadError = true }
@@ -57,28 +73,41 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Text(
-            "Sureler",
+            strings.navSurahs,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp),
         )
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text("Sure ara (isim veya numara)") },
+            placeholder = { Text(strings.surahSearchPlaceholder) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             singleLine = true,
         )
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            loadError -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Sureler yüklenemedi. İnternet bağlantınızı kontrol edin.", color = MaterialTheme.colorScheme.error)
+            loadError -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        strings.surahsLoadErrorFull,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Button(onClick = { reloadKey++ }) { Text(strings.retry) }
+                }
             }
-            else -> LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(filtered, key = { it.number }) { surah ->
-                    SurahRow(surah) { onOpenSurah(surah.number) }
+            else -> {
+                val showAds = !preferences.isAdFree()
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    itemsIndexed(filtered, key = { _, surah -> surah.number }) { index, surah ->
+                        SurahRow(surah, appLanguage, strings) { onOpenSurah(surah.number) }
+                        if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                    }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }
@@ -86,7 +115,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
 }
 
 @Composable
-private fun SurahRow(surah: Surah, onClick: () -> Unit) {
+private fun SurahRow(surah: Surah, appLanguage: AppLanguage, strings: Strings, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -99,9 +128,10 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
                 Text(surah.number.toString(), color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
-                Text(surah.englishName, style = MaterialTheme.typography.titleMedium)
+                Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "${surah.englishNameTranslation} • ${surah.numberOfAyahs} ayet • ${if (surah.revelationType == "Meccan") "Mekki" else "Medeni"}",
+                    "${surah.englishNameTranslation} • ${surah.numberOfAyahs} ${strings.ayahWordLower} • " +
+                        if (surah.revelationType == "Meccan") strings.meccan else strings.medinan,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )

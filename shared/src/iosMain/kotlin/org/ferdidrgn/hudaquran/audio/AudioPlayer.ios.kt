@@ -32,6 +32,7 @@ actual class AudioPlayer actual constructor() {
     private var endObserver: Any? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var progressJob: Job? = null
+    private var desiredRate: Float = 1f
 
     private val _state = MutableStateFlow(PlaybackState())
     actual val state: StateFlow<PlaybackState> = _state.asStateFlow()
@@ -59,7 +60,7 @@ actual class AudioPlayer actual constructor() {
             _state.value = _state.value.copy(status = PlaybackStatus.COMPLETED)
         }
 
-        avPlayer.play()
+        avPlayer.rate = desiredRate
         _state.value = _state.value.copy(status = PlaybackStatus.PLAYING)
         startProgressLoop()
     }
@@ -71,7 +72,7 @@ actual class AudioPlayer actual constructor() {
     }
 
     actual fun resume() {
-        player?.play()
+        player?.rate = desiredRate
         _state.value = _state.value.copy(status = PlaybackStatus.PLAYING)
         startProgressLoop()
     }
@@ -84,6 +85,13 @@ actual class AudioPlayer actual constructor() {
     actual fun seekTo(positionMs: Long) {
         val time = CMTimeMakeWithSeconds(positionMs / 1000.0, NSEC_PER_SEC.toInt())
         player?.seekToTime(time)
+    }
+
+    actual fun setPlaybackSpeed(speed: Float) {
+        desiredRate = speed
+        if (_state.value.status == PlaybackStatus.PLAYING) {
+            player?.rate = speed
+        }
     }
 
     actual fun release() {

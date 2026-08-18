@@ -5,6 +5,14 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// Firebase plugins are applied only when the user has dropped their own
+// google-services.json into androidApp/ — this keeps the build green out of
+// the box before Firebase is configured. See README/Firebase setup notes.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
@@ -27,8 +35,8 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "1.2.5"
     }
     packaging {
         resources {
@@ -37,11 +45,15 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
     compileOptions {

@@ -13,7 +13,7 @@ data class PlaybackState(
 
 /**
  * Thin cross-platform wrapper around a native media player.
- * Android: android.media.MediaPlayer. iOS: AVFoundation.AVPlayer.
+ * Android: androidx.media3 ExoPlayer. iOS: AVFoundation.AVPlayer.
  */
 expect class AudioPlayer() {
     val state: StateFlow<PlaybackState>
@@ -22,5 +22,6 @@ expect class AudioPlayer() {
     fun resume()
     fun stop()
     fun seekTo(positionMs: Long)
+    fun setPlaybackSpeed(speed: Float)
     fun release()
 }

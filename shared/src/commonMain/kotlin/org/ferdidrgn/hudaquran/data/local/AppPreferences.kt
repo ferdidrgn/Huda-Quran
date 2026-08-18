@@ -4,6 +4,7 @@ import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Clock
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
@@ -20,6 +21,52 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_RECITER = "selected_reciter"
         private const val KEY_TRANSLATION = "selected_translation"
         private const val KEY_THEME = "theme_mode"
+        private const val KEY_PRAYER_CITY = "prayer_city"
+        private const val KEY_PRAYER_COUNTRY = "prayer_country"
+        private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
+        private const val KEY_APP_LANGUAGE = "app_language"
+        private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
+    }
+
+    var adsRemovedUntilMillis: Long
+        get() = settings.getLong(KEY_ADS_REMOVED_UNTIL, 0L)
+        private set(value) = settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+
+    fun isAdFree(): Boolean = adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds()
+
+    /** Extends the ad-free period by [durationMillis] from now, or from the current expiry if it's still active. */
+    fun grantAdFreePeriod(durationMillis: Long) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val base = maxOf(adsRemovedUntilMillis, now)
+        adsRemovedUntilMillis = base + durationMillis
+    }
+
+    private fun loadAppLanguage(): AppLanguage =
+        runCatching { AppLanguage.valueOf(settings.getString(KEY_APP_LANGUAGE, AppLanguage.TURKISH.name)) }
+            .getOrDefault(AppLanguage.TURKISH)
+
+    private val _appLanguage = MutableStateFlow(loadAppLanguage())
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    fun setAppLanguage(value: AppLanguage) {
+        settings.putString(KEY_APP_LANGUAGE, value.name)
+        _appLanguage.value = value
+    }
+
+    var prayerCity: String
+        get() = settings.getString(KEY_PRAYER_CITY, "Istanbul")
+        set(value) = settings.putString(KEY_PRAYER_CITY, value)
+
+    var prayerCountry: String
+        get() = settings.getString(KEY_PRAYER_COUNTRY, "Turkey")
+        set(value) = settings.putString(KEY_PRAYER_COUNTRY, value)
+
+    private val _prayerNotificationsEnabled = MutableStateFlow(settings.getBoolean(KEY_PRAYER_NOTIFICATIONS, false))
+    val prayerNotificationsEnabled: StateFlow<Boolean> = _prayerNotificationsEnabled.asStateFlow()
+
+    fun setPrayerNotificationsEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_PRAYER_NOTIFICATIONS, enabled)
+        _prayerNotificationsEnabled.value = enabled
     }
 
     var onboardingCompleted: Boolean

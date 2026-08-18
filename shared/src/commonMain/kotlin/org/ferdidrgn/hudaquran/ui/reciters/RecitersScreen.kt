@@ -12,11 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,6 +48,9 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
 
 private const val PREVIEW_SURAH_NUMBER = 1
 private const val PREVIEW_SURAH_NAME = "Al-Faatiha"
@@ -56,11 +66,15 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var loadError by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var selectedReciter by remember { mutableStateOf(preferences.selectedReciter) }
+    var reloadKey by remember { mutableStateOf(0) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
+    val strings = LocalStrings.current
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reloadKey) {
+        isLoading = true
+        loadError = false
         runCatching { repository.getReciters() }
             .onSuccess { reciters = it }
             .onFailure { loadError = true }
@@ -76,12 +90,12 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) { Text("←", fontSize = 22.sp) }
+            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
             Column {
-                Text("Hafızlar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(strings.reciters, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (!isLoading) {
                     Text(
-                        "${reciters.size} hafız • dinleyip seçebilirsiniz",
+                        strings.recitersCountSubtitleTemplate.replace("{n}", reciters.size.toString()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     )
@@ -91,7 +105,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text("Hafız ara...") },
+            placeholder = { Text(strings.searchReciterPlaceholder) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             singleLine = true,
         )
@@ -99,17 +113,23 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             loadError && reciters.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    "Hafız listesi yüklenemedi. İnternet bağlantınızı kontrol edin.",
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        strings.recitersLoadErrorFull,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Button(onClick = { reloadKey++ }) { Text(strings.retry) }
+                }
             }
-            else -> LazyColumn(
+            else -> {
+                val showAds = !preferences.isAdFree()
+                LazyColumn(
                 contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(filtered, key = { it.identifier }) { reciter ->
+                itemsIndexed(filtered, key = { _, reciter -> reciter.identifier }) { index, reciter ->
                     val isThisPreviewing = nowPlaying?.mode == PlaybackMode.WHOLE_SURAH &&
                         nowPlaying?.reciterId == reciter.identifier &&
                         nowPlaying?.surahNumber == PREVIEW_SURAH_NUMBER
@@ -118,6 +138,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         isSelected = selectedReciter == reciter.identifier,
                         isPreviewPlaying = isThisPreviewing && playerState.status == PlaybackStatus.PLAYING,
                         isPreviewLoading = isThisPreviewing && playerState.status == PlaybackStatus.LOADING,
+                        strings = strings,
                         onSelect = {
                             selectedReciter = reciter.identifier
                             preferences.selectedReciter = reciter.identifier
@@ -135,6 +156,9 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                             }
                         },
                     )
+                    if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }
@@ -147,6 +171,7 @@ private fun ReciterRow(
     isSelected: Boolean,
     isPreviewPlaying: Boolean,
     isPreviewLoading: Boolean,
+    strings: Strings,
     onSelect: () -> Unit,
     onPreviewToggle: () -> Unit,
 ) {
@@ -187,7 +212,7 @@ private fun ReciterRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    if (isSelected) "Seçili hafız" else "Seçmek için dokunun",
+                    if (isSelected) strings.selectedReciterLabel else strings.tapToSelectLabel,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
@@ -205,9 +230,23 @@ private fun ReciterRow(
                 contentAlignment = Alignment.Center,
             ) {
                 when {
-                    isPreviewLoading -> CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                    isPreviewPlaying -> Text("⏸️", fontSize = 14.sp)
-                    else -> Text("▶️", fontSize = 14.sp)
+                    isPreviewLoading -> CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    isPreviewPlaying -> Icon(
+                        Icons.Filled.Pause,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    else -> Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }

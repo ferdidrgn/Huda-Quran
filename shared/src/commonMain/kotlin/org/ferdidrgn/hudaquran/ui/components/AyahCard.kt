@@ -16,12 +16,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 
 @Composable
 fun AyahCard(
@@ -43,6 +50,7 @@ fun AyahCard(
     onFavoriteToggle: () -> Unit,
     showSurahLabel: Boolean = false,
 ) {
+    val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = if (isPlaying) {
@@ -55,7 +63,7 @@ fun AyahCard(
         Column(modifier = Modifier.padding(16.dp)) {
             if (showSurahLabel) {
                 Text(
-                    ayah.surahName,
+                    localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -106,19 +114,30 @@ private fun FavoriteToggleButton(isFavorite: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: () -> Unit) {
+fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: () -> Unit) {
     val transition = rememberInfiniteTransition()
     val pulse by transition.animateFloat(
         initialValue = 1f,
         targetValue = if (isPlaying) 1.12f else 1f,
         animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
     )
+    val loadingAlpha by transition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse),
+    )
     Box(
         modifier = Modifier
             .size(34.dp)
             .scale(if (isPlaying) pulse else 1f)
             .clip(CircleShape)
-            .background(if (isPlaying || isLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .background(
+                when {
+                    isLoading -> MaterialTheme.colorScheme.primary.copy(alpha = loadingAlpha)
+                    isPlaying -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                },
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -128,8 +147,8 @@ private fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: ()
                 strokeWidth = 2.dp,
                 color = MaterialTheme.colorScheme.onPrimary,
             )
-            isPlaying -> Text("⏸️", fontSize = 14.sp)
-            else -> Text("▶️", fontSize = 14.sp)
+            isPlaying -> Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
+            else -> Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
     }
 }

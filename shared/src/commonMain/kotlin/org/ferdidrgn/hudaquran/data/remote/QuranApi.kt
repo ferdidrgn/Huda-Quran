@@ -4,11 +4,16 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.encodeURLParameter
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.ferdidrgn.hudaquran.data.remote.dto.ApiResponseDto
 import org.ferdidrgn.hudaquran.data.remote.dto.AyahDto
 import org.ferdidrgn.hudaquran.data.remote.dto.EditionDto
-import org.ferdidrgn.hudaquran.data.remote.dto.JuzEditionDto
+import org.ferdidrgn.hudaquran.data.remote.dto.QuranMetaDto
+import org.ferdidrgn.hudaquran.data.remote.dto.SajdaResponseDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SearchResultDto
+import org.ferdidrgn.hudaquran.data.remote.dto.SectionEditionDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahEditionDto
 
@@ -27,11 +32,16 @@ class QuranApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.c
         return response.data
     }
 
-    suspend fun getJuzWithEditions(juzNumber: Int, editions: List<String>): List<JuzEditionDto> {
-        val editionsPath = editions.joinToString(",")
-        val response: ApiResponseDto<List<JuzEditionDto>> =
-            client.get("${QuranHttpClient.BASE_URL}/juz/$juzNumber/editions/$editionsPath").body()
-        return response.data
+    // Juz/Page/Manzil/Ruku/HizbQuarter have no multi-edition endpoint (unlike Surah/Ayah) — only
+    // /{kind}/{number}/{edition} for a single edition, so fetch each edition separately in parallel.
+    suspend fun getSectionWithEditions(apiPath: String, number: Int, editions: List<String>): List<SectionEditionDto> = coroutineScope {
+        editions.map { edition ->
+            async {
+                val response: ApiResponseDto<SectionEditionDto> =
+                    client.get("${QuranHttpClient.BASE_URL}/$apiPath/$number/$edition").body()
+                response.data
+            }
+        }.awaitAll()
     }
 
     suspend fun getAyahWithEditions(globalAyahNumber: Int, editions: List<String>): List<AyahEditionResult> {
@@ -39,6 +49,25 @@ class QuranApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.c
         val response: ApiResponseDto<List<AyahEditionDto>> =
             client.get("${QuranHttpClient.BASE_URL}/ayah/$globalAyahNumber/editions/$editionsPath").body()
         return response.data.map { AyahEditionResult(it.surah, it.text, it.numberInSurah, it.audio) }
+    }
+
+    suspend fun getRandomAyahWithEditions(editions: List<String>): List<AyahEditionResult> {
+        val editionsPath = editions.joinToString(",")
+        val response: ApiResponseDto<List<AyahEditionDto>> =
+            client.get("${QuranHttpClient.BASE_URL}/ayah/random/editions/$editionsPath").body()
+        return response.data.map { AyahEditionResult(it.surah, it.text, it.numberInSurah, it.audio) }
+    }
+
+    // /sajda has no multi-edition endpoint either, so callers fetch one edition at a time.
+    suspend fun getSajdaAyahs(edition: String): SajdaResponseDto {
+        val response: ApiResponseDto<SajdaResponseDto> =
+            client.get("${QuranHttpClient.BASE_URL}/sajda/$edition").body()
+        return response.data
+    }
+
+    suspend fun getMeta(): QuranMetaDto {
+        val response: ApiResponseDto<QuranMetaDto> = client.get("${QuranHttpClient.BASE_URL}/meta").body()
+        return response.data
     }
 
     suspend fun getEditions(format: String? = null, language: String? = null, type: String? = null): List<EditionDto> {

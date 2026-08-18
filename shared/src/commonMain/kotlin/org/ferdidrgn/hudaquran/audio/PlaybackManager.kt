@@ -2,12 +2,16 @@ package org.ferdidrgn.hudaquran.audio
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.domain.model.Ayah
+
+private const val LOADING_TIMEOUT_MS = 20_000L
 
 enum class PlaybackMode { AYAH_QUEUE, WHOLE_SURAH }
 
@@ -32,12 +36,36 @@ class PlaybackManager(private val player: AudioPlayer) {
 
     val playerState: StateFlow<PlaybackState> = player.state
 
+    private val _repeatOne = MutableStateFlow(false)
+    val repeatOne: StateFlow<Boolean> = _repeatOne.asStateFlow()
+
+    private val _speed = MutableStateFlow(1f)
+    val speed: StateFlow<Float> = _speed.asStateFlow()
+
     var onSaveProgress: ((surahNumber: Int, numberInSurah: Int, surahName: String) -> Unit)? = null
+
+    private var loadingWatchdog: Job? = null
 
     init {
         scope.launch {
             playerState.collect { state ->
                 if (state.status == PlaybackStatus.COMPLETED) advance()
+
+                loadingWatchdog?.cancel()
+                loadingWatchdog = if (state.status == PlaybackStatus.LOADING) {
+                    val stuckUrl = state.currentUrl
+                    scope.launch {
+                        delay(LOADING_TIMEOUT_MS)
+                        // Still loading the same track after the timeout: the stream never opened, so
+                        // stop and clear it rather than leave the UI spinning forever with no way to retry.
+                        if (playerState.value.status == PlaybackStatus.LOADING && playerState.value.currentUrl == stuckUrl) {
+                            player.stop()
+                            _nowPlaying.value = null
+                        }
+                    }
+                } else {
+                    null
+                }
             }
         }
     }
@@ -56,6 +84,7 @@ class PlaybackManager(private val player: AudioPlayer) {
         if (startIndex !in queue.indices) return
         _nowPlaying.value = NowPlaying(PlaybackMode.AYAH_QUEUE, queue, startIndex, surahNumber, surahName, reciterId)
         player.play(queue[startIndex].audioUrl)
+        if (_speed.value != 1f) player.setPlaybackSpeed(_speed.value)
         val ayah = queue[startIndex]
         onSaveProgress?.invoke(ayah.surahNumber, ayah.numberInSurah, ayah.surahName)
     }
@@ -63,6 +92,7 @@ class PlaybackManager(private val player: AudioPlayer) {
     fun playWholeSurah(surahNumber: Int, surahName: String, url: String, reciterId: String) {
         _nowPlaying.value = NowPlaying(PlaybackMode.WHOLE_SURAH, emptyList(), 0, surahNumber, surahName, reciterId)
         player.play(url)
+        if (_speed.value != 1f) player.setPlaybackSpeed(_speed.value)
     }
 
     fun toggleWholeSurah(surahNumber: Int, surahName: String, url: String, reciterId: String) {
@@ -100,18 +130,56 @@ class PlaybackManager(private val player: AudioPlayer) {
         _nowPlaying.value = null
     }
 
+    fun seekTo(positionMs: Long) {
+        player.seekTo(positionMs)
+    }
+
+    fun setSpeed(speed: Float) {
+        _speed.value = speed
+        player.setPlaybackSpeed(speed)
+    }
+
+    fun toggleRepeatOne() {
+        _repeatOne.value = !_repeatOne.value
+    }
+
+    fun skipNext() {
+        val current = _nowPlaying.value ?: return
+        if (current.mode != PlaybackMode.AYAH_QUEUE) return
+        val next = current.currentIndex + 1
+        if (next < current.queue.size) jumpTo(current, next)
+    }
+
+    fun skipPrevious() {
+        val current = _nowPlaying.value ?: return
+        if (current.mode != PlaybackMode.AYAH_QUEUE) return
+        val previous = current.currentIndex - 1
+        if (previous >= 0) jumpTo(current, previous)
+    }
+
+    private fun jumpTo(current: NowPlaying, index: Int) {
+        _nowPlaying.value = current.copy(currentIndex = index)
+        val ayah = current.queue[index]
+        player.play(ayah.audioUrl)
+        if (_speed.value != 1f) player.setPlaybackSpeed(_speed.value)
+        onSaveProgress?.invoke(ayah.surahNumber, ayah.numberInSurah, ayah.surahName)
+    }
+
     private fun advance() {
         val current = _nowPlaying.value ?: return
         if (current.mode != PlaybackMode.AYAH_QUEUE) {
             _nowPlaying.value = null
             return
         }
+        if (_repeatOne.value) {
+            val ayah = current.queue[current.currentIndex]
+            player.play(ayah.audioUrl)
+            if (_speed.value != 1f) player.setPlaybackSpeed(_speed.value)
+            return
+        }
         val next = current.currentIndex + 1
         if (next < current.queue.size) {
-            _nowPlaying.value = current.copy(currentIndex = next)
-            val ayah = current.queue[next]
-            player.play(ayah.audioUrl)
-            onSaveProgress?.invoke(ayah.surahNumber, ayah.numberInSurah, ayah.surahName)
+            jumpTo(current, next)
         } else {
             _nowPlaying.value = null
         }
