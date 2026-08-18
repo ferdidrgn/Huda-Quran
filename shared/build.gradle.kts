@@ -78,9 +78,7 @@ kotlin {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
-            // DEĞİŞTİRİLECEK SATIR:
-            // implementation(libs.compose.materialIconsCore) yerine:
-            implementation(compose.materialIconsExtended) // veya sadece temel ikonlar için: implementation(compose.material)
+            implementation(compose.materialIconsExtended)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
