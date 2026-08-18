@@ -5,6 +5,14 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
+// Firebase plugins are applied only when the user has dropped their own
+// google-services.json into androidApp/ — this keeps the build green out of
+// the box before Firebase is configured. See README/Firebase setup notes.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11

@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.ferdidrgn.hudaquran.ads.BannerAdView
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -224,6 +225,16 @@ fun HomeScreen(
             }
         }
 
+        if (!preferences.isAdFree()) {
+            item(span = { GridItemSpan(2) }) {
+                StaggeredEntrance(4) {
+                    GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
+                        BannerAdView(modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
+        }
+
         item(span = { GridItemSpan(2) }) {
             StaggeredEntrance(5) {
                 Column {
@@ -268,9 +279,9 @@ fun HomeScreen(
                         IconBubble(emoji = "📝", accent = true)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Elif-Ba Öğren", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Kur'an Okuma Dersleri", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(
-                                "Arap alfabesinin 28 harfini kolay bir derste keşfedin",
+                                "Elif-Ba'dan tecvide, sesli telaffuzlu 6 sıralı ders",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

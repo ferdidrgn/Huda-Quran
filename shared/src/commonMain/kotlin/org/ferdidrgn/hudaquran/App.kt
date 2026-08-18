@@ -14,7 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.ads.AdGate
+import org.ferdidrgn.hudaquran.ads.AdManager
+import org.ferdidrgn.hudaquran.analytics.AppAnalytics
+import org.ferdidrgn.hudaquran.analytics.PushNotifications
 import org.ferdidrgn.hudaquran.audio.NowPlayingController
+import org.ferdidrgn.hudaquran.billing.BillingManager
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
@@ -24,7 +30,8 @@ import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
-import org.ferdidrgn.hudaquran.ui.learn.ArabicAlphabetScreen
+import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
+import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonListScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
@@ -53,10 +60,25 @@ fun App() {
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { nowPlayingController.start() }
+    LaunchedEffect(Unit) { AdManager.initialize() }
+    LaunchedEffect(Unit) { BillingManager.initialize() }
+    LaunchedEffect(Unit) { AppAnalytics.initialize() }
+    LaunchedEffect(Unit) { PushNotifications.initialize() }
+
+    fun maybeShowInterstitial() {
+        if (!preferences.isAdFree() && AdGate.recordActionAndCheck()) {
+            AdManager.showInterstitialIfReady()
+        }
+    }
 
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
+
+        LaunchedEffect(screen) {
+            AppAnalytics.logEvent("screen_view", mapOf("screen" to screen::class.simpleName.orEmpty()))
+            if (screen is Screen.SurahDetail || screen is Screen.LanguagePicker) maybeShowInterstitial()
+        }
 
         val canInterceptBack = navigator.canGoBack() || (screen.isBottomNavDestination() && screen != Screen.Home)
         AppBackHandler(enabled = canInterceptBack) {
@@ -104,7 +126,7 @@ fun App() {
                     onOpenSearch = { navigator.navigate(Screen.Search) },
                     onOpenJuzList = { navigator.navigate(Screen.SectionList(SectionKind.JUZ)) },
                     onOpenReciters = { navigator.navigate(Screen.ReciterPicker) },
-                    onOpenArabicAlphabet = { navigator.navigate(Screen.ArabicAlphabet) },
+                    onOpenArabicAlphabet = { navigator.navigate(Screen.TajwidLessonList) },
                     onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
                     onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
                 )
@@ -124,6 +146,7 @@ fun App() {
                     onOpenReciterPicker = { navigator.navigate(Screen.ReciterPicker) },
                     onOpenTranslationPicker = { navigator.navigate(Screen.TranslationPicker) },
                     onOpenLocationPicker = { navigator.navigate(Screen.PrayerLocationPicker) },
+                    onOpenLanguagePicker = { navigator.navigate(Screen.LanguagePicker) },
                 )
 
                 is Screen.ReciterPicker -> RecitersScreen(
@@ -169,6 +192,20 @@ fun App() {
                     modifier = contentModifier,
                 )
 
+                is Screen.LanguagePicker -> EditionPickerScreen(
+                    title = "Dil Seçin",
+                    selectedId = preferences.appLanguage.value.name,
+                    loadItems = {
+                        AppLanguage.entries.map { PickerItem(it.name, "${it.flag} ${it.nativeName}") }
+                    },
+                    onSelect = { id ->
+                        preferences.setAppLanguage(AppLanguage.valueOf(id))
+                        navigator.back()
+                    },
+                    onBack = { navigator.back() },
+                    modifier = contentModifier,
+                )
+
                 is Screen.SurahDetail -> SurahDetailScreen(
                     surahNumber = screen.surahNumber,
                     scrollToAyah = screen.scrollToAyah,
@@ -205,7 +242,14 @@ fun App() {
                     onClose = { navigator.back() },
                 )
 
-                is Screen.ArabicAlphabet -> ArabicAlphabetScreen(
+                is Screen.TajwidLessonList -> TajwidLessonListScreen(
+                    modifier = contentModifier,
+                    onBack = { navigator.back() },
+                    onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
+                )
+
+                is Screen.TajwidLessonDetail -> TajwidLessonDetailScreen(
+                    lessonId = screen.lessonId,
                     modifier = contentModifier,
                     onBack = { navigator.back() },
                 )

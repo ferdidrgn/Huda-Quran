@@ -67,6 +67,12 @@ kotlin {
             implementation(libs.androidx.media3.exoplayer)
             implementation(libs.androidx.media3.common)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.play.services.ads)
+            implementation(libs.android.billing.ktx)
+            implementation(platform(libs.firebase.bom))
+            implementation(libs.firebase.analytics)
+            implementation(libs.firebase.crashlytics)
+            implementation(libs.firebase.messaging)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

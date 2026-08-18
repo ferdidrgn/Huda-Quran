@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -33,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.billing.BillingManager
+import org.ferdidrgn.hudaquran.billing.BillingProduct
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.data.local.appVersionName
@@ -48,6 +52,7 @@ fun SettingsScreen(
     onOpenReciterPicker: () -> Unit,
     onOpenTranslationPicker: () -> Unit,
     onOpenLocationPicker: () -> Unit,
+    onOpenLanguagePicker: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -95,14 +100,11 @@ fun SettingsScreen(
 
         SectionTitle(strings.language)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            AppLanguage.entries.forEachIndexed { index, lang ->
-                if (index > 0) Spacer(modifier = Modifier.height(4.dp))
-                OptionRow(
-                    title = lang.nativeName,
-                    selected = appLanguage == lang,
-                    onClick = { preferences.setAppLanguage(lang) },
-                )
-            }
+            NavigationRow(
+                title = "${appLanguage.flag} ${appLanguage.nativeName}",
+                value = "${AppLanguage.entries.size} dil arasından seçin",
+                onClick = onOpenLanguagePicker,
+            )
         }
 
         SectionTitle(strings.appearance)
@@ -154,6 +156,31 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )
             }
+        }
+
+        SectionTitle("Destek Ol")
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Text(
+                if (preferences.isAdFree()) "Reklamsız üyeliğiniz aktif, teşekkürler! 💚" else "Uygulamayı geliştirmemize destek olun",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = { BillingManager.purchase(BillingProduct.DONATION_SMALL) },
+                    modifier = Modifier.weight(1f),
+                ) { Text("☕ Küçük Bağış") }
+                OutlinedButton(
+                    onClick = { BillingManager.purchase(BillingProduct.DONATION_MEDIUM) },
+                    modifier = Modifier.weight(1f),
+                ) { Text("🎁 Orta Bağış") }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = { BillingManager.purchase(BillingProduct.NO_ADS_6_MONTHS) },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("✨ 6 Aylık Reklamsız Üyelik") }
         }
 
         Text(
@@ -211,18 +238,6 @@ private fun SectionTitle(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
     )
-}
-
-@Composable
-private fun OptionRow(title: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        androidx.compose.material3.RadioButton(selected = selected, onClick = onClick)
-    }
 }
 
 @Composable

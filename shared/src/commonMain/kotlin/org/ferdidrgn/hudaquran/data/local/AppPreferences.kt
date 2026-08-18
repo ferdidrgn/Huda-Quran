@@ -4,6 +4,7 @@ import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Clock
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
@@ -24,6 +25,20 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_PRAYER_COUNTRY = "prayer_country"
         private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
         private const val KEY_APP_LANGUAGE = "app_language"
+        private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
+    }
+
+    var adsRemovedUntilMillis: Long
+        get() = settings.getLong(KEY_ADS_REMOVED_UNTIL, 0L)
+        private set(value) = settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+
+    fun isAdFree(): Boolean = adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds()
+
+    /** Extends the ad-free period by [durationMillis] from now, or from the current expiry if it's still active. */
+    fun grantAdFreePeriod(durationMillis: Long) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val base = maxOf(adsRemovedUntilMillis, now)
+        adsRemovedUntilMillis = base + durationMillis
     }
 
     private fun loadAppLanguage(): AppLanguage =
