@@ -4,6 +4,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.encodeURLParameter
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import org.ferdidrgn.hudaquran.data.remote.dto.ApiResponseDto
 import org.ferdidrgn.hudaquran.data.remote.dto.AyahDto
 import org.ferdidrgn.hudaquran.data.remote.dto.EditionDto
@@ -27,11 +30,16 @@ class QuranApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.c
         return response.data
     }
 
-    suspend fun getJuzWithEditions(juzNumber: Int, editions: List<String>): List<JuzEditionDto> {
-        val editionsPath = editions.joinToString(",")
-        val response: ApiResponseDto<List<JuzEditionDto>> =
-            client.get("${QuranHttpClient.BASE_URL}/juz/$juzNumber/editions/$editionsPath").body()
-        return response.data
+    // The AlQuran Cloud API has no multi-edition Juz endpoint (unlike Surah/Ayah) — only
+    // /juz/{number}/{edition} for a single edition, so fetch each edition separately.
+    suspend fun getJuzWithEditions(juzNumber: Int, editions: List<String>): List<JuzEditionDto> = coroutineScope {
+        editions.map { edition ->
+            async {
+                val response: ApiResponseDto<JuzEditionDto> =
+                    client.get("${QuranHttpClient.BASE_URL}/juz/$juzNumber/$edition").body()
+                response.data
+            }
+        }.awaitAll()
     }
 
     suspend fun getAyahWithEditions(globalAyahNumber: Int, editions: List<String>): List<AyahEditionResult> {
