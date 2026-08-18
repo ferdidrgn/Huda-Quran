@@ -28,10 +28,38 @@ data class SurahDetail(
     val surahAudioUrl: String,
 )
 
-data class JuzDetail(
-    val juzNumber: Int,
+data class QuranSectionDetail(
+    val sectionNumber: Int,
     val ayahs: List<Ayah>,
 )
+
+/** Every alternate way the Quran is divided for browsing/recitation, beyond Surah. */
+enum class SectionKind(val apiPath: String, val titleSingular: String, val titlePlural: String) {
+    JUZ("juz", "Cüz", "Cüzler"),
+    PAGE("page", "Sayfa", "Sayfalar"),
+    MANZIL("manzil", "Menzil", "Menziller"),
+    RUKU("ruku", "Rükû", "Rükûlar"),
+    HIZB_QUARTER("hizbQuarter", "Hizb Çeyreği", "Hizb Çeyrekleri"),
+}
+
+data class QuranMeta(
+    val ayahCount: Int,
+    val surahCount: Int,
+    val sajdaCount: Int,
+    val rukuCount: Int,
+    val pageCount: Int,
+    val manzilCount: Int,
+    val hizbQuarterCount: Int,
+    val juzCount: Int,
+) {
+    fun countFor(kind: SectionKind): Int = when (kind) {
+        SectionKind.JUZ -> juzCount
+        SectionKind.PAGE -> pageCount
+        SectionKind.MANZIL -> manzilCount
+        SectionKind.RUKU -> rukuCount
+        SectionKind.HIZB_QUARTER -> hizbQuarterCount
+    }
+}
 
 data class SearchMatch(
     val surahNumber: Int,

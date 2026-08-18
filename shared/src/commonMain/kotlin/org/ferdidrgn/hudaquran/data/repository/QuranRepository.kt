@@ -4,14 +4,15 @@ import org.ferdidrgn.hudaquran.data.remote.QuranApi
 import org.ferdidrgn.hudaquran.data.remote.retryOnce
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.domain.model.Ayah
-import org.ferdidrgn.hudaquran.domain.model.JuzDetail
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
+import org.ferdidrgn.hudaquran.domain.model.QuranMeta
+import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.SearchMatch
+import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.Translation
-import kotlin.random.Random
 
 data class DailyAyah(
     val surahName: String,
@@ -76,14 +77,16 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         )
     }
 
-    suspend fun getJuzDetail(
-        juzNumber: Int,
+    suspend fun getSectionDetail(
+        kind: SectionKind,
+        number: Int,
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
-    ): JuzDetail {
+    ): QuranSectionDetail {
         val editions = retryOnce {
-            api.getJuzWithEditions(
-                juzNumber,
+            api.getSectionWithEditions(
+                kind.apiPath,
+                number,
                 listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
             )
         }
@@ -100,13 +103,51 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
                 arabicText = ayahDto.text,
                 translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
                 audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
-                juz = juzNumber,
+                juz = ayahDto.juz,
                 page = ayahDto.page,
                 isSajda = ayahDto.sajda,
             )
         }
 
-        return JuzDetail(juzNumber = juzNumber, ayahs = ayahs)
+        return QuranSectionDetail(sectionNumber = number, ayahs = ayahs)
+    }
+
+    suspend fun getSajdaAyahs(
+        translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
+        reciterEdition: String = QuranEditions.DEFAULT_RECITER,
+    ): List<Ayah> {
+        val arabic = retryOnce { api.getSajdaAyahs(QuranEditions.ARABIC_TEXT_EDITION) }
+        val translation = retryOnce { api.getSajdaAyahs(translationEdition) }
+        val audio = retryOnce { api.getSajdaAyahs(reciterEdition) }
+
+        return arabic.ayahs.mapIndexed { index, ayahDto ->
+            Ayah(
+                surahNumber = ayahDto.surah.number,
+                surahName = ayahDto.surah.englishName,
+                numberInSurah = ayahDto.numberInSurah,
+                globalNumber = ayahDto.number,
+                arabicText = ayahDto.text,
+                translationText = translation.ayahs.getOrNull(index)?.text.orEmpty(),
+                audioUrl = audio.ayahs.getOrNull(index)?.audio.orEmpty(),
+                juz = ayahDto.juz,
+                page = ayahDto.page,
+                isSajda = true,
+            )
+        }
+    }
+
+    suspend fun getMeta(): QuranMeta {
+        val meta = retryOnce { api.getMeta() }
+        return QuranMeta(
+            ayahCount = meta.ayahs.count,
+            surahCount = meta.surahs.count,
+            sajdaCount = meta.sajdas.count,
+            rukuCount = meta.rukus.count,
+            pageCount = meta.pages.count,
+            manzilCount = meta.manzils.count,
+            hizbQuarterCount = meta.hizbQuarters.count,
+            juzCount = meta.juzs.count,
+        )
     }
 
     private var cachedReciters: List<Reciter>? = null
@@ -149,8 +190,9 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
     }
 
     suspend fun getDailyAyah(translationEdition: String = QuranEditions.DEFAULT_TRANSLATION): DailyAyah {
-        val globalNumber = Random.nextInt(1, 6237)
-        val results = api.getAyahWithEditions(globalNumber, listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition))
+        val results = retryOnce {
+            api.getRandomAyahWithEditions(listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition))
+        }
         val arabic = results[0]
         val translation = results.getOrNull(1)
         return DailyAyah(

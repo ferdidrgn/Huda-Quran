@@ -1,4 +1,4 @@
-package org.ferdidrgn.hudaquran.ui.juz
+package org.ferdidrgn.hudaquran.ui.sections
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,19 +36,20 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
-import org.ferdidrgn.hudaquran.domain.model.JuzDetail
+import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
+import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 
 @Composable
-fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () -> Unit) {
+fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Modifier, onBack: () -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     val playback = AppContainer.playbackManager
 
-    var detail by remember(juzNumber) { mutableStateOf<JuzDetail?>(null) }
-    var isLoading by remember(juzNumber) { mutableStateOf(true) }
-    var loadError by remember(juzNumber) { mutableStateOf(false) }
-    var reloadKey by remember(juzNumber) { mutableStateOf(0) }
+    var detail by remember(kind, number) { mutableStateOf<QuranSectionDetail?>(null) }
+    var isLoading by remember(kind, number) { mutableStateOf(true) }
+    var loadError by remember(kind, number) { mutableStateOf(false) }
+    var reloadKey by remember(kind, number) { mutableStateOf(0) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
@@ -58,11 +59,11 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
     } else null
 
-    LaunchedEffect(juzNumber, reloadKey) {
+    LaunchedEffect(kind, number, reloadKey) {
         isLoading = true
         loadError = false
         runCatching {
-            repository.getJuzDetail(juzNumber, preferences.selectedTranslation, preferences.selectedReciter)
+            repository.getSectionDetail(kind, number, preferences.selectedTranslation, preferences.selectedReciter)
         }.onSuccess { detail = it }.onFailure { loadError = true }
         isLoading = false
     }
@@ -73,7 +74,7 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
-            Text("Cüz $juzNumber", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("${kind.titleSingular} $number", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         HorizontalDivider()
 
@@ -82,7 +83,7 @@ fun JuzDetailScreen(juzNumber: Int, modifier: Modifier = Modifier, onBack: () ->
             loadError || detail == null -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Cüz yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
+                        "${kind.titleSingular} yüklenemedi. Sunucuya ulaşılamadı, lütfen tekrar deneyin.",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                     )

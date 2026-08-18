@@ -45,7 +45,9 @@ import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.EsmaName
 import org.ferdidrgn.hudaquran.domain.model.PrayerTimes
+import org.ferdidrgn.hudaquran.domain.model.QuranMeta
 import org.ferdidrgn.hudaquran.domain.model.Reciter
+import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
@@ -67,6 +69,8 @@ fun HomeScreen(
     onOpenJuzList: () -> Unit,
     onOpenReciters: () -> Unit,
     onOpenArabicAlphabet: () -> Unit,
+    onOpenSection: (SectionKind) -> Unit,
+    onOpenSajdaAyahs: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -83,8 +87,12 @@ fun HomeScreen(
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
+    var meta by remember { mutableStateOf<QuranMeta?>(null) }
     var surahReloadKey by remember { mutableStateOf(0) }
 
+    LaunchedEffect(Unit) {
+        meta = runCatching { repository.getMeta() }.getOrNull()
+    }
     LaunchedEffect(surahReloadKey) {
         loadError = false
         runCatching { repository.getSurahList() }
@@ -175,7 +183,7 @@ fun HomeScreen(
         }
         item {
             StaggeredEntrance(3) {
-                StatBento(value = "30", label = "Cüz", emoji = "🔢", onClick = onOpenJuzList)
+                StatBento(value = (meta?.juzCount ?: 30).toString(), label = "Cüz", emoji = "🔢", onClick = onOpenJuzList)
             }
         }
 
@@ -286,9 +294,54 @@ fun HomeScreen(
             }
         }
 
+        item(span = { GridItemSpan(2) }) {
+            StaggeredEntrance(9) {
+                Column {
+                    SectionHeader("Kur'an'ı Keşfet")
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item { QuickAction("📄", "Sayfalar", onClick = { onOpenSection(SectionKind.PAGE) }) }
+                        item { QuickAction("📆", "Menziller", onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                        item { QuickAction("📚", "Rükûlar", onClick = { onOpenSection(SectionKind.RUKU) }) }
+                        item { QuickAction("🔖", "Hizb Çeyrekleri", onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                        item { QuickAction("🕋", "Secde Ayetleri", onClick = onOpenSajdaAyahs) }
+                    }
+                }
+            }
+        }
+
+        if (meta != null) {
+            item(span = { GridItemSpan(2) }) {
+                StaggeredEntrance(10) {
+                    GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                        Text("Kur'an-ı Kerim İstatistikleri", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(12.dp))
+                        val stats = listOf(
+                            "Sure" to meta!!.surahCount,
+                            "Ayet" to meta!!.ayahCount,
+                            "Cüz" to meta!!.juzCount,
+                            "Sayfa" to meta!!.pageCount,
+                            "Rükû" to meta!!.rukuCount,
+                            "Hizb Çeyreği" to meta!!.hizbQuarterCount,
+                            "Menzil" to meta!!.manzilCount,
+                            "Secde" to meta!!.sajdaCount,
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            items(stats, key = { it.first }) { (label, value) ->
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(value.toString(), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (popularSurahs.isNotEmpty()) {
             item(span = { GridItemSpan(2) }) {
-                StaggeredEntrance(9) {
+                StaggeredEntrance(11) {
                     Column {
                         SectionHeader("Öne Çıkan Sureler", "Tümünü Gör", onOpenSurahList)
                         Spacer(Modifier.height(10.dp))
@@ -303,7 +356,7 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(2) }) {
-            StaggeredEntrance(10) {
+            StaggeredEntrance(12) {
                 Column {
                     SectionHeader("Sureler", "Tümünü Gör", onOpenSurahList)
                     Spacer(Modifier.height(10.dp))

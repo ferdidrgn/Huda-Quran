@@ -83,10 +83,31 @@ data class AyahWithSurahDto(
 )
 
 @Serializable
-data class JuzEditionDto(
+data class SectionEditionDto(
     val number: Int,
     val ayahs: List<AyahWithSurahDto>,
     val edition: EditionDto? = null,
+)
+
+@Serializable
+data class SajdaResponseDto(
+    val ayahs: List<AyahWithSurahDto>,
+    val edition: EditionDto? = null,
+)
+
+@Serializable
+data class MetaCountDto(val count: Int)
+
+@Serializable
+data class QuranMetaDto(
+    val ayahs: MetaCountDto,
+    val surahs: MetaCountDto,
+    val sajdas: MetaCountDto,
+    val rukus: MetaCountDto,
+    val pages: MetaCountDto,
+    val manzils: MetaCountDto,
+    val hizbQuarters: MetaCountDto,
+    val juzs: MetaCountDto,
 )
 
 @Serializable

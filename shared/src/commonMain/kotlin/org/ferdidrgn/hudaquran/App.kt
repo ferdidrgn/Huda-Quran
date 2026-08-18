@@ -17,14 +17,13 @@ import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.NowPlayingController
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
+import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.components.AppBottomNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
-import org.ferdidrgn.hudaquran.ui.juz.JuzDetailScreen
-import org.ferdidrgn.hudaquran.ui.juz.JuzListScreen
 import org.ferdidrgn.hudaquran.ui.learn.ArabicAlphabetScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
@@ -32,7 +31,10 @@ import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.nowplaying.NowPlayingScreen
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
 import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
+import org.ferdidrgn.hudaquran.ui.sajda.SajdaAyahsScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
+import org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen
+import org.ferdidrgn.hudaquran.ui.sections.SectionListScreen
 import org.ferdidrgn.hudaquran.ui.settings.EditionPickerScreen
 import org.ferdidrgn.hudaquran.ui.settings.PickerItem
 import org.ferdidrgn.hudaquran.ui.settings.SettingsScreen
@@ -100,9 +102,11 @@ fun App() {
                     onOpenFavorites = { navigator.replaceAll(Screen.Favorites) },
                     onOpenSettings = { navigator.replaceAll(Screen.Settings) },
                     onOpenSearch = { navigator.navigate(Screen.Search) },
-                    onOpenJuzList = { navigator.navigate(Screen.JuzList) },
+                    onOpenJuzList = { navigator.navigate(Screen.SectionList(SectionKind.JUZ)) },
                     onOpenReciters = { navigator.navigate(Screen.ReciterPicker) },
                     onOpenArabicAlphabet = { navigator.navigate(Screen.ArabicAlphabet) },
+                    onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
+                    onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
                 )
 
                 is Screen.SurahList -> SurahListScreen(
@@ -178,16 +182,23 @@ fun App() {
                     onOpenSurah = { number, ayah -> navigator.navigate(Screen.SurahDetail(number, ayah)) },
                 )
 
-                is Screen.JuzList -> JuzListScreen(
+                is Screen.SectionList -> SectionListScreen(
+                    kind = screen.kind,
                     modifier = contentModifier,
                     onBack = { navigator.back() },
-                    onOpenJuz = { number -> navigator.navigate(Screen.JuzDetail(number)) },
+                    onOpenSection = { number -> navigator.navigate(Screen.SectionDetail(screen.kind, number)) },
                 )
 
-                is Screen.JuzDetail -> JuzDetailScreen(
-                    juzNumber = screen.juzNumber,
+                is Screen.SectionDetail -> SectionDetailScreen(
+                    kind = screen.kind,
+                    number = screen.number,
                     onBack = { navigator.back() },
                     modifier = contentModifier,
+                )
+
+                is Screen.SajdaAyahs -> SajdaAyahsScreen(
+                    modifier = contentModifier,
+                    onBack = { navigator.back() },
                 )
 
                 is Screen.NowPlaying -> NowPlayingScreen(

@@ -1,5 +1,7 @@
 package org.ferdidrgn.hudaquran.ui.navigation
 
+import org.ferdidrgn.hudaquran.domain.model.SectionKind
+
 sealed class Screen {
     data object Splash : Screen()
     data object Onboarding : Screen()
@@ -13,7 +15,8 @@ sealed class Screen {
     data object PrayerLocationPicker : Screen()
     data object ArabicAlphabet : Screen()
     data object Search : Screen()
-    data object JuzList : Screen()
-    data class JuzDetail(val juzNumber: Int) : Screen()
+    data class SectionList(val kind: SectionKind) : Screen()
+    data class SectionDetail(val kind: SectionKind, val number: Int) : Screen()
+    data object SajdaAyahs : Screen()
     data object NowPlaying : Screen()
 }
