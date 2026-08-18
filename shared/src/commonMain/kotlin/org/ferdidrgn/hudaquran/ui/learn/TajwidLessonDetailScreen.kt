@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -32,14 +33,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.LetterPronouncer
+import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.TajwidExample
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
     val strings = LocalStrings.current
+    val preferences = AppContainer.preferences
     val lesson = tajwidCourse.firstOrNull { it.id == lessonId }
     val pronouncer = remember { LetterPronouncer() }
     DisposableEffect(Unit) {
@@ -77,6 +81,9 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
             ) {
                 items(lesson.examples, key = { it.arabic + it.transliteration }) { example ->
                     ExampleCard(example, strings.pronounceContentDescription) { pronouncer.speak(example.arabic) }
+                }
+                if (!preferences.isAdFree()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
             }
         }

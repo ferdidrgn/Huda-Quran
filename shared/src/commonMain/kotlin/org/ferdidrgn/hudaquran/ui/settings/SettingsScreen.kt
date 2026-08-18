@@ -43,6 +43,7 @@ import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -119,6 +120,10 @@ fun SettingsScreen(
             NavigationRow(title = strings.translationLabel, value = translationName, onClick = onOpenTranslationPicker)
         }
 
+        if (!preferences.isAdFree()) {
+            AdBannerCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        }
+
         SectionTitle(strings.prayerNotifications)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Row(
@@ -181,6 +186,10 @@ fun SettingsScreen(
                 onClick = { BillingManager.purchase(BillingProduct.NO_ADS_6_MONTHS) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(strings.sixMonthAdFreeButton) }
+        }
+
+        if (!preferences.isAdFree()) {
+            AdBannerCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
 
         Text(

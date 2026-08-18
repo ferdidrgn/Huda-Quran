@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
@@ -52,6 +54,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -93,7 +96,8 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     var dragPosition by remember { mutableStateOf(0f) }
 
     Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(20.dp),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState()).padding(20.dp),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Box(
@@ -250,6 +254,11 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                     }
                 }
             }
+        }
+
+        if (!preferences.isAdFree()) {
+            Spacer(Modifier.height(16.dp))
+            AdBannerCard()
         }
     }
 }

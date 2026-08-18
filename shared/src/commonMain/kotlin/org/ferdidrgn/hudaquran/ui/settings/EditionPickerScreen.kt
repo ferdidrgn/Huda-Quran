@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 data class PickerItem(val id: String, val label: String, val sublabel: String? = null)
@@ -44,6 +46,7 @@ fun EditionPickerScreen(
     modifier: Modifier = Modifier,
 ) {
     val strings = LocalStrings.current
+    val preferences = AppContainer.preferences
     var items by remember { mutableStateOf<List<PickerItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var query by remember { mutableStateOf("") }
@@ -80,26 +83,32 @@ fun EditionPickerScreen(
             filtered.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(strings.notFound, textAlign = TextAlign.Center)
             }
-            else -> LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                items(filtered, key = { it.id }) { item ->
-                    Card(
-                        onClick = { onSelect(item.id) },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
+            else -> {
+                val showAds = !preferences.isAdFree()
+                val midIndex = filtered.size / 2
+                LazyColumn(contentPadding = PaddingValues(16.dp)) {
+                    itemsIndexed(filtered, key = { _, item -> item.id }) { index, item ->
+                        Card(
+                            onClick = { onSelect(item.id) },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(item.label, style = MaterialTheme.typography.bodyLarge)
-                                item.sublabel?.let {
-                                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(item.label, style = MaterialTheme.typography.bodyLarge)
+                                    item.sublabel?.let {
+                                        Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                                    }
                                 }
+                                RadioButton(selected = item.id == selectedId, onClick = { onSelect(item.id) })
                             }
-                            RadioButton(selected = item.id == selectedId, onClick = { onSelect(item.id) })
                         }
+                        if (showAds && index == midIndex) AdBannerCard(modifier = Modifier.padding(bottom = 8.dp))
                     }
+                    if (showAds) item { AdBannerCard() }
                 }
             }
         }
