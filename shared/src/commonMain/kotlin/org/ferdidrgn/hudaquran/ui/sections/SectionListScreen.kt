@@ -38,6 +38,19 @@ import org.ferdidrgn.hudaquran.ui.localization.sectionPlural
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
 @Composable
+private fun SectionCell(number: Int, singularLabel: String, onOpenSection: (Int) -> Unit) {
+    GlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 20.dp),
+        onClick = { onOpenSection(number) },
+    ) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Text("$singularLabel $number", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
 fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSection: (Int) -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
@@ -60,25 +73,24 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
         if (total == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
+            val showAds = !preferences.isAdFree()
+            val midCount = total / 2
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(total) { index ->
-                    val number = index + 1
-                    GlassSurface(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(vertical = 20.dp),
-                        onClick = { onOpenSection(number) },
-                    ) {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("${strings.sectionSingular(kind)} $number", style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
+                items(midCount) { index ->
+                    SectionCell(index + 1, strings.sectionSingular(kind), onOpenSection)
                 }
-                if (!preferences.isAdFree()) {
+                if (showAds) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(vertical = 4.dp)) }
+                }
+                items(total - midCount) { index ->
+                    SectionCell(midCount + index + 1, strings.sectionSingular(kind), onOpenSection)
+                }
+                if (showAds) {
                     item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
             }

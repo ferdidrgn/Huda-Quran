@@ -401,6 +401,14 @@ fun HomeScreen(
                 }
             }
         }
+
+        if (!preferences.isAdFree()) {
+            item(span = { GridItemSpan(2) }) {
+                GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
+                    BannerAdView(modifier = Modifier.fillMaxWidth())
+                }
+            }
+        }
     }
 }
 

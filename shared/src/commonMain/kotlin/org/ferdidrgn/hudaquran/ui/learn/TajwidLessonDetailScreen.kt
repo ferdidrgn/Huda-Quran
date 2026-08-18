@@ -73,16 +73,25 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
                 Text(strings.lessonNotFound, color = MaterialTheme.colorScheme.error)
             }
         } else {
+            val showAds = !preferences.isAdFree()
+            val examples = lesson.examples
+            val midCount = examples.size / 2
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(lesson.examples, key = { it.arabic + it.transliteration }) { example ->
+                items(examples.subList(0, midCount), key = { it.arabic + it.transliteration }) { example ->
                     ExampleCard(example, strings.pronounceContentDescription) { pronouncer.speak(example.arabic) }
                 }
-                if (!preferences.isAdFree()) {
+                if (showAds) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(vertical = 4.dp)) }
+                }
+                items(examples.subList(midCount, examples.size), key = { it.arabic + it.transliteration }) { example ->
+                    ExampleCard(example, strings.pronounceContentDescription) { pronouncer.speak(example.arabic) }
+                }
+                if (showAds) {
                     item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
             }
