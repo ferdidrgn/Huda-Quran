@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Required on Android 13+ for AdMob to read the advertising ID; without it the ID resets. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
         android:name=".HudaQuranApplication"
