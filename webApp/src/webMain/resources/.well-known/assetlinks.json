@@ -1,0 +1,18 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.ferdidrgn.hudaquran",
+      "sha256_cert_fingerprints": [
+        "10:B9:64:08:B3:2E:23:2F:5A:47:6A:0F:89:41:68:94:48:83:0B:D8:54:B5:86:AF:9F:F6:92:94:74:27:43:B5",
+        "93:BD:DF:9C:FE:50:CA:F4:C5:97:E8:47:86:21:30:CE:D1:D8:67:E6:0A:54:FC:6E:6F:D3:44:44:5F:BC:2F:EA",
+        "96:52:E2:86:0F:AB:D6:1E:6C:11:B3:01:23:1B:4E:FE:CC:31:D9:E3:F1:D6:5C:E0:0C:7F:E4:21:55:7D:4A:AB",
+        "D6:34:28:FA:96:C7:32:0F:B1:1B:76:C4:62:AF:D2:FD:31:6F:45:C6:F5:C9:63:DF:03:AF:FF:45:52:39:AC:94"
+      ]
+    }
+  }
+]
