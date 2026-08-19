@@ -21,10 +21,15 @@ expect object AdManager {
 expect fun BannerAdView(modifier: Modifier)
 
 object AdUnitIds {
-    // Google's official test ad unit IDs (https://developers.google.com/admob/android/test-ads) —
-    // safe to ship during development, always safe to click, never generate real revenue.
-    const val ANDROID_BANNER = "ca-app-pub-3940256099942544/6300978111"
+    // Real Huda Qur'an AdMob unit (account pub-5779807348211992).
+    const val ANDROID_BANNER = "ca-app-pub-5779807348211992/9986199019"
+
+    // No interstitial unit created yet — still Google's official test ID
+    // (https://developers.google.com/admob/android/test-ads), safe to click, no real revenue.
+    // Swap this for a real "Geçiş" (Interstitial) ad unit ID once created in AdMob.
     const val ANDROID_INTERSTITIAL = "ca-app-pub-3940256099942544/1033173712"
+
+    // iOS ads aren't wired up yet (see AdManager.ios.kt) — left as Google's test IDs.
     const val IOS_BANNER = "ca-app-pub-3940256099942544/2934735716"
     const val IOS_INTERSTITIAL = "ca-app-pub-3940256099942544/4411468910"
 }
