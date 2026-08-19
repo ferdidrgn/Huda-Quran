@@ -7,6 +7,25 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="app-icon-512.png">
     <link type="text/css" rel="stylesheet" href="styles.css">
+
+    <!-- Firebase Web SDK (compat build — exposes the global `firebase` object that
+         AppAnalytics.js.kt / AppAnalytics.wasmJs.kt call into via JS interop). -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyD4nOwx3m7djveuXsB1lO_53oPvxlZ7Qtk",
+            authDomain: "huda-kuran.firebaseapp.com",
+            projectId: "huda-kuran",
+            storageBucket: "huda-kuran.firebasestorage.app",
+            messagingSenderId: "1013548164586",
+            appId: "1:1013548164586:web:dcff630c5df7cbf9c77e93",
+            measurementId: "G-KW6QHQ75LK"
+        };
+        if (window.firebase) {
+            window.firebase.initializeApp(firebaseConfig);
+        }
+    </script>
 </head>
 <body style="text-align: center; align-content: center">
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
