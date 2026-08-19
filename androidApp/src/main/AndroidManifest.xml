@@ -37,11 +37,34 @@
 
         <activity
             android:exported="true"
+            android:launchMode="singleTask"
             android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Custom-scheme deep links (hudaquran://...) — work immediately, no domain verification needed. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="hudaquran" />
+            </intent-filter>
+
+            <!--
+              Android App Links (https://hudaquran.web.app/...). autoVerify requires a matching
+              .well-known/assetlinks.json hosted at this domain, listing this app's release
+              signing certificate's SHA-256 fingerprint (see `gradlew signingReport`). Until that
+              file is deployed there, Android falls back to treating these as ordinary
+              (non-verified, chooser-prompting) links instead of opening the app directly.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="hudaquran.web.app" />
             </intent-filter>
         </activity>
 

@@ -127,13 +127,13 @@ fun HomeScreen(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Adaptive(minSize = 180.dp),
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
                 Column {
                     Text("${strings.homeGreeting} 👋", style = MaterialTheme.typography.headlineMedium)
@@ -148,7 +148,7 @@ fun HomeScreen(
 
         val currentLastRead = lastRead
         if (currentLastRead != null) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(1) {
                     GlassSurface(
                         modifier = Modifier.fillMaxWidth(),
@@ -175,7 +175,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(2) { PrayerWidget(prayerTimes) }
         }
 
@@ -190,7 +190,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(4) {
                 GlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -228,7 +228,7 @@ fun HomeScreen(
         }
 
         if (!preferences.isAdFree()) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(4) {
                     GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
                         NativeAdCard(modifier = Modifier.fillMaxWidth())
@@ -237,7 +237,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(5) {
                 Column {
                     SectionHeader(strings.reciters, strings.viewAll, onOpenReciters)
@@ -257,7 +257,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(6) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     item { QuickAction("📖", strings.navSurahs, onClick = onOpenSurahList) }
@@ -270,7 +270,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(7) {
                 GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
@@ -293,7 +293,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(8) {
                 Column {
                     SectionHeader(strings.esmaulHusnaTitle, null, null)
@@ -307,7 +307,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(9) {
                 Column {
                     SectionHeader(strings.discoverQuranTitle)
@@ -324,7 +324,7 @@ fun HomeScreen(
         }
 
         if (meta != null) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(10) {
                     GlassSurface(modifier = Modifier.fillMaxWidth()) {
                         Text(strings.quranStatsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -353,7 +353,7 @@ fun HomeScreen(
         }
 
         if (popularSurahs.isNotEmpty()) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(11) {
                     Column {
                         SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
@@ -368,7 +368,7 @@ fun HomeScreen(
             }
         }
 
-        item(span = { GridItemSpan(2) }) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(12) {
                 Column {
                     SectionHeader(strings.navSurahs, strings.viewAll, onOpenSurahList)
@@ -404,7 +404,7 @@ fun HomeScreen(
         }
 
         if (!preferences.isAdFree()) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
                     BannerAdView(modifier = Modifier.fillMaxWidth())
                 }

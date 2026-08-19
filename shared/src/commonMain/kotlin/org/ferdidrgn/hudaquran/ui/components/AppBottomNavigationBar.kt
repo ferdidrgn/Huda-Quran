@@ -27,11 +27,11 @@ import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
 
-private data class BottomTab(val screen: Screen, val emoji: String, val label: String)
+internal data class BottomTab(val screen: Screen, val emoji: String, val label: String)
 
 private val bottomNavScreens = listOf(Screen.Home, Screen.SurahList, Screen.Favorites, Screen.Settings)
 
-private fun tabsFor(strings: Strings) = listOf(
+internal fun tabsFor(strings: Strings) = listOf(
     BottomTab(Screen.Home, "🏠", strings.navHome),
     BottomTab(Screen.SurahList, "📖", strings.navSurahs),
     BottomTab(Screen.Favorites, "⭐", strings.navFavorites),

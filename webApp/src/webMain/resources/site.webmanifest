@@ -1,0 +1,18 @@
+{
+  "name": "Huda Qur'an",
+  "short_name": "Huda Qur'an",
+  "description": "Kur'an-ı Kerim okuma, dinleme ve öğrenme uygulaması.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1f17",
+  "theme_color": "#0b1f17",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
