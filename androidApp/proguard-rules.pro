@@ -21,7 +21,6 @@
 #-renamesourcefileattribute SourceFile
 
 # --- kotlinx.serialization: keep generated serializers + companion members ---
-# https://github.com/Kotlin/kotlinx.serialization/blob/master/rules/common.pro
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
 
@@ -36,7 +35,19 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# --- Firebase Crashlytics: keep readable stack traces in crash reports ---
+# --- Firebase Crashlytics & Analytics ---
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 -keep public class * extends java.lang.Exception
+-keep class com.google.android.gms.measurement.** { *; }
+# --- Firebase & AdMob Koruma Kuralları ---
+-keep class com.google.android.gms.measurement.** { *; }
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.ads.**
+
+# --- AdMob & Reklam Kimliği (AD_ID) Koruma Kuralları ---
+-keep class com.google.android.gms.ads.** { *; }
+-keep public class com.google.android.gms.ads.identifier.** { *; }
+-dontwarn com.google.android.gms.ads.**
