@@ -109,3 +109,4 @@ coverage/
 # NOT: gradlew, gradlew.bat ve gradle/wrapper/ ASLA ignore edilmemelidir.
 # ====================================================================
 androidApp/google-services.json
+.firebase/hosting.d2ViQXBwXGJ1aWxkXGRpc3Rcd2FzbUpzXHByb2R1Y3Rpb25FeGVjdXRhYmxl.cache
