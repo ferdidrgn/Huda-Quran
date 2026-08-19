@@ -32,10 +32,7 @@ object AdUnitIds {
     const val ANDROID_BANNER = "ca-app-pub-5779807348211992/9986199019"
     const val ANDROID_NATIVE = "ca-app-pub-5779807348211992/3608598123"
 
-    // No interstitial unit created yet — still Google's official test ID
-    // (https://developers.google.com/admob/android/test-ads), safe to click, no real revenue.
-    // Swap this for a real "Geçiş" (Interstitial) ad unit ID once created in AdMob.
-    const val ANDROID_INTERSTITIAL = "ca-app-pub-3940256099942544/1033173712"
+    const val ANDROID_INTERSTITIAL = "ca-app-pub-5779807348211992/1397262550"
 
     // iOS ads aren't wired up yet (see AdManager.ios.kt) — left as Google's test IDs.
     const val IOS_BANNER = "ca-app-pub-3940256099942544/2934735716"
