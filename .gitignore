@@ -108,3 +108,4 @@ coverage/
 # ====================================================================
 # NOT: gradlew, gradlew.bat ve gradle/wrapper/ ASLA ignore edilmemelidir.
 # ====================================================================
+androidApp/google-services.json
