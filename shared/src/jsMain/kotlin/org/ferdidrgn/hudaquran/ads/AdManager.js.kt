@@ -11,3 +11,6 @@ actual object AdManager {
 
 @Composable
 actual fun BannerAdView(modifier: Modifier) {}
+
+@Composable
+actual fun NativeAdCard(modifier: Modifier) {}

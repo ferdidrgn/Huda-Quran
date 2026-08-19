@@ -20,9 +20,17 @@ expect object AdManager {
 @Composable
 expect fun BannerAdView(modifier: Modifier)
 
+/**
+ * A "Native Advanced" ad whose assets (headline, body, icon, call-to-action) are laid out in the
+ * app's own styling rather than Google's fixed banner chrome. Renders nothing until an ad loads.
+ */
+@Composable
+expect fun NativeAdCard(modifier: Modifier)
+
 object AdUnitIds {
-    // Real Huda Qur'an AdMob unit (account pub-5779807348211992).
+    // Real Huda Qur'an AdMob units (account pub-5779807348211992).
     const val ANDROID_BANNER = "ca-app-pub-5779807348211992/9986199019"
+    const val ANDROID_NATIVE = "ca-app-pub-5779807348211992/3608598123"
 
     // No interstitial unit created yet — still Google's official test ID
     // (https://developers.google.com/admob/android/test-ads), safe to click, no real revenue.
@@ -32,4 +40,5 @@ object AdUnitIds {
     // iOS ads aren't wired up yet (see AdManager.ios.kt) — left as Google's test IDs.
     const val IOS_BANNER = "ca-app-pub-3940256099942544/2934735716"
     const val IOS_INTERSTITIAL = "ca-app-pub-3940256099942544/4411468910"
+    const val IOS_NATIVE = "ca-app-pub-3940256099942544/3986624511"
 }
