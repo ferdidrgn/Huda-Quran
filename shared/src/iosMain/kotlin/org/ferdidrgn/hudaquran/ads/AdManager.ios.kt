@@ -26,3 +26,8 @@ actual object AdManager {
 actual fun BannerAdView(modifier: Modifier) {
     // Intentionally renders nothing until the CocoaPods integration described above is added.
 }
+
+@Composable
+actual fun NativeAdCard(modifier: Modifier) {
+    // Intentionally renders nothing until the CocoaPods integration described above is added.
+}

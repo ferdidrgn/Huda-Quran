@@ -41,6 +41,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.ads.BannerAdView
+import org.ferdidrgn.hudaquran.ads.NativeAdCard
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -230,7 +231,7 @@ fun HomeScreen(
             item(span = { GridItemSpan(2) }) {
                 StaggeredEntrance(4) {
                     GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
-                        BannerAdView(modifier = Modifier.fillMaxWidth())
+                        NativeAdCard(modifier = Modifier.fillMaxWidth())
                     }
                 }
             }

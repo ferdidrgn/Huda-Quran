@@ -1,6 +1,6 @@
 [versions]
 agp = "9.0.1"
-android-compileSdk = "37"
+android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 androidx-activity = "1.13.0"
@@ -28,7 +28,6 @@ firebaseBom = "33.5.1"
 firebaseCrashlyticsPlugin = "3.0.3"
 
 [libraries]
-firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinxJson = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
