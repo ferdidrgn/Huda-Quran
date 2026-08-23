@@ -35,8 +35,11 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.platform.Platform
+import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AppBottomNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppSideNavigationBar
+import org.ferdidrgn.hudaquran.ui.components.AppTopNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
@@ -126,10 +129,58 @@ fun App() {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val sizeClass = windowSizeClassOf(maxWidth)
 
-            if (!chromeVisible || sizeClass == WindowSizeClass.COMPACT) {
-                Scaffold(
-                    bottomBar = {
-                        if (chromeVisible) {
+            when {
+                !chromeVisible -> {
+                    AppDestinationContent(
+                        screen = screen,
+                        navigator = navigator,
+                        contentModifier = Modifier,
+                        strings = strings,
+                        preferences = preferences,
+                        coroutineScope = coroutineScope,
+                    )
+                }
+
+                currentPlatform == Platform.WEB -> {
+                    // A bottom tab bar reads as a mobile-app affordance; websites get a top bar
+                    // instead, at every width — and content stays capped/centered once there's
+                    // room to spare instead of stretching edge-to-edge.
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        AppTopNavigationBar(navigator = navigator, current = screen, appTitle = APP_TITLE)
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentAlignment = Alignment.TopCenter,
+                        ) {
+                            val contentModifier = if (sizeClass == WindowSizeClass.COMPACT) {
+                                Modifier.fillMaxSize()
+                            } else {
+                                val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
+                                    expandedContentMaxWidth
+                                } else {
+                                    mediumContentMaxWidth
+                                }
+                                Modifier.widthIn(max = contentMaxWidth).fillMaxSize()
+                            }
+                            Box(modifier = contentModifier) {
+                                AppDestinationContent(
+                                    screen = screen,
+                                    navigator = navigator,
+                                    contentModifier = Modifier,
+                                    strings = strings,
+                                    preferences = preferences,
+                                    coroutineScope = coroutineScope,
+                                )
+                            }
+                        }
+                        if (nowPlaying != null) {
+                            GlobalMiniPlayer(onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) })
+                        }
+                    }
+                }
+
+                sizeClass == WindowSizeClass.COMPACT -> {
+                    Scaffold(
+                        bottomBar = {
                             Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
                                 if (nowPlaying != null) {
                                     GlobalMiniPlayer(
@@ -140,59 +191,61 @@ fun App() {
                                     AppBottomNavigationBar(navigator, screen)
                                 }
                             }
-                        }
-                    },
-                ) { padding ->
-                    val contentModifier = if (chromeVisible) Modifier.padding(padding) else Modifier
-                    AppDestinationContent(
-                        screen = screen,
-                        navigator = navigator,
-                        contentModifier = contentModifier,
-                        strings = strings,
-                        preferences = preferences,
-                        coroutineScope = coroutineScope,
-                    )
-                }
-            } else {
-                // Tablet (MEDIUM) and desktop (EXPANDED) windows trade the bottom tab bar for a
-                // persistent side rail/drawer and cap content width so it stays comfortable to read.
-                Row(modifier = Modifier.fillMaxSize()) {
-                    AppSideNavigationBar(
-                        navigator = navigator,
-                        current = screen,
-                        expanded = sizeClass == WindowSizeClass.EXPANDED,
-                        appTitle = APP_TITLE,
-                    )
-                    Scaffold(
-                        modifier = Modifier.weight(1f),
-                        bottomBar = {
-                            if (nowPlaying != null) {
-                                Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                                    GlobalMiniPlayer(
-                                        onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) },
-                                    )
-                                }
-                            }
                         },
                     ) { padding ->
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(padding),
-                            contentAlignment = Alignment.TopCenter,
-                        ) {
-                            val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
-                                expandedContentMaxWidth
-                            } else {
-                                mediumContentMaxWidth
-                            }
-                            Box(modifier = Modifier.widthIn(max = contentMaxWidth).fillMaxSize()) {
-                                AppDestinationContent(
-                                    screen = screen,
-                                    navigator = navigator,
-                                    contentModifier = Modifier,
-                                    strings = strings,
-                                    preferences = preferences,
-                                    coroutineScope = coroutineScope,
-                                )
+                        AppDestinationContent(
+                            screen = screen,
+                            navigator = navigator,
+                            contentModifier = Modifier.padding(padding),
+                            strings = strings,
+                            preferences = preferences,
+                            coroutineScope = coroutineScope,
+                        )
+                    }
+                }
+
+                else -> {
+                    // Tablet (MEDIUM) and desktop (EXPANDED) Android/iOS windows trade the bottom
+                    // tab bar for a persistent side rail/drawer and cap content width so it stays
+                    // comfortable to read.
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        AppSideNavigationBar(
+                            navigator = navigator,
+                            current = screen,
+                            expanded = sizeClass == WindowSizeClass.EXPANDED,
+                            appTitle = APP_TITLE,
+                        )
+                        Scaffold(
+                            modifier = Modifier.weight(1f),
+                            bottomBar = {
+                                if (nowPlaying != null) {
+                                    Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+                                        GlobalMiniPlayer(
+                                            onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) },
+                                        )
+                                    }
+                                }
+                            },
+                        ) { padding ->
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(padding),
+                                contentAlignment = Alignment.TopCenter,
+                            ) {
+                                val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
+                                    expandedContentMaxWidth
+                                } else {
+                                    mediumContentMaxWidth
+                                }
+                                Box(modifier = Modifier.widthIn(max = contentMaxWidth).fillMaxSize()) {
+                                    AppDestinationContent(
+                                        screen = screen,
+                                        navigator = navigator,
+                                        contentModifier = Modifier,
+                                        strings = strings,
+                                        preferences = preferences,
+                                        coroutineScope = coroutineScope,
+                                    )
+                                }
                             }
                         }
                     }
@@ -217,6 +270,8 @@ private fun AppDestinationContent(
             onFinished = {
                 val deepLinkTarget = DeepLinkController.consumePending()
                 val target = when {
+                    // A first-launch tutorial doesn't fit a website visit; go straight in.
+                    currentPlatform == Platform.WEB -> deepLinkTarget ?: Screen.Home
                     !preferences.onboardingCompleted -> Screen.Onboarding
                     deepLinkTarget != null -> deepLinkTarget
                     else -> Screen.Home

@@ -4,7 +4,7 @@
     "details": [
       {
         "appID": "TEAMID.org.ferdidrgn.hudaquran",
-        "paths": ["/product/*"]
+        "paths": ["/*"]
       }
     ]
   }

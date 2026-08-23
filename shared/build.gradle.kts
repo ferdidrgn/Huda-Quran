@@ -105,11 +105,9 @@ kotlin {
         jsMain.dependencies {
             implementation(libs.wrappers.browser)
             implementation(libs.ktor.client.js)
-            implementation(libs.multiplatformSettings.test)
         }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
-            implementation(libs.multiplatformSettings.test)
         }
     }
 }
