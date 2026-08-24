@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# --- kotlinx.serialization: keep generated serializers + companion members ---
+# --- kotlinx.serialization: official rules (github.com/Kotlin/kotlinx.serialization) ---
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
 
@@ -33,6 +33,28 @@
 }
 -keepclasseswithmembers class org.ferdidrgn.hudaquran.** {
     kotlinx.serialization.KSerializer serializer(...);
+}
+# Also keep every @Serializable model itself (fields + the class), not just its generated
+# serializer — R8 can otherwise rename/remove fields the serializer reflects over at runtime,
+# which throws only when that exact code path executes (e.g. parsing a real API response), not
+# at compile time. This is the single most common "works in debug, crashes in release" cause for
+# a Ktor + kotlinx.serialization app.
+-keep,includedescriptorclasses @kotlinx.serialization.Serializable class org.ferdidrgn.hudaquran.** { *; }
+-if @kotlinx.serialization.Serializable class org.ferdidrgn.hudaquran.**
+-keepclassmembers class <1>$Companion {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# --- Ktor client: reflection-heavy, a very common release-only crash source ---
+-keep class io.ktor.** { *; }
+-keepclassmembers class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.coroutines.** {
+    volatile <fields>;
 }
 
 # --- Firebase Crashlytics & Analytics ---
@@ -51,3 +73,15 @@
 -keep class com.google.android.gms.ads.** { *; }
 -keep public class com.google.android.gms.ads.identifier.** { *; }
 -dontwarn com.google.android.gms.ads.**
+
+# --- Google Play Billing Library ---
+-keep class com.android.billingclient.** { *; }
+-dontwarn com.android.billingclient.**
+
+# --- Media3 / ExoPlayer (usually ships its own consumer rules, kept defensively too) ---
+-keep class androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+
+# --- multiplatform-settings ---
+-keep class com.russhwolf.settings.** { *; }
+-dontwarn com.russhwolf.settings.**

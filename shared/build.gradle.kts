@@ -105,9 +105,13 @@ kotlin {
         jsMain.dependencies {
             implementation(libs.wrappers.browser)
             implementation(libs.ktor.client.js)
+            // MapSettings — the in-memory fallback SettingsFactory.js.kt uses if localStorage
+            // access throws (e.g. some browsers' private-browsing modes block it outright).
+            implementation(libs.multiplatformSettings.test)
         }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+            implementation(libs.multiplatformSettings.test)
         }
     }
 }
