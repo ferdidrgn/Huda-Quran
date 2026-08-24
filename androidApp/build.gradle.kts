@@ -45,6 +45,11 @@ android {
     }
     buildTypes {
         release {
+            // Debug-signed so `assembleRelease` produces something `adb install` can actually
+            // install locally for crash testing (R8/minification behavior included) without
+            // needing the real upload keystore. Play Console re-signs uploaded bundles with the
+            // real app-signing key regardless, so this has no effect on what you actually publish.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
