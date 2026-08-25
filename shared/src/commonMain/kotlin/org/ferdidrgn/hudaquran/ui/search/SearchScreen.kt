@@ -39,6 +39,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private enum class SearchStatus { IDLE, LOADING, DONE, ERROR }
@@ -76,7 +77,7 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Text(strings.searchTitle, style = MaterialTheme.typography.titleLarge)
         }
         OutlinedTextField(

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.sectionPlural
@@ -66,7 +67,7 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Text(strings.sectionPlural(kind), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         val total = count

@@ -43,6 +43,7 @@ import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -100,7 +101,7 @@ fun SurahDetailScreen(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     detail?.surah?.let { localizedSurahName(it.number, it.englishName, appLanguage) } ?: strings.surahFallback,

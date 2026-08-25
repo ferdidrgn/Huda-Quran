@@ -37,6 +37,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.TajwidExample
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -55,7 +56,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Column {
                 Text(lesson?.title ?: strings.lessonFallback, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (lesson != null) {

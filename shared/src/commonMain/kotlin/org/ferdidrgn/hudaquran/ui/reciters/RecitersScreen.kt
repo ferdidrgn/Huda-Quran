@@ -49,6 +49,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -90,7 +91,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Column {
                 Text(strings.reciters, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (!isLoading) {

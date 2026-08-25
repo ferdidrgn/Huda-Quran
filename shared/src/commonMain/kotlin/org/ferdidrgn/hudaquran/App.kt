@@ -21,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -103,7 +105,8 @@ fun App() {
     }
 
     val strings = stringsFor(appLanguage)
-    CompositionLocalProvider(LocalStrings provides strings) {
+    val layoutDirection = if (appLanguage == AppLanguage.ARABIC) LayoutDirection.Rtl else LayoutDirection.Ltr
+    CompositionLocalProvider(LocalStrings provides strings, LocalLayoutDirection provides layoutDirection) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying

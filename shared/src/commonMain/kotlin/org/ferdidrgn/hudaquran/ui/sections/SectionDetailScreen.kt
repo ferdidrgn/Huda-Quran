@@ -40,6 +40,7 @@ import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
+import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
@@ -77,7 +78,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) { Text("←", fontSize = 24.sp) }
+            BackButton(onBack = onBack)
             Text("${strings.sectionSingular(kind)} $number", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         HorizontalDivider()
