@@ -85,3 +85,15 @@
 # --- multiplatform-settings ---
 -keep class com.russhwolf.settings.** { *; }
 -dontwarn com.russhwolf.settings.**
+
+# --- WorkManager / Room (WorkManager builds its internal WorkDatabase via Room at app startup,
+# through the androidx.startup.InitializationProvider ContentProvider — this runs before any
+# Activity, so a missing keep rule here crashes the app immediately on launch in release builds) ---
+-keep class androidx.work.** { *; }
+-dontwarn androidx.work.**
+-keep class androidx.room.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-dontwarn androidx.room.**
+-keep class androidx.startup.** { *; }
+-dontwarn androidx.startup.**
