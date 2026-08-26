@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -180,14 +181,25 @@ fun HomeScreen(
             StaggeredEntrance(2) { PrayerWidget(prayerTimes) }
         }
 
-        item {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(3) {
-                StatBento(value = favorites.size.toString(), label = strings.favoriteLabel, emoji = "⭐", onClick = onOpenFavorites)
-            }
-        }
-        item {
-            StaggeredEntrance(3) {
-                StatBento(value = (meta?.juzCount ?: 30).toString(), label = strings.statJuz, emoji = "🔢", onClick = onOpenJuzList)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    StatBento(
+                        modifier = Modifier.weight(1f),
+                        value = favorites.size.toString(),
+                        label = strings.favoriteLabel,
+                        emoji = "⭐",
+                        onClick = onOpenFavorites,
+                    )
+                    StatBento(
+                        modifier = Modifier.weight(1f),
+                        value = (meta?.juzCount ?: 30).toString(),
+                        label = strings.statJuz,
+                        emoji = "🔢",
+                        accent = true,
+                        onClick = onOpenJuzList,
+                    )
+                }
             }
         }
 
@@ -506,12 +518,31 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
 }
 
 @Composable
-private fun StatBento(value: String, label: String, emoji: String, onClick: () -> Unit) {
-    GlassSurface(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
-        Text(emoji, fontSize = 22.sp)
-        Spacer(Modifier.height(10.dp))
-        Text(value, style = MaterialTheme.typography.headlineMedium, fontSize = 24.sp, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun StatBento(
+    value: String,
+    label: String,
+    emoji: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    accent: Boolean = false,
+) {
+    GlassSurface(modifier = modifier.fillMaxWidth(), onClick = onClick) {
+        IconBubble(emoji = emoji, accent = accent)
+        Spacer(Modifier.height(12.dp))
+        Text(
+            value,
+            style = MaterialTheme.typography.headlineMedium,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
