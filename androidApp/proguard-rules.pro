@@ -12,6 +12,14 @@
 #   public *;
 #}
 
+# Disable renaming (obfuscation) entirely, keep shrinking/optimization on. This app depends on
+# several reflection-heavy libraries (kotlinx.serialization, Ktor, Room/WorkManager) that look
+# up classes by their exact runtime name; renaming has caused repeated release-only startup
+# crashes even with targeted -keep rules in place (most recently WorkManager's WorkDatabase,
+# built via Room's Class.forName("...WorkDatabase_Impl") lookup). Turning off renaming removes
+# this entire class of bug at a small APK-size cost.
+-dontobfuscate
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable
