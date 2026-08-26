@@ -74,6 +74,7 @@ fun HomeScreen(
     onOpenArabicAlphabet: () -> Unit,
     onOpenSection: (SectionKind) -> Unit,
     onOpenSajdaAyahs: () -> Unit,
+    onOpenMushafMode: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -313,6 +314,7 @@ fun HomeScreen(
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item { QuickAction("📖", strings.mushafModeLabel, onClick = onOpenMushafMode) }
                         item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
                         item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
                         item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }

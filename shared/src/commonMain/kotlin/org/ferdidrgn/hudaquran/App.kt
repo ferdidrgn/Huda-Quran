@@ -51,6 +51,7 @@ import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonListScreen
+import org.ferdidrgn.hudaquran.ui.mushaf.MushafPageScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
 import org.ferdidrgn.hudaquran.ui.navigation.DeepLink
@@ -303,6 +304,7 @@ private fun AppDestinationContent(
             onOpenArabicAlphabet = { navigator.navigate(Screen.TajwidLessonList) },
             onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
             onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
+            onOpenMushafMode = { navigator.navigate(Screen.MushafPage(1)) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -426,6 +428,13 @@ private fun AppDestinationContent(
             lessonId = screen.lessonId,
             modifier = contentModifier,
             onBack = { navigator.back() },
+        )
+
+        is Screen.MushafPage -> MushafPageScreen(
+            pageNumber = screen.pageNumber,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onChangePage = { newPage -> navigator.replaceAll(Screen.MushafPage(newPage.coerceAtLeast(1))) },
         )
     }
 }

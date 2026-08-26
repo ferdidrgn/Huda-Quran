@@ -21,4 +21,5 @@ sealed class Screen {
     data class SectionDetail(val kind: SectionKind, val number: Int) : Screen()
     data object SajdaAyahs : Screen()
     data object NowPlaying : Screen()
+    data class MushafPage(val pageNumber: Int) : Screen()
 }
