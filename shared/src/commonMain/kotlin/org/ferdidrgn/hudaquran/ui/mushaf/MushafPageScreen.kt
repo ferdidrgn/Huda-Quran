@@ -29,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +38,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +62,33 @@ import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
 private val SPREAD_MIN_WIDTH = 700.dp
+private val PAGE_SHAPE = RoundedCornerShape(18.dp)
+
+// A fixed warm paper tone, independent of the app's accent theme — the same way a physical
+// mushaf's page color doesn't change with the cover. Text ink shifts to a light cream on the
+// dark-mode paper so it still reads as "ink on paper" rather than "app text on a random surface".
+private val PaperLight = Color(0xFFF7EEDA)
+private val PaperDark = Color(0xFF2B2620)
+private val InkLight = Color(0xFF2A2015)
+private val InkDark = Color(0xFFEFE4CB)
+
+@Composable
+private fun paperColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) PaperDark else PaperLight
+
+@Composable
+private fun inkColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) InkDark else InkLight
 
 /**
- * A "mushaf" (book-style) reading mode: ayahs flow as one continuous justified paragraph — the
- * way a printed Qur'an page actually reads — instead of the ayah-by-ayah card list
- * [org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen] uses. Reuses the exact same
- * [QuranSectionDetail] data and [org.ferdidrgn.hudaquran.audio.PlaybackManager] queue that screen
- * already relies on — only the visual presentation and page-flipping controls are new.
+ * A "mushaf" (book-style) reading mode: ayahs flow as one continuous justified paragraph on a
+ * paper-toned, shadowed page — the way a printed Qur'an page actually looks and reads — instead
+ * of the ayah-by-ayah card list [org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen] uses.
+ * Reuses the exact same [QuranSectionDetail] data and
+ * [org.ferdidrgn.hudaquran.audio.PlaybackManager] queue that screen already relies on — only the
+ * visual presentation and page-flipping controls are new.
  *
  * In a wide-enough landscape window it opens as a real two-page spread (right = odd page, left =
- * even page, matching how a physical mushaf actually pairs pages) instead of one scrolling page.
+ * even page, matching how a physical mushaf actually pairs pages), with a gutter shadow between
+ * the pages suggesting the book's binding, instead of one scrolling page.
  */
 @Composable
 fun MushafPageScreen(
@@ -162,16 +183,31 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
         }
         HorizontalDivider()
 
-        MushafPageColumn(
-            detail = detail,
-            isLoading = isLoading,
-            error = loadError,
-            currentAyah = currentAyah,
-            showTranslation = showTranslation,
-            strings = strings,
-            onRetry = { reloadKey++ },
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = PAGE_SHAPE,
+                    ambientColor = Color.Black.copy(alpha = 0.4f),
+                    spotColor = Color.Black.copy(alpha = 0.4f),
+                )
+                .clip(PAGE_SHAPE)
+                .background(paperColor()),
+        ) {
+            MushafPageColumn(
+                detail = detail,
+                isLoading = isLoading,
+                error = loadError,
+                currentAyah = currentAyah,
+                showTranslation = showTranslation,
+                strings = strings,
+                onRetry = { reloadKey++ },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         MushafPageFooter(
             centerLabel = "$pageNumber",
@@ -269,27 +305,59 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
         }
         HorizontalDivider()
 
-        Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            MushafPageColumn(
-                detail = rightDetail,
-                isLoading = rightLoading,
-                error = rightError,
-                currentAyah = currentAyah,
-                showTranslation = showTranslation,
-                strings = strings,
-                onRetry = { reloadKey++ },
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-            VerticalDivider(modifier = Modifier.fillMaxHeight().width(1.dp))
-            MushafPageColumn(
-                detail = leftDetail,
-                isLoading = leftLoading,
-                error = leftError,
-                currentAyah = currentAyah,
-                showTranslation = showTranslation,
-                strings = strings,
-                onRetry = { reloadKey++ },
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(20.dp)
+                .shadow(
+                    elevation = 22.dp,
+                    shape = PAGE_SHAPE,
+                    ambientColor = Color.Black.copy(alpha = 0.45f),
+                    spotColor = Color.Black.copy(alpha = 0.45f),
+                )
+                .clip(PAGE_SHAPE)
+                .background(paperColor()),
+        ) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                MushafPageColumn(
+                    detail = rightDetail,
+                    isLoading = rightLoading,
+                    error = rightError,
+                    currentAyah = currentAyah,
+                    showTranslation = showTranslation,
+                    strings = strings,
+                    onRetry = { reloadKey++ },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                MushafPageColumn(
+                    detail = leftDetail,
+                    isLoading = leftLoading,
+                    error = leftError,
+                    currentAyah = currentAyah,
+                    showTranslation = showTranslation,
+                    strings = strings,
+                    onRetry = { reloadKey++ },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+            }
+            // The book's binding: a soft shadow gradient straddling the seam between the two
+            // pages, so the spread reads as one bound book rather than two separate cards.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxHeight()
+                    .width(32.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.14f),
+                                Color.Black.copy(alpha = 0.14f),
+                                Color.Transparent,
+                            ),
+                        ),
+                    ),
             )
         }
 
@@ -314,6 +382,7 @@ private fun MushafPageColumn(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val ink = inkColor()
     when {
         isLoading -> Box(modifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         error || detail == null -> Box(modifier.padding(24.dp), contentAlignment = Alignment.Center) {
@@ -330,7 +399,7 @@ private fun MushafPageColumn(
         else -> {
             val d = detail!!
             val highlightColor = MaterialTheme.colorScheme.primaryContainer
-            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah) {
+            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink) {
                 buildAnnotatedString {
                     d.ayahs.forEach { ayah ->
                         val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
@@ -351,12 +420,13 @@ private fun MushafPageColumn(
             Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
                 Text(
                     pageText,
+                    color = ink,
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Justify,
                     lineHeight = 44.sp,
                 )
                 if (showTranslation) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
                     d.ayahs.forEach { ayah ->
                         if (ayah.translationText.isNotBlank()) {
                             val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
@@ -372,11 +442,7 @@ private fun MushafPageColumn(
                                     ayah.translationText,
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isCurrent) {
-                                        MaterialTheme.colorScheme.onBackground
-                                    } else {
-                                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
-                                    },
+                                    color = if (isCurrent) ink else ink.copy(alpha = 0.72f),
                                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                                 )
                             }
