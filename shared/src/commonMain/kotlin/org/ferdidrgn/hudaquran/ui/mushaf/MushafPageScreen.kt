@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -73,6 +74,7 @@ fun MushafPageScreen(
     var isLoading by remember(pageNumber) { mutableStateOf(true) }
     var loadError by remember(pageNumber) { mutableStateOf(false) }
     var reloadKey by remember(pageNumber) { mutableStateOf(0) }
+    var showTranslation by remember { mutableStateOf(true) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
@@ -102,6 +104,13 @@ fun MushafPageScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = { showTranslation = !showTranslation }) {
+                Icon(
+                    Icons.Filled.Translate,
+                    contentDescription = strings.toggleTranslationLabel,
+                    tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             val d = detail
             if (d != null) {
                 IconButton(
@@ -168,6 +177,34 @@ fun MushafPageScreen(
                         textAlign = TextAlign.Justify,
                         lineHeight = 48.sp,
                     )
+                    if (showTranslation) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp))
+                        d.ayahs.forEach { ayah ->
+                            if (ayah.translationText.isNotBlank()) {
+                                val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
+                                    currentAyah.numberInSurah == ayah.numberInSurah
+                                Row(modifier = Modifier.padding(bottom = 10.dp)) {
+                                    Text(
+                                        "${ayah.numberInSurah}. ",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        ayah.translationText,
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isCurrent) {
+                                            MaterialTheme.colorScheme.onBackground
+                                        } else {
+                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
+                                        },
+                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Row(
