@@ -89,6 +89,7 @@ fun HomeScreen(
     onOpenSection: (SectionKind) -> Unit,
     onOpenSajdaAyahs: () -> Unit,
     onOpenMushafMode: (Int) -> Unit,
+    onOpenQibla: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -515,6 +516,13 @@ fun HomeScreen(
                                 "🔖",
                                 strings.hizbQuartersLabel,
                                 onClick = { onOpenSection(SectionKind.HIZB_QUARTER) })
+                        }
+                        item {
+                            QuickAction(
+                                "🧭",
+                                strings.qiblaTitle,
+                                onClick = onOpenQibla,
+                            )
                         }
                         item {
                             QuickAction(

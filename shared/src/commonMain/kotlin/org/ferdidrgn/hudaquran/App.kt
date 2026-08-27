@@ -60,6 +60,7 @@ import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.navigation.syncBrowserUrl
 import org.ferdidrgn.hudaquran.ui.nowplaying.NowPlayingScreen
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
+import org.ferdidrgn.hudaquran.ui.qibla.QiblaScreen
 import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
 import org.ferdidrgn.hudaquran.ui.sajda.SajdaAyahsScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
@@ -305,6 +306,7 @@ private fun AppDestinationContent(
             onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
             onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
+            onOpenQibla = { navigator.navigate(Screen.Qibla) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -435,6 +437,11 @@ private fun AppDestinationContent(
             modifier = contentModifier,
             onBack = { navigator.back() },
             onChangePage = { newPage -> navigator.replaceAll(Screen.MushafPage(newPage.coerceAtLeast(1))) },
+        )
+
+        is Screen.Qibla -> QiblaScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
         )
     }
 }

@@ -169,6 +169,12 @@ data class Strings(
     val khatmProgressTitle: String,
     val khatmProgressTemplate: String,
     val khatmCompletedCountTemplate: String,
+
+    // Qibla
+    val qiblaTitle: String,
+    val qiblaBearingTemplate: String,
+    val qiblaInstructions: String,
+    val qiblaLocationUnavailable: String,
 )
 
 private val turkish = Strings(
@@ -261,6 +267,11 @@ private val turkish = Strings(
     khatmProgressTitle = "Hatim İlerlemeniz",
     khatmProgressTemplate = "Sayfa {page} / {total} (%{percent})",
     khatmCompletedCountTemplate = "Tamamlanan hatim: {n}",
+
+    qiblaTitle = "Kıble Pusulası",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Telefonunuzun pusulasını açıp bu açıyı kuzeye göre hizalayın.",
+    qiblaLocationUnavailable = "Konum bilgisi alınamadı. Ayarlar'dan şehir/ülke seçtiğinizden emin olun.",
 )
 
 private val english = Strings(
@@ -353,6 +364,11 @@ private val english = Strings(
     khatmProgressTitle = "Your Khatm Progress",
     khatmProgressTemplate = "Page {page} / {total} (%{percent})",
     khatmCompletedCountTemplate = "Completed khatms: {n}",
+
+    qiblaTitle = "Qibla Compass",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Open your phone's compass and align this angle with north.",
+    qiblaLocationUnavailable = "Couldn't get your location. Make sure you've set a city/country in Settings.",
 )
 
 private val arabic = Strings(
@@ -445,6 +461,11 @@ private val arabic = Strings(
     khatmProgressTitle = "تقدمك في الختمة",
     khatmProgressTemplate = "الصفحة {page} / {total} (%{percent})",
     khatmCompletedCountTemplate = "الختمات المكتملة: {n}",
+
+    qiblaTitle = "بوصلة القبلة",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "افتح بوصلة هاتفك وقم بمحاذاة هذه الزاوية مع الشمال.",
+    qiblaLocationUnavailable = "تعذر الحصول على موقعك. تأكد من تحديد المدينة/الدولة في الإعدادات.",
 )
 
 private val german = Strings(
@@ -537,6 +558,11 @@ private val german = Strings(
     khatmProgressTitle = "Ihr Khatm-Fortschritt",
     khatmProgressTemplate = "Seite {page} / {total} (%{percent})",
     khatmCompletedCountTemplate = "Abgeschlossene Khatms: {n}",
+
+    qiblaTitle = "Qibla-Kompass",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Öffnen Sie den Kompass Ihres Telefons und richten Sie diesen Winkel nach Norden aus.",
+    qiblaLocationUnavailable = "Standort konnte nicht ermittelt werden. Stellen Sie sicher, dass Stadt/Land in den Einstellungen festgelegt sind.",
 )
 
 private val french = Strings(
@@ -629,6 +655,11 @@ private val french = Strings(
     khatmProgressTitle = "Votre progression du khatm",
     khatmProgressTemplate = "Page {page} / {total} (%{percent})",
     khatmCompletedCountTemplate = "Khatms terminés : {n}",
+
+    qiblaTitle = "Boussole Qibla",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Ouvrez la boussole de votre téléphone et alignez cet angle avec le nord.",
+    qiblaLocationUnavailable = "Impossible d'obtenir votre position. Vérifiez que la ville/le pays sont définis dans les Paramètres.",
 )
 
 private val uzbek = Strings(
@@ -721,6 +752,11 @@ private val uzbek = Strings(
     khatmProgressTitle = "Xatm jarayoningiz",
     khatmProgressTemplate = "{page}-sahifa / {total} (%{percent})",
     khatmCompletedCountTemplate = "Tugallangan xatmlar: {n}",
+
+    qiblaTitle = "Qibla Kompasi",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Telefoningizning kompasini oching va bu burchakni shimolga qarab tekislang.",
+    qiblaLocationUnavailable = "Joylashuvingizni aniqlab bo'lmadi. Sozlamalarda shahar/davlat tanlanganiga ishonch hosil qiling.",
 )
 
 private val kyrgyz = Strings(
@@ -813,6 +849,11 @@ private val kyrgyz = Strings(
     khatmProgressTitle = "Хатм жүрүшүңүз",
     khatmProgressTemplate = "{page}-барак / {total} (%{percent})",
     khatmCompletedCountTemplate = "Аяктаган хатмдар: {n}",
+
+    qiblaTitle = "Кыбыла Компасы",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Телефонуңуздун компасын ачып, бул бурчту түндүккө карай тегиздеңиз.",
+    qiblaLocationUnavailable = "Жайгашкан жериңизди аныктоо мүмкүн болбоду. Жөндөөлөрдө шаар/өлкө тандалганына ынаныңыз.",
 )
 
 private val turkmen = Strings(
@@ -905,6 +946,11 @@ private val turkmen = Strings(
     khatmProgressTitle = "Hatmiňiziň dowamy",
     khatmProgressTemplate = "{page}-sahypa / {total} (%{percent})",
     khatmCompletedCountTemplate = "Tamamlanan hatmlar: {n}",
+
+    qiblaTitle = "Kybla Kompasy",
+    qiblaBearingTemplate = "{degree}° ({cardinal})",
+    qiblaInstructions = "Telefonyňyzyň kompasyny açyp, bu burçy demirgazyga görä deňleşdiriň.",
+    qiblaLocationUnavailable = "Ýerleşiş maglumaty alynyp bilinmedi. Sazlamalarda şäher/ýurt saýlanandygyna göz ýetiriň.",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

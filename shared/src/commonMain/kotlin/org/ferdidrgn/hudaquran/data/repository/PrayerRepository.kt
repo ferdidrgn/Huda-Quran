@@ -19,7 +19,7 @@ class PrayerRepository(private val api: PrayerApi = PrayerApi()) {
             val raw = dto.timings[key].orEmpty().substringBefore(" ")
             PrayerTime(key, label, raw)
         }
-        return PrayerTimes(prayers)
+        return PrayerTimes(prayers, latitude = dto.meta?.latitude, longitude = dto.meta?.longitude)
     }
 }
 

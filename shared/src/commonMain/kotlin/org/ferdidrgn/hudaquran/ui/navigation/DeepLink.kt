@@ -45,6 +45,7 @@ object DeepLink {
                 if (lessonId != null) Screen.TajwidLessonDetail(lessonId) else Screen.TajwidLessonList
             }
             "mushaf" -> Screen.MushafPage(segments.getOrNull(1)?.toIntOrNull() ?: 1)
+            "qibla" -> Screen.Qibla
             else -> null
         }
     }
@@ -109,5 +110,6 @@ object DeepLink {
         is Screen.SajdaAyahs -> "/sajda"
         is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
+        is Screen.Qibla -> "/qibla"
     }
 }

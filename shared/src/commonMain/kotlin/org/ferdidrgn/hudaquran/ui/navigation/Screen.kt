@@ -22,4 +22,5 @@ sealed class Screen {
     data object SajdaAyahs : Screen()
     data object NowPlaying : Screen()
     data class MushafPage(val pageNumber: Int) : Screen()
+    data object Qibla : Screen()
 }
