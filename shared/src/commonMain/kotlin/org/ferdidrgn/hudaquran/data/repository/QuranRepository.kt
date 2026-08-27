@@ -1,5 +1,6 @@
 package org.ferdidrgn.hudaquran.data.repository
 
+import org.ferdidrgn.hudaquran.data.local.QuranCache
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
 import org.ferdidrgn.hudaquran.data.remote.retryOnce
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
@@ -22,15 +23,27 @@ data class DailyAyah(
     val translationText: String,
 )
 
-class QuranRepository(private val api: QuranApi = QuranApi()) {
+class QuranRepository(
+    private val api: QuranApi = QuranApi(),
+    private val cache: QuranCache = QuranCache(),
+) {
 
     private var cachedSurahList: List<Surah>? = null
 
     suspend fun getSurahList(): List<Surah> {
         cachedSurahList?.let { return it }
-        val list = retryOnce { api.getSurahList() }.map { it.toDomain() }
-        cachedSurahList = list
-        return list
+        val fetched = runCatching { retryOnce { api.getSurahList() }.map { it.toDomain() } }
+        fetched.getOrNull()?.let { list ->
+            cachedSurahList = list
+            cache.saveSurahList(list)
+            return list
+        }
+        val offline = cache.getSurahList()
+        if (offline != null) {
+            cachedSurahList = offline
+            return offline
+        }
+        throw fetched.exceptionOrNull() ?: IllegalStateException("Surah list unavailable")
     }
 
     suspend fun getSurahDetail(
@@ -38,43 +51,52 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): SurahDetail {
-        val editions = retryOnce {
-            api.getSurahWithEditions(
-                surahNumber,
-                listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+        val fetched = runCatching {
+            val editions = retryOnce {
+                api.getSurahWithEditions(
+                    surahNumber,
+                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+                )
+            }
+            val arabicEdition = editions[0]
+            val translationEditionData = editions[1]
+            val audioEdition = editions[2]
+
+            val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
+                Ayah(
+                    surahNumber = arabicEdition.number,
+                    surahName = arabicEdition.englishName,
+                    numberInSurah = ayahDto.numberInSurah,
+                    globalNumber = ayahDto.number,
+                    arabicText = ayahDto.text,
+                    translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
+                    audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
+                    juz = ayahDto.juz,
+                    page = ayahDto.page,
+                    isSajda = ayahDto.sajda,
+                )
+            }
+
+            SurahDetail(
+                surah = Surah(
+                    number = arabicEdition.number,
+                    name = arabicEdition.name,
+                    englishName = arabicEdition.englishName,
+                    englishNameTranslation = arabicEdition.englishNameTranslation,
+                    numberOfAyahs = arabicEdition.numberOfAyahs,
+                    revelationType = arabicEdition.revelationType,
+                ),
+                ayahs = ayahs,
+                surahAudioUrl = QuranEditions.surahAudioUrl(surahNumber, reciterEdition),
             )
         }
-        val arabicEdition = editions[0]
-        val translationEditionData = editions[1]
-        val audioEdition = editions[2]
-
-        val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
-            Ayah(
-                surahNumber = arabicEdition.number,
-                surahName = arabicEdition.englishName,
-                numberInSurah = ayahDto.numberInSurah,
-                globalNumber = ayahDto.number,
-                arabicText = ayahDto.text,
-                translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
-                audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
-                juz = ayahDto.juz,
-                page = ayahDto.page,
-                isSajda = ayahDto.sajda,
-            )
+        fetched.getOrNull()?.let { detail ->
+            cache.saveSurahDetail(surahNumber, translationEdition, reciterEdition, detail)
+            return detail
         }
-
-        return SurahDetail(
-            surah = Surah(
-                number = arabicEdition.number,
-                name = arabicEdition.name,
-                englishName = arabicEdition.englishName,
-                englishNameTranslation = arabicEdition.englishNameTranslation,
-                numberOfAyahs = arabicEdition.numberOfAyahs,
-                revelationType = arabicEdition.revelationType,
-            ),
-            ayahs = ayahs,
-            surahAudioUrl = QuranEditions.surahAudioUrl(surahNumber, reciterEdition),
-        )
+        val offline = cache.getSurahDetail(surahNumber, translationEdition, reciterEdition)
+        if (offline != null) return offline
+        throw fetched.exceptionOrNull() ?: IllegalStateException("Surah detail unavailable")
     }
 
     suspend fun getSectionDetail(
@@ -83,33 +105,42 @@ class QuranRepository(private val api: QuranApi = QuranApi()) {
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): QuranSectionDetail {
-        val editions = retryOnce {
-            api.getSectionWithEditions(
-                kind.apiPath,
-                number,
-                listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
-            )
-        }
-        val arabicEdition = editions[0]
-        val translationEditionData = editions[1]
-        val audioEdition = editions[2]
+        val fetched = runCatching {
+            val editions = retryOnce {
+                api.getSectionWithEditions(
+                    kind.apiPath,
+                    number,
+                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+                )
+            }
+            val arabicEdition = editions[0]
+            val translationEditionData = editions[1]
+            val audioEdition = editions[2]
 
-        val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
-            Ayah(
-                surahNumber = ayahDto.surah.number,
-                surahName = ayahDto.surah.englishName,
-                numberInSurah = ayahDto.numberInSurah,
-                globalNumber = ayahDto.number,
-                arabicText = ayahDto.text,
-                translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
-                audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
-                juz = ayahDto.juz,
-                page = ayahDto.page,
-                isSajda = ayahDto.sajda,
-            )
-        }
+            val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
+                Ayah(
+                    surahNumber = ayahDto.surah.number,
+                    surahName = ayahDto.surah.englishName,
+                    numberInSurah = ayahDto.numberInSurah,
+                    globalNumber = ayahDto.number,
+                    arabicText = ayahDto.text,
+                    translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
+                    audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
+                    juz = ayahDto.juz,
+                    page = ayahDto.page,
+                    isSajda = ayahDto.sajda,
+                )
+            }
 
-        return QuranSectionDetail(sectionNumber = number, ayahs = ayahs)
+            QuranSectionDetail(sectionNumber = number, ayahs = ayahs)
+        }
+        fetched.getOrNull()?.let { detail ->
+            cache.saveSectionDetail(kind.name, number, translationEdition, reciterEdition, detail)
+            return detail
+        }
+        val offline = cache.getSectionDetail(kind.name, number, translationEdition, reciterEdition)
+        if (offline != null) return offline
+        throw fetched.exceptionOrNull() ?: IllegalStateException("Section detail unavailable")
     }
 
     suspend fun getSajdaAyahs(

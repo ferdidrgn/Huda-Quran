@@ -1,10 +1,13 @@
 package org.ferdidrgn.hudaquran.domain.model
 
+import kotlinx.serialization.Serializable
+
 // The standard 15-line Uthmani mushaf layout — the same one AlQuran Cloud's /page endpoints
 // paginate against — always has exactly 604 pages. Shared so khatm-progress tracking (data layer)
 // and its UI (Home, Mushaf mode) agree on the same total without duplicating the literal.
 const val TOTAL_MUSHAF_PAGES = 604
 
+@Serializable
 data class Surah(
     val number: Int,
     val name: String,
@@ -14,6 +17,7 @@ data class Surah(
     val revelationType: String,
 )
 
+@Serializable
 data class Ayah(
     val surahNumber: Int,
     val surahName: String,
@@ -27,12 +31,14 @@ data class Ayah(
     val isSajda: Boolean,
 )
 
+@Serializable
 data class SurahDetail(
     val surah: Surah,
     val ayahs: List<Ayah>,
     val surahAudioUrl: String,
 )
 
+@Serializable
 data class QuranSectionDetail(
     val sectionNumber: Int,
     val ayahs: List<Ayah>,
