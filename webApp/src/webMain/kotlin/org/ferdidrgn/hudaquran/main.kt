@@ -7,7 +7,10 @@ import org.ferdidrgn.hudaquran.ui.navigation.DeepLinkController
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     DeepLinkController.handle(currentBrowserUrl())
-    ComposeViewport {
+    // Mounts into the #compose-target div from index.html, rather than appending a canvas
+    // straight onto <body>, so the real SEO header/footer markup around it stays intact — see
+    // the comment in index.html for why that markup needs to exist at all.
+    ComposeViewport(viewportContainerId = "compose-target") {
         App()
     }
 }

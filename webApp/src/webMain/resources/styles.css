@@ -1,7 +1,130 @@
+:root {
+    --seo-header-height: 88px;
+    --paper: #f4ede1;
+    --ink: #0b1f17;
+}
+
 html, body {
     width: 100%;
-    height: 100%;
     margin: 0;
     padding: 0;
+}
+
+/* A real, always-rendered header — see the comment in index.html for why this markup exists
+   at all. Sized to stay out of the way of the app below it on small phone screens. */
+#seo-header {
+    box-sizing: border-box;
+    height: var(--seo-header-height);
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#seo-header h1 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+#seo-header p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(244, 237, 225, 0.82);
+    max-width: 680px;
+}
+
+/* The interactive Compose canvas mounts here (see main.kt). Fixed to exactly one viewport minus
+   the header, and clipped, so the app keeps behaving like the full-screen, no-page-scroll
+   experience it always has — only the header/footer around it are new. */
+#compose-target {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--seo-header-height));
     overflow: hidden;
+}
+
+/* Absolutely positioned rather than flex-centered, so nothing on this container competes with
+   Compose's own JS-driven sizing of the canvas it injects here once the app boots. */
+#seo-loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Real, visible, scrollable-to content — not a crawler-only trick. Styled plainly since its job
+   is to be genuinely readable, not to compete visually with the app above it. */
+#seo-footer {
+    box-sizing: border-box;
+    padding: 32px 20px 56px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#seo-footer section {
+    max-width: 760px;
+    margin: 0 auto 32px;
+}
+
+#seo-footer h2 {
+    font-size: 18px;
+    margin: 0 0 10px;
+}
+
+#seo-footer p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 10px;
+}
+
+#seo-surah-list {
+    columns: 2;
+    column-gap: 24px;
+    padding-left: 20px;
+    margin: 12px 0 0;
+}
+
+#seo-surah-list li {
+    font-size: 13px;
+    line-height: 1.9;
+    break-inside: avoid;
+}
+
+#seo-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+}
+
+#seo-footer a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(11, 31, 23, 0.35);
+}
+
+#seo-footer a:hover {
+    border-bottom-color: var(--ink);
+}
+
+#seo-copyright {
+    max-width: 760px;
+    margin: 0 auto;
+    font-size: 12px;
+    color: rgba(11, 31, 23, 0.6);
+}
+
+@media (max-width: 480px) {
+    #seo-surah-list {
+        columns: 1;
+    }
 }

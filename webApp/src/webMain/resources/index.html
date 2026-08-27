@@ -46,15 +46,191 @@
         }
     </script>
 </head>
-<body style="text-align: center; align-content: center">
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
-        <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
-        <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
-                stroke-dasharray="90 125">
-            <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
-                              repeatCount="indefinite"/>
-        </circle>
-    </svg>
+<body>
+    <!--
+        Huda Qur'an is a Kotlin/Wasm + Compose Multiplatform app: the interactive experience
+        below (#compose-target) renders entirely to a <canvas>, which carries no crawlable text
+        of its own. Without real markup somewhere on the page, every route on this site (Firebase
+        Hosting rewrites every path to this same index.html) looks like an empty "still loading"
+        screen to anything that isn't a full browser — which is exactly what AdSense's content
+        review flags as "screens without publisher content". The header and footer below are
+        genuine, always-rendered HTML: a short header visible the instant the page paints (before
+        the app has even booted), and a longer footer describing the app and linking every real
+        surah page. Real content for crawlers and reviewers, and for a human who scrolls, not a
+        cloaking trick — nothing here is hidden or display:none.
+    -->
+    <header id="seo-header">
+        <h1>Huda Kur'an</h1>
+        <p>Kur'an-ı Kerim'i sesli dinleyin, Türkçe ve 7 farklı dilde mealiyle okuyun, tecvid derslerini öğrenin ve namaz vakitlerini takip edin.</p>
+    </header>
+
+    <div id="compose-target">
+        <svg id="seo-loading-spinner" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
+            <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
+            <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
+                    stroke-dasharray="90 125">
+                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
+                                  repeatCount="indefinite"/>
+            </circle>
+        </svg>
+    </div>
+
+    <footer id="seo-footer">
+        <section>
+            <h2>Huda Kur'an Hakkında</h2>
+            <p>
+                Huda Kur'an, Kur'an-ı Kerim'i cebinizde taşımanızı sağlayan ücretsiz bir okuma ve
+                dinleme uygulamasıdır. Seçtiğiniz hafızdan ayet ayet veya sure sure sesli dinleyebilir,
+                Türkçe başta olmak üzere Arapça, İngilizce, Almanca, Fransızca, Özbekçe, Kırgızca ve
+                Türkmence mealleriyle okuyabilirsiniz.
+            </p>
+            <p>
+                Uygulama; Elif-Ba'dan başlayan sıralı tecvid dersleri, gerçek bir Mushaf gibi sayfa
+                sayfa okuma modu, günün ayeti, favori ayetleriniz, sure/cüz/sayfa/rükû/hizb çeyreği
+                bazında gezinme, secde ayetleri listesi ve konumunuza göre güncellenen namaz vakti
+                bildirimleri sunar.
+            </p>
+        </section>
+
+        <section>
+            <h2>Kur'an-ı Kerim'in 114 Suresi</h2>
+            <p>Herhangi bir sureye doğrudan gitmek için aşağıdaki listeden seçin:</p>
+            <ol id="seo-surah-list">
+                <li><a href="/surah/1">1. Fâtiha</a></li>
+                        <li><a href="/surah/2">2. Bakara</a></li>
+                        <li><a href="/surah/3">3. Âl-i İmrân</a></li>
+                        <li><a href="/surah/4">4. Nisâ</a></li>
+                        <li><a href="/surah/5">5. Mâide</a></li>
+                        <li><a href="/surah/6">6. En'âm</a></li>
+                        <li><a href="/surah/7">7. A'râf</a></li>
+                        <li><a href="/surah/8">8. Enfâl</a></li>
+                        <li><a href="/surah/9">9. Tevbe</a></li>
+                        <li><a href="/surah/10">10. Yûnus</a></li>
+                        <li><a href="/surah/11">11. Hûd</a></li>
+                        <li><a href="/surah/12">12. Yûsuf</a></li>
+                        <li><a href="/surah/13">13. Ra'd</a></li>
+                        <li><a href="/surah/14">14. İbrâhim</a></li>
+                        <li><a href="/surah/15">15. Hicr</a></li>
+                        <li><a href="/surah/16">16. Nahl</a></li>
+                        <li><a href="/surah/17">17. İsrâ</a></li>
+                        <li><a href="/surah/18">18. Kehf</a></li>
+                        <li><a href="/surah/19">19. Meryem</a></li>
+                        <li><a href="/surah/20">20. Tâhâ</a></li>
+                        <li><a href="/surah/21">21. Enbiyâ</a></li>
+                        <li><a href="/surah/22">22. Hac</a></li>
+                        <li><a href="/surah/23">23. Mü'minûn</a></li>
+                        <li><a href="/surah/24">24. Nûr</a></li>
+                        <li><a href="/surah/25">25. Furkân</a></li>
+                        <li><a href="/surah/26">26. Şuarâ</a></li>
+                        <li><a href="/surah/27">27. Neml</a></li>
+                        <li><a href="/surah/28">28. Kasas</a></li>
+                        <li><a href="/surah/29">29. Ankebût</a></li>
+                        <li><a href="/surah/30">30. Rûm</a></li>
+                        <li><a href="/surah/31">31. Lokman</a></li>
+                        <li><a href="/surah/32">32. Secde</a></li>
+                        <li><a href="/surah/33">33. Ahzâb</a></li>
+                        <li><a href="/surah/34">34. Sebe'</a></li>
+                        <li><a href="/surah/35">35. Fâtır</a></li>
+                        <li><a href="/surah/36">36. Yâsîn</a></li>
+                        <li><a href="/surah/37">37. Sâffât</a></li>
+                        <li><a href="/surah/38">38. Sâd</a></li>
+                        <li><a href="/surah/39">39. Zümer</a></li>
+                        <li><a href="/surah/40">40. Mü'min</a></li>
+                        <li><a href="/surah/41">41. Fussilet</a></li>
+                        <li><a href="/surah/42">42. Şûrâ</a></li>
+                        <li><a href="/surah/43">43. Zuhruf</a></li>
+                        <li><a href="/surah/44">44. Duhân</a></li>
+                        <li><a href="/surah/45">45. Câsiye</a></li>
+                        <li><a href="/surah/46">46. Ahkâf</a></li>
+                        <li><a href="/surah/47">47. Muhammed</a></li>
+                        <li><a href="/surah/48">48. Fetih</a></li>
+                        <li><a href="/surah/49">49. Hucurât</a></li>
+                        <li><a href="/surah/50">50. Kâf</a></li>
+                        <li><a href="/surah/51">51. Zâriyât</a></li>
+                        <li><a href="/surah/52">52. Tûr</a></li>
+                        <li><a href="/surah/53">53. Necm</a></li>
+                        <li><a href="/surah/54">54. Kamer</a></li>
+                        <li><a href="/surah/55">55. Rahmân</a></li>
+                        <li><a href="/surah/56">56. Vâkıa</a></li>
+                        <li><a href="/surah/57">57. Hadîd</a></li>
+                        <li><a href="/surah/58">58. Mücâdele</a></li>
+                        <li><a href="/surah/59">59. Haşr</a></li>
+                        <li><a href="/surah/60">60. Mümtehine</a></li>
+                        <li><a href="/surah/61">61. Saf</a></li>
+                        <li><a href="/surah/62">62. Cum'a</a></li>
+                        <li><a href="/surah/63">63. Münâfikûn</a></li>
+                        <li><a href="/surah/64">64. Tegâbün</a></li>
+                        <li><a href="/surah/65">65. Talâk</a></li>
+                        <li><a href="/surah/66">66. Tahrîm</a></li>
+                        <li><a href="/surah/67">67. Mülk</a></li>
+                        <li><a href="/surah/68">68. Kalem</a></li>
+                        <li><a href="/surah/69">69. Hâkka</a></li>
+                        <li><a href="/surah/70">70. Meâric</a></li>
+                        <li><a href="/surah/71">71. Nûh</a></li>
+                        <li><a href="/surah/72">72. Cin</a></li>
+                        <li><a href="/surah/73">73. Müzzemmil</a></li>
+                        <li><a href="/surah/74">74. Müddessir</a></li>
+                        <li><a href="/surah/75">75. Kıyâme</a></li>
+                        <li><a href="/surah/76">76. İnsân</a></li>
+                        <li><a href="/surah/77">77. Mürselât</a></li>
+                        <li><a href="/surah/78">78. Nebe'</a></li>
+                        <li><a href="/surah/79">79. Nâziât</a></li>
+                        <li><a href="/surah/80">80. Abese</a></li>
+                        <li><a href="/surah/81">81. Tekvîr</a></li>
+                        <li><a href="/surah/82">82. İnfitâr</a></li>
+                        <li><a href="/surah/83">83. Mutaffifîn</a></li>
+                        <li><a href="/surah/84">84. İnşikâk</a></li>
+                        <li><a href="/surah/85">85. Bürûc</a></li>
+                        <li><a href="/surah/86">86. Târık</a></li>
+                        <li><a href="/surah/87">87. A'lâ</a></li>
+                        <li><a href="/surah/88">88. Gâşiye</a></li>
+                        <li><a href="/surah/89">89. Fecr</a></li>
+                        <li><a href="/surah/90">90. Beled</a></li>
+                        <li><a href="/surah/91">91. Şems</a></li>
+                        <li><a href="/surah/92">92. Leyl</a></li>
+                        <li><a href="/surah/93">93. Duhâ</a></li>
+                        <li><a href="/surah/94">94. İnşirâh</a></li>
+                        <li><a href="/surah/95">95. Tîn</a></li>
+                        <li><a href="/surah/96">96. Alak</a></li>
+                        <li><a href="/surah/97">97. Kadir</a></li>
+                        <li><a href="/surah/98">98. Beyyine</a></li>
+                        <li><a href="/surah/99">99. Zilzâl</a></li>
+                        <li><a href="/surah/100">100. Âdiyât</a></li>
+                        <li><a href="/surah/101">101. Kâria</a></li>
+                        <li><a href="/surah/102">102. Tekâsür</a></li>
+                        <li><a href="/surah/103">103. Asr</a></li>
+                        <li><a href="/surah/104">104. Hümeze</a></li>
+                        <li><a href="/surah/105">105. Fil</a></li>
+                        <li><a href="/surah/106">106. Kureyş</a></li>
+                        <li><a href="/surah/107">107. Mâûn</a></li>
+                        <li><a href="/surah/108">108. Kevser</a></li>
+                        <li><a href="/surah/109">109. Kâfirûn</a></li>
+                        <li><a href="/surah/110">110. Nasr</a></li>
+                        <li><a href="/surah/111">111. Tebbet</a></li>
+                        <li><a href="/surah/112">112. İhlâs</a></li>
+                        <li><a href="/surah/113">113. Felak</a></li>
+                        <li><a href="/surah/114">114. Nâs</a></li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Diğer Bölümler</h2>
+            <ul id="seo-nav-list">
+                <li><a href="/juz">Cüzler</a></li>
+                <li><a href="/page">Sayfalar (Mushaf modu)</a></li>
+                <li><a href="/manzil">Menziller</a></li>
+                <li><a href="/ruku">Rükûlar</a></li>
+                <li><a href="/hizbQuarter">Hizb Çeyrekleri</a></li>
+                <li><a href="/sajda">Secde Ayetleri</a></li>
+                <li><a href="/reciters">Hafızlar</a></li>
+                <li><a href="/lessons">Tecvid Dersleri</a></li>
+                <li><a href="/search">Ayet Arama</a></li>
+            </ul>
+        </section>
+
+        <p id="seo-copyright">© Huda Kur'an — Kur'an-ı Kerim okuma, dinleme ve öğrenme uygulaması.</p>
+    </footer>
+
     <script type="application/javascript" src="webApp.js"></script>
 </body>
 </html>
