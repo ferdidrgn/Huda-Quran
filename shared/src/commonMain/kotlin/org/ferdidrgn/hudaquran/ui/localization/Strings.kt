@@ -181,7 +181,7 @@ private val turkish = Strings(
     readingLessonsTitle = "Kur'an Okuma Dersleri",
     readingLessonsSubtitleTemplate = "Elif-Ba'dan tecvide, sesli telaffuzlu {n} sıralı ders",
     esmaulHusnaTitle = "Esma-ül Hüsna", discoverQuranTitle = "Kur'an'ı Keşfet",
-    mushafModeLabel = "Mushaf Modu", toggleTranslationLabel = "Meali Göster/Gizle",
+    mushafModeLabel = "Kitap Okuma Modu", toggleTranslationLabel = "Meali Göster/Gizle",
     pagesLabel = "Sayfalar", manzilsLabel = "Menziller", rukusLabel = "Rükûlar",
     hizbQuartersLabel = "Hizb Çeyrekleri", sajdaVersesLabel = "Secde Ayetleri",
     quranStatsTitle = "Kur'an-ı Kerim İstatistikleri", statSurah = "Sure", statJuz = "Cüz",
