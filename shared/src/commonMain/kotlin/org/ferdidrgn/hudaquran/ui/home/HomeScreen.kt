@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.ads.BannerAdView
@@ -585,12 +587,8 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
             return@GlassSurface
         }
 
-        // Zamanı kotlinx-datetime ile alıyoruz (Doğru import ile)
-        val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val currentHour = now.hour
-        val currentMinute = now.minute
-
-        val next = prayerTimes.nextPrayer(currentHour, currentMinute)
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val next = prayerTimes.nextPrayer(now.hour, now.minute)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
