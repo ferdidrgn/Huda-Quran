@@ -21,7 +21,10 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,13 +78,14 @@ fun HomeScreen(
     onOpenArabicAlphabet: () -> Unit,
     onOpenSection: (SectionKind) -> Unit,
     onOpenSajdaAyahs: () -> Unit,
-    onOpenMushafMode: () -> Unit,
+    onOpenMushafMode: (Int) -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
     val prayerRepository = AppContainer.prayerRepository
 
     val lastRead by preferences.lastRead.collectAsState()
+    val lastMushafPage by preferences.lastMushafPage.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -179,6 +183,38 @@ fun HomeScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(2) { PrayerWidget(prayerTimes) }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(2) {
+                GlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                    onClick = { onOpenMushafMode(lastMushafPage ?: 1) },
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconBubble(emoji = "📖", accent = true)
+                        Spacer(Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(strings.mushafModeLabel, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (lastMushafPage != null) {
+                                    strings.mushafResumeSubtitleTemplate.replace("{n}", lastMushafPage.toString())
+                                } else {
+                                    strings.mushafStartSubtitle
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -326,7 +362,6 @@ fun HomeScreen(
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("📖", strings.mushafModeLabel, onClick = onOpenMushafMode) }
                         item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
                         item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
                         item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }

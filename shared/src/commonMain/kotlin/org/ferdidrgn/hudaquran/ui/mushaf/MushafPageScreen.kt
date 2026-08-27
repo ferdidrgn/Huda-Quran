@@ -1,10 +1,18 @@
 package org.ferdidrgn.hudaquran.ui.mushaf
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,23 +20,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,14 +57,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -57,6 +75,7 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
@@ -124,6 +143,8 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
     var loadError by remember(pageNumber) { mutableStateOf(false) }
     var reloadKey by remember(pageNumber) { mutableStateOf(0) }
     var showTranslation by remember { mutableStateOf(true) }
+    var showJumpDialog by remember { mutableStateOf(false) }
+    var showLandscapeHint by remember { mutableStateOf(!preferences.mushafLandscapeHintSeen) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
@@ -137,7 +158,10 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
         loadError = false
         runCatching {
             repository.getSectionDetail(SectionKind.PAGE, pageNumber, preferences.selectedTranslation, preferences.selectedReciter)
-        }.onSuccess { detail = it }.onFailure { loadError = true }
+        }.onSuccess {
+            detail = it
+            preferences.saveLastMushafPage(pageNumber)
+        }.onFailure { loadError = true }
         isLoading = false
     }
 
@@ -151,7 +175,7 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
                 "${strings.sectionSingular(SectionKind.PAGE)} $pageNumber",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).clickable { showJumpDialog = true },
             )
             IconButton(onClick = { showTranslation = !showTranslation }) {
                 Icon(
@@ -209,11 +233,35 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
             )
         }
 
+        if (showLandscapeHint) {
+            MushafLandscapeHint(
+                text = strings.mushafLandscapeHintText,
+                dismissLabel = strings.dismissLabel,
+                onDismiss = {
+                    showLandscapeHint = false
+                    preferences.mushafLandscapeHintSeen = true
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+        }
+
         MushafPageFooter(
             centerLabel = "$pageNumber",
             onPrevious = { if (pageNumber > 1) onChangePage(pageNumber - 1) },
             previousEnabled = pageNumber > 1,
             onNext = { onChangePage(pageNumber + 1) },
+        )
+    }
+
+    if (showJumpDialog) {
+        MushafPageJumpDialog(
+            initialPage = pageNumber,
+            strings = strings,
+            onDismiss = { showJumpDialog = false },
+            onJump = { target ->
+                showJumpDialog = false
+                onChangePage(target.coerceAtLeast(1))
+            },
         )
     }
 }
@@ -234,6 +282,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
     var leftError by remember(leftPageNumber) { mutableStateOf(false) }
     var reloadKey by remember(rightPageNumber) { mutableStateOf(0) }
     var showTranslation by remember { mutableStateOf(true) }
+    var showJumpDialog by remember { mutableStateOf(false) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
@@ -243,7 +292,10 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
         rightError = false
         runCatching {
             repository.getSectionDetail(SectionKind.PAGE, rightPageNumber, preferences.selectedTranslation, preferences.selectedReciter)
-        }.onSuccess { rightDetail = it }.onFailure { rightError = true }
+        }.onSuccess {
+            rightDetail = it
+            preferences.saveLastMushafPage(rightPageNumber)
+        }.onFailure { rightError = true }
         rightLoading = false
     }
     LaunchedEffect(leftPageNumber, reloadKey) {
@@ -274,7 +326,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                 "${strings.sectionSingular(SectionKind.PAGE)} $rightPageNumber–$leftPageNumber",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).clickable { showJumpDialog = true },
             )
             IconButton(onClick = { showTranslation = !showTranslation }) {
                 Icon(
@@ -366,6 +418,18 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
             onPrevious = { if (rightPageNumber > 1) onChangeSpread(rightPageNumber - 2) },
             previousEnabled = rightPageNumber > 1,
             onNext = { onChangeSpread(rightPageNumber + 2) },
+        )
+    }
+
+    if (showJumpDialog) {
+        MushafPageJumpDialog(
+            initialPage = rightPageNumber,
+            strings = strings,
+            onDismiss = { showJumpDialog = false },
+            onJump = { target ->
+                showJumpDialog = false
+                onChangeSpread(target.coerceAtLeast(1))
+            },
         )
     }
 }
@@ -473,6 +537,85 @@ private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previo
         }
         IconButton(onClick = onNext) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        }
+    }
+}
+
+/** Lets the reader type an exact page number and jump straight to it, instead of only stepping ±1. */
+@Composable
+private fun MushafPageJumpDialog(
+    initialPage: Int,
+    strings: Strings,
+    onDismiss: () -> Unit,
+    onJump: (Int) -> Unit,
+) {
+    var input by remember { mutableStateOf(initialPage.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(strings.mushafJumpToPageTitle) },
+        text = {
+            OutlinedTextField(
+                value = input,
+                onValueChange = { new -> input = new.filter { it.isDigit() }.take(3) },
+                placeholder = { Text(strings.mushafJumpToPageHint) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { input.toIntOrNull()?.let { if (it > 0) onJump(it) } }) {
+                Text(strings.goLabel)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(strings.cancelLabel) }
+        },
+    )
+}
+
+/**
+ * A small, self-dismissing "guide" banner shown the first time a reader opens Mushaf mode in
+ * portrait, nudging them toward the two-page landscape spread ([MushafSpreadScreen]). The phone
+ * glyph rocks between portrait and landscape to visually demonstrate the gesture being suggested,
+ * rather than just describing it in text.
+ */
+@Composable
+private fun MushafLandscapeHint(
+    text: String,
+    dismissLabel: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LaunchedEffect(Unit) {
+        delay(6000)
+        onDismiss()
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "mushafRotateHint")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -90f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "phoneRotation",
+    )
+
+    GlassSurface(modifier = modifier, contentPadding = PaddingValues(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Filled.ScreenRotation,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp).graphicsLayer { rotationZ = rotation },
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Filled.Close, contentDescription = dismissLabel)
+            }
         }
     }
 }

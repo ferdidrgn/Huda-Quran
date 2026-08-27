@@ -304,7 +304,7 @@ private fun AppDestinationContent(
             onOpenArabicAlphabet = { navigator.navigate(Screen.TajwidLessonList) },
             onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
             onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
-            onOpenMushafMode = { navigator.navigate(Screen.MushafPage(1)) },
+            onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
         )
 
         is Screen.SurahList -> SurahListScreen(

@@ -26,6 +26,8 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
+        private const val KEY_LAST_MUSHAF_PAGE = "last_mushaf_page"
+        private const val KEY_MUSHAF_LANDSCAPE_HINT_SEEN = "mushaf_landscape_hint_seen"
     }
 
     var adsRemovedUntilMillis: Long
@@ -129,4 +131,16 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         settings.putString(KEY_LAST_READ_SURAH_NAME, surahName)
         _lastRead.value = LastRead(surahNumber, numberInSurah, surahName)
     }
+
+    private val _lastMushafPage = MutableStateFlow(settings.getIntOrNull(KEY_LAST_MUSHAF_PAGE))
+    val lastMushafPage: StateFlow<Int?> = _lastMushafPage.asStateFlow()
+
+    fun saveLastMushafPage(page: Int) {
+        settings.putInt(KEY_LAST_MUSHAF_PAGE, page)
+        _lastMushafPage.value = page
+    }
+
+    var mushafLandscapeHintSeen: Boolean
+        get() = settings.getBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, false)
+        set(value) = settings.putBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, value)
 }

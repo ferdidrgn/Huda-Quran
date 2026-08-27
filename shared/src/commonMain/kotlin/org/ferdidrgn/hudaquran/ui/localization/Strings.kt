@@ -154,6 +154,16 @@ data class Strings(
     val lessonNotFound: String,
     val lessonFallback: String,
     val pronounceContentDescription: String,
+
+    // Mushaf mode extras
+    val cancelLabel: String,
+    val goLabel: String,
+    val dismissLabel: String,
+    val mushafJumpToPageTitle: String,
+    val mushafJumpToPageHint: String,
+    val mushafLandscapeHintText: String,
+    val mushafResumeSubtitleTemplate: String,
+    val mushafStartSubtitle: String,
 )
 
 private val turkish = Strings(
@@ -236,6 +246,12 @@ private val turkish = Strings(
 
     lessonsSubtitleTemplate = "Elif-Ba'dan tecvide, sıralı {n} ders", lessonNotFound = "Ders bulunamadı",
     lessonFallback = "Ders", pronounceContentDescription = "Telaffuzu dinle",
+
+    cancelLabel = "İptal", goLabel = "Git", dismissLabel = "Kapat",
+    mushafJumpToPageTitle = "Sayfaya Git", mushafJumpToPageHint = "Sayfa numarası (1-604)",
+    mushafLandscapeHintText = "Telefonunuzu yan çevirin, gerçek bir kitap gibi çift sayfa okuyun",
+    mushafResumeSubtitleTemplate = "Sayfa {n}'de kaldınız, devam edin",
+    mushafStartSubtitle = "Kitap gibi okuyun, sayfa sayfa çevirin",
 )
 
 private val english = Strings(
@@ -318,6 +334,12 @@ private val english = Strings(
 
     lessonsSubtitleTemplate = "From Elif-Ba to Tajwid, {n} guided lessons", lessonNotFound = "Lesson not found",
     lessonFallback = "Lesson", pronounceContentDescription = "Listen to pronunciation",
+
+    cancelLabel = "Cancel", goLabel = "Go", dismissLabel = "Dismiss",
+    mushafJumpToPageTitle = "Go to Page", mushafJumpToPageHint = "Page number (1-604)",
+    mushafLandscapeHintText = "Rotate your phone sideways to read two pages at once, just like a real book",
+    mushafResumeSubtitleTemplate = "You left off on page {n} — continue reading",
+    mushafStartSubtitle = "Read like a real book, page by page",
 )
 
 private val arabic = Strings(
@@ -400,6 +422,12 @@ private val arabic = Strings(
 
     lessonsSubtitleTemplate = "من الألف باء إلى التجويد، {n} دروس مرتبة", lessonNotFound = "الدرس غير موجود",
     lessonFallback = "درس", pronounceContentDescription = "استمع إلى النطق",
+
+    cancelLabel = "إلغاء", goLabel = "اذهب", dismissLabel = "إغلاق",
+    mushafJumpToPageTitle = "الانتقال إلى صفحة", mushafJumpToPageHint = "رقم الصفحة (1-604)",
+    mushafLandscapeHintText = "أدر هاتفك أفقيًا لقراءة صفحتين في آنٍ واحد، كما في المصحف الحقيقي",
+    mushafResumeSubtitleTemplate = "توقفت عند الصفحة {n}، تابع القراءة",
+    mushafStartSubtitle = "اقرأ كأنه كتاب حقيقي، صفحة بصفحة",
 )
 
 private val german = Strings(
@@ -482,6 +510,12 @@ private val german = Strings(
 
     lessonsSubtitleTemplate = "Von Elif-Ba bis Tadschwid, {n} geführte Lektionen", lessonNotFound = "Lektion nicht gefunden",
     lessonFallback = "Lektion", pronounceContentDescription = "Aussprache anhören",
+
+    cancelLabel = "Abbrechen", goLabel = "Los", dismissLabel = "Schließen",
+    mushafJumpToPageTitle = "Zu Seite springen", mushafJumpToPageHint = "Seitenzahl (1-604)",
+    mushafLandscapeHintText = "Drehen Sie Ihr Telefon quer, um wie in einem echten Buch zwei Seiten gleichzeitig zu lesen",
+    mushafResumeSubtitleTemplate = "Sie waren auf Seite {n} — weiterlesen",
+    mushafStartSubtitle = "Lesen Sie wie in einem echten Buch, Seite für Seite",
 )
 
 private val french = Strings(
@@ -564,6 +598,12 @@ private val french = Strings(
 
     lessonsSubtitleTemplate = "De l'Elif-Ba au tajwid, {n} leçons guidées", lessonNotFound = "Leçon introuvable",
     lessonFallback = "Leçon", pronounceContentDescription = "Écouter la prononciation",
+
+    cancelLabel = "Annuler", goLabel = "Aller", dismissLabel = "Fermer",
+    mushafJumpToPageTitle = "Aller à la page", mushafJumpToPageHint = "Numéro de page (1-604)",
+    mushafLandscapeHintText = "Tournez votre téléphone à l'horizontale pour lire deux pages à la fois, comme un vrai livre",
+    mushafResumeSubtitleTemplate = "Vous étiez à la page {n} — continuer la lecture",
+    mushafStartSubtitle = "Lisez comme un vrai livre, page par page",
 )
 
 private val uzbek = Strings(
@@ -646,6 +686,12 @@ private val uzbek = Strings(
 
     lessonsSubtitleTemplate = "Elif-Bodan tajvidgacha, ketma-ket {n} dars", lessonNotFound = "Dars topilmadi",
     lessonFallback = "Dars", pronounceContentDescription = "Talaffuzni tinglash",
+
+    cancelLabel = "Bekor qilish", goLabel = "O'tish", dismissLabel = "Yopish",
+    mushafJumpToPageTitle = "Sahifaga o'tish", mushafJumpToPageHint = "Sahifa raqami (1-604)",
+    mushafLandscapeHintText = "Haqiqiy kitobdek ikki sahifani birga o'qish uchun telefoningizni yonboshlab tuting",
+    mushafResumeSubtitleTemplate = "{n}-sahifada to'xtagansiz, davom eting",
+    mushafStartSubtitle = "Haqiqiy kitobdek, sahifama-sahifa o'qing",
 )
 
 private val kyrgyz = Strings(
@@ -728,6 +774,12 @@ private val kyrgyz = Strings(
 
     lessonsSubtitleTemplate = "Элип-Байдан тажвидге чейин, ырааттуу {n} сабак", lessonNotFound = "Сабак табылган жок",
     lessonFallback = "Сабак", pronounceContentDescription = "Айтылышын угуу",
+
+    cancelLabel = "Жокко чыгаруу", goLabel = "Өтүү", dismissLabel = "Жабуу",
+    mushafJumpToPageTitle = "Баракка өтүү", mushafJumpToPageHint = "Барак номери (1-604)",
+    mushafLandscapeHintText = "Чыныгы китептей эки баракты бирге окуу үчүн телефонуңузду жанбаштата буруңуз",
+    mushafResumeSubtitleTemplate = "{n}-барактан токтогонсуз, улантыңыз",
+    mushafStartSubtitle = "Чыныгы китептей, барактап окуңуз",
 )
 
 private val turkmen = Strings(
@@ -810,6 +862,12 @@ private val turkmen = Strings(
 
     lessonsSubtitleTemplate = "Elif-Baýdan tejwide çenli, yzygiderli {n} sapak", lessonNotFound = "Sapak tapylmady",
     lessonFallback = "Sapak", pronounceContentDescription = "Aýdylyşyny diňle",
+
+    cancelLabel = "Ýatyr", goLabel = "Git", dismissLabel = "Ýap",
+    mushafJumpToPageTitle = "Sahypa git", mushafJumpToPageHint = "Sahypa belgisi (1-604)",
+    mushafLandscapeHintText = "Hakyky kitap ýaly iki sahypany bilelikde okamak üçin telefonyňyzy ýan tarap öwrüň",
+    mushafResumeSubtitleTemplate = "{n}-sahypada galdyňyz, dowam ediň",
+    mushafStartSubtitle = "Hakyky kitap ýaly, sahypama-sahypa okaň",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {
