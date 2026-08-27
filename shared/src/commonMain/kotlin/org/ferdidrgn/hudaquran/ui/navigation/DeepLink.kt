@@ -100,6 +100,8 @@ object DeepLink {
         is Screen.Settings -> "/settings"
         is Screen.ReciterPicker -> "/reciters"
         is Screen.TranslationPicker -> "/settings"
+        is Screen.TafsirPicker -> "/settings"
+        is Screen.AyahTafsir -> "/tafsir/${screen.globalAyahNumber}"
         is Screen.PrayerLocationPicker -> "/settings"
         is Screen.LanguagePicker -> "/settings"
         is Screen.TajwidLessonList -> "/lessons"

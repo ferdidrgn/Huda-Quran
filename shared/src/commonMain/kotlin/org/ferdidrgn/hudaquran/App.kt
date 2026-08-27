@@ -74,6 +74,7 @@ import org.ferdidrgn.hudaquran.ui.settings.PickerItem
 import org.ferdidrgn.hudaquran.ui.settings.SettingsScreen
 import org.ferdidrgn.hudaquran.ui.splash.SplashScreen
 import org.ferdidrgn.hudaquran.ui.surahdetail.SurahDetailScreen
+import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
 import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
 import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
 
@@ -323,6 +324,7 @@ private fun AppDestinationContent(
             modifier = contentModifier,
             onOpenReciterPicker = { navigator.navigate(Screen.ReciterPicker) },
             onOpenTranslationPicker = { navigator.navigate(Screen.TranslationPicker) },
+            onOpenTafsirPicker = { navigator.navigate(Screen.TafsirPicker) },
             onOpenLocationPicker = { navigator.navigate(Screen.PrayerLocationPicker) },
             onOpenLanguagePicker = { navigator.navigate(Screen.LanguagePicker) },
         )
@@ -344,6 +346,30 @@ private fun AppDestinationContent(
             },
             onBack = { navigator.back() },
             modifier = contentModifier,
+        )
+
+        is Screen.TafsirPicker -> EditionPickerScreen(
+            title = strings.selectTafsirTitle,
+            selectedId = preferences.selectedTafsir,
+            loadItems = {
+                AppContainer.repository.getTafsirs().map { PickerItem(it.identifier, it.displayName, it.language) }
+            },
+            onSelect = { id ->
+                preferences.selectedTafsir = id
+                navigator.back()
+            },
+            onBack = { navigator.back() },
+            modifier = contentModifier,
+        )
+
+        is Screen.AyahTafsir -> TafsirScreen(
+            globalAyahNumber = screen.globalAyahNumber,
+            surahName = screen.surahName,
+            numberInSurah = screen.numberInSurah,
+            arabicText = screen.arabicText,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onChangeTafsir = { navigator.navigate(Screen.TafsirPicker) },
         )
 
         is Screen.PrayerLocationPicker -> EditionPickerScreen(
@@ -389,6 +415,9 @@ private fun AppDestinationContent(
             scrollToAyah = screen.scrollToAyah,
             onBack = { navigator.back() },
             modifier = contentModifier,
+            onOpenTafsir = { ayah ->
+                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
+            },
         )
 
         is Screen.Search -> SearchScreen(

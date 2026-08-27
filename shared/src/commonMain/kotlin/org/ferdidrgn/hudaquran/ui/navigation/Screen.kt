@@ -12,6 +12,8 @@ sealed class Screen {
     data object Settings : Screen()
     data object ReciterPicker : Screen()
     data object TranslationPicker : Screen()
+    data object TafsirPicker : Screen()
+    data class AyahTafsir(val globalAyahNumber: Int, val surahName: String, val numberInSurah: Int, val arabicText: String) : Screen()
     data object PrayerLocationPicker : Screen()
     data object LanguagePicker : Screen()
     data object TajwidLessonList : Screen()

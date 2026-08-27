@@ -13,6 +13,7 @@ import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
+import org.ferdidrgn.hudaquran.domain.model.Tafsir
 import org.ferdidrgn.hudaquran.domain.model.Translation
 
 data class DailyAyah(
@@ -206,6 +207,25 @@ class QuranRepository(
         }.getOrElse { QuranEditions.translations }
         cachedTranslations = loaded
         return loaded
+    }
+
+    private var cachedTafsirs: List<Tafsir>? = null
+
+    suspend fun getTafsirs(): List<Tafsir> {
+        cachedTafsirs?.let { return it }
+        val loaded = runCatching {
+            api.getEditions(format = "text", type = "tafsir")
+                .map { Tafsir(it.identifier, it.language, it.englishName.ifBlank { it.name }) }
+                .distinctBy { it.identifier }
+                .sortedBy { it.language }
+        }.getOrElse { emptyList() }
+        cachedTafsirs = loaded
+        return loaded
+    }
+
+    suspend fun getTafsirForAyah(globalAyahNumber: Int, tafsirEdition: String): String {
+        val result = retryOnce { api.getAyahWithEditions(globalAyahNumber, listOf(tafsirEdition)) }
+        return result.firstOrNull()?.text.orEmpty()
     }
 
     suspend fun searchQuran(keyword: String, edition: String = QuranEditions.DEFAULT_TRANSLATION): List<SearchMatch> {

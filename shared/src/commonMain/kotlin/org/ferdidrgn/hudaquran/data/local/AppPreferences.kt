@@ -20,6 +20,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_LAST_READ_SURAH_NAME = "last_read_surah_name"
         private const val KEY_RECITER = "selected_reciter"
         private const val KEY_TRANSLATION = "selected_translation"
+        private const val KEY_TAFSIR = "selected_tafsir"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_PRAYER_CITY = "prayer_city"
         private const val KEY_PRAYER_COUNTRY = "prayer_country"
@@ -84,6 +85,11 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     var selectedTranslation: String
         get() = settings.getString(KEY_TRANSLATION, QuranEditions.DEFAULT_TRANSLATION)
         set(value) = settings.putString(KEY_TRANSLATION, value)
+
+    /** Empty until the reader picks one (or one is auto-selected on first use of the tafsir screen). */
+    var selectedTafsir: String
+        get() = settings.getString(KEY_TAFSIR, "")
+        set(value) = settings.putString(KEY_TAFSIR, value)
 
     private fun loadThemeMode(): ThemeMode =
         runCatching { ThemeMode.valueOf(settings.getString(KEY_THEME, ThemeMode.SYSTEM.name)) }

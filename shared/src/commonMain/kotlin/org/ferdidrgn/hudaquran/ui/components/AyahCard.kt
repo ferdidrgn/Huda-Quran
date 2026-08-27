@@ -50,6 +50,7 @@ fun AyahCard(
     onPlayToggle: () -> Unit,
     onFavoriteToggle: () -> Unit,
     showSurahLabel: Boolean = false,
+    onTafsirClick: (() -> Unit)? = null,
 ) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     Card(
@@ -95,6 +96,16 @@ fun AyahCard(
                     ayah.translationText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                )
+            }
+            if (onTafsirClick != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    LocalStrings.current.tafsirLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(onClick = onTafsirClick),
                 )
             }
         }

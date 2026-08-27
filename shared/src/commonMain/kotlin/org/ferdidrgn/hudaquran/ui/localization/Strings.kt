@@ -184,6 +184,13 @@ data class Strings(
     val cdRepeat: String,
     val cdPrevious: String,
     val cdNext: String,
+
+    // Tafsir
+    val tafsirLabel: String,
+    val selectTafsirTitle: String,
+    val changeTafsirLabel: String,
+    val tafsirUnavailable: String,
+    val tafsirNotSelected: String,
 )
 
 private val turkish = Strings(
@@ -282,6 +289,7 @@ private val turkish = Strings(
     qiblaInstructions = "Telefonunuzun pusulasını açıp bu açıyı kuzeye göre hizalayın.",
     qiblaLocationUnavailable = "Konum bilgisi alınamadı. Ayarlar'dan şehir/ülke seçtiğinizden emin olun.",
     cdBack = "Geri", cdPlay = "Oynat", cdPause = "Duraklat", cdClose = "Kapat", cdRepeat = "Tekrarla", cdPrevious = "Önceki", cdNext = "Sonraki",
+    tafsirLabel = "Tefsir", selectTafsirTitle = "Tefsir Seç", changeTafsirLabel = "Tefsiri Değiştir", tafsirUnavailable = "Bu ayet için tefsir metni alınamadı.", tafsirNotSelected = "Tefsir seçilmedi",
 )
 
 private val english = Strings(
@@ -380,6 +388,7 @@ private val english = Strings(
     qiblaInstructions = "Open your phone's compass and align this angle with north.",
     qiblaLocationUnavailable = "Couldn't get your location. Make sure you've set a city/country in Settings.",
     cdBack = "Back", cdPlay = "Play", cdPause = "Pause", cdClose = "Close", cdRepeat = "Repeat", cdPrevious = "Previous", cdNext = "Next",
+    tafsirLabel = "Tafsir", selectTafsirTitle = "Select Tafsir", changeTafsirLabel = "Change Tafsir", tafsirUnavailable = "Couldn't load the tafsir for this ayah.", tafsirNotSelected = "No tafsir selected",
 )
 
 private val arabic = Strings(
@@ -478,6 +487,7 @@ private val arabic = Strings(
     qiblaInstructions = "افتح بوصلة هاتفك وقم بمحاذاة هذه الزاوية مع الشمال.",
     qiblaLocationUnavailable = "تعذر الحصول على موقعك. تأكد من تحديد المدينة/الدولة في الإعدادات.",
     cdBack = "رجوع", cdPlay = "تشغيل", cdPause = "إيقاف مؤقت", cdClose = "إغلاق", cdRepeat = "تكرار", cdPrevious = "السابق", cdNext = "التالي",
+    tafsirLabel = "تفسير", selectTafsirTitle = "اختر التفسير", changeTafsirLabel = "تغيير التفسير", tafsirUnavailable = "تعذر تحميل تفسير هذه الآية.", tafsirNotSelected = "لم يتم اختيار تفسير",
 )
 
 private val german = Strings(
@@ -576,6 +586,7 @@ private val german = Strings(
     qiblaInstructions = "Öffnen Sie den Kompass Ihres Telefons und richten Sie diesen Winkel nach Norden aus.",
     qiblaLocationUnavailable = "Standort konnte nicht ermittelt werden. Stellen Sie sicher, dass Stadt/Land in den Einstellungen festgelegt sind.",
     cdBack = "Zurück", cdPlay = "Abspielen", cdPause = "Pause", cdClose = "Schließen", cdRepeat = "Wiederholen", cdPrevious = "Vorherige", cdNext = "Weiter",
+    tafsirLabel = "Tafsir", selectTafsirTitle = "Tafsir auswählen", changeTafsirLabel = "Tafsir ändern", tafsirUnavailable = "Der Tafsir für diesen Vers konnte nicht geladen werden.", tafsirNotSelected = "Kein Tafsir ausgewählt",
 )
 
 private val french = Strings(
@@ -674,6 +685,7 @@ private val french = Strings(
     qiblaInstructions = "Ouvrez la boussole de votre téléphone et alignez cet angle avec le nord.",
     qiblaLocationUnavailable = "Impossible d'obtenir votre position. Vérifiez que la ville/le pays sont définis dans les Paramètres.",
     cdBack = "Retour", cdPlay = "Lecture", cdPause = "Pause", cdClose = "Fermer", cdRepeat = "Répéter", cdPrevious = "Précédent", cdNext = "Suivant",
+    tafsirLabel = "Tafsir", selectTafsirTitle = "Choisir le tafsir", changeTafsirLabel = "Changer le tafsir", tafsirUnavailable = "Impossible de charger le tafsir de ce verset.", tafsirNotSelected = "Aucun tafsir sélectionné",
 )
 
 private val uzbek = Strings(
@@ -772,6 +784,7 @@ private val uzbek = Strings(
     qiblaInstructions = "Telefoningizning kompasini oching va bu burchakni shimolga qarab tekislang.",
     qiblaLocationUnavailable = "Joylashuvingizni aniqlab bo'lmadi. Sozlamalarda shahar/davlat tanlanganiga ishonch hosil qiling.",
     cdBack = "Orqaga", cdPlay = "Ijro et", cdPause = "Pauza", cdClose = "Yopish", cdRepeat = "Takrorlash", cdPrevious = "Oldingi", cdNext = "Keyingi",
+    tafsirLabel = "Tafsir", selectTafsirTitle = "Tafsirni tanlang", changeTafsirLabel = "Tafsirni o'zgartirish", tafsirUnavailable = "Bu oyat uchun tafsir yuklanmadi.", tafsirNotSelected = "Tafsir tanlanmagan",
 )
 
 private val kyrgyz = Strings(
@@ -870,6 +883,7 @@ private val kyrgyz = Strings(
     qiblaInstructions = "Телефонуңуздун компасын ачып, бул бурчту түндүккө карай тегиздеңиз.",
     qiblaLocationUnavailable = "Жайгашкан жериңизди аныктоо мүмкүн болбоду. Жөндөөлөрдө шаар/өлкө тандалганына ынаныңыз.",
     cdBack = "Артка", cdPlay = "Ойнотуу", cdPause = "Тыныгуу", cdClose = "Жабуу", cdRepeat = "Кайталоо", cdPrevious = "Мурунку", cdNext = "Кийинки",
+    tafsirLabel = "Тафсир", selectTafsirTitle = "Тафсирди тандаңыз", changeTafsirLabel = "Тафсирди өзгөртүү", tafsirUnavailable = "Бул аят үчүн тафсир жүктөлгөн жок.", tafsirNotSelected = "Тафсир тандалган жок",
 )
 
 private val turkmen = Strings(
@@ -968,6 +982,7 @@ private val turkmen = Strings(
     qiblaInstructions = "Telefonyňyzyň kompasyny açyp, bu burçy demirgazyga görä deňleşdiriň.",
     qiblaLocationUnavailable = "Ýerleşiş maglumaty alynyp bilinmedi. Sazlamalarda şäher/ýurt saýlanandygyna göz ýetiriň.",
     cdBack = "Yza", cdPlay = "Ýerine ýetir", cdPause = "Duruzmak", cdClose = "Ýapmak", cdRepeat = "Gaýtalamak", cdPrevious = "Öňki", cdNext = "Indiki",
+    tafsirLabel = "Tefsir", selectTafsirTitle = "Tefsir saýlaň", changeTafsirLabel = "Tefsiri üýtget", tafsirUnavailable = "Bu aýat üçin tefsir ýüklenip bilinmedi.", tafsirNotSelected = "Tefsir saýlanmady",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

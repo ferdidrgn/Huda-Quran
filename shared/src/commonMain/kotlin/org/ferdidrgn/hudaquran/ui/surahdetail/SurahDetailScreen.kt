@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
@@ -53,6 +54,7 @@ fun SurahDetailScreen(
     scrollToAyah: Int?,
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
+    onOpenTafsir: (Ayah) -> Unit,
 ) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
@@ -168,6 +170,7 @@ fun SurahDetailScreen(
                                 playback.toggleAyahInQueue(detail!!.ayahs, index, surahNumber, detail!!.surah.englishName, preferences.selectedReciter)
                             },
                             onFavoriteToggle = { preferences.toggleFavorite(surahNumber, ayah.numberInSurah) },
+                            onTafsirClick = { onOpenTafsir(ayah) },
                         )
                         if (showAds && index == midIndex) AdBannerCard()
                     }

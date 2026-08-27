@@ -83,6 +83,8 @@ data class Reciter(val identifier: String, val displayName: String)
 
 data class Translation(val identifier: String, val language: String, val displayName: String)
 
+data class Tafsir(val identifier: String, val language: String, val displayName: String)
+
 object QuranEditions {
     val reciters = listOf(
         Reciter("ar.alafasy", "Mishary Alafasy"),

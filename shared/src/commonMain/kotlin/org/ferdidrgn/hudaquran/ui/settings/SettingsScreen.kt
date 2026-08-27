@@ -52,6 +52,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onOpenReciterPicker: () -> Unit,
     onOpenTranslationPicker: () -> Unit,
+    onOpenTafsirPicker: () -> Unit,
     onOpenLocationPicker: () -> Unit,
     onOpenLanguagePicker: () -> Unit,
 ) {
@@ -65,6 +66,7 @@ fun SettingsScreen(
 
     var reciterName by remember { mutableStateOf(preferences.selectedReciter) }
     var translationName by remember { mutableStateOf(preferences.selectedTranslation) }
+    var tafsirName by remember { mutableStateOf(preferences.selectedTafsir) }
     val city = preferences.prayerCity
     val country = preferences.prayerCountry
     val locationDisplayName = PrayerLocations.all.firstOrNull { it.city == city && it.country == country }
@@ -76,6 +78,13 @@ fun SettingsScreen(
         if (reciter != null) reciterName = reciter.displayName
         val translation = repository.getTranslations().firstOrNull { it.identifier == preferences.selectedTranslation }
         if (translation != null) translationName = "${translation.displayName} (${translation.language})"
+        val tafsirs = repository.getTafsirs()
+        val tafsir = tafsirs.firstOrNull { it.identifier == preferences.selectedTafsir }
+        tafsirName = when {
+            tafsir != null -> "${tafsir.displayName} (${tafsir.language})"
+            preferences.selectedTafsir.isBlank() -> strings.tafsirNotSelected
+            else -> preferences.selectedTafsir
+        }
     }
 
     fun rescheduleNotifications(enabled: Boolean) {
@@ -118,6 +127,8 @@ fun SettingsScreen(
             NavigationRow(title = strings.reciterLabel, value = reciterName, onClick = onOpenReciterPicker)
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(title = strings.translationLabel, value = translationName, onClick = onOpenTranslationPicker)
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(title = strings.tafsirLabel, value = tafsirName, onClick = onOpenTafsirPicker)
         }
 
         if (!preferences.isAdFree()) {
