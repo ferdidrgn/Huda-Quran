@@ -27,6 +27,20 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
 
+// Release signing, sourced from environment variables so the same keystore you already use in
+// Android Studio's "Generate Signed App Bundle" wizard can also sign CI/CD builds — nothing here
+// changes when those variables are unset, so local `bundleRelease` runs still fall back to the
+// debug key exactly as before. Set these locally only if you want a command-line release build to
+// be genuinely upload-signed; in CI they come from repo secrets (see .github/workflows/ci.yml).
+val releaseKeystorePath: String? = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword: String? = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias: String? = System.getenv("ANDROID_KEY_ALIAS")
+val releaseKeyPassword: String? = System.getenv("ANDROID_KEY_PASSWORD")
+val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
+    !releaseKeystorePassword.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() &&
+    !releaseKeyPassword.isNullOrBlank()
+
 android {
     namespace = "org.ferdidrgn.hudaquran"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -43,13 +57,21 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseKeystorePath!!)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
-            // Debug-signed so `assembleRelease` produces something `adb install` can actually
-            // install locally for crash testing (R8/minification behavior included) without
-            // needing the real upload keystore. Play Console re-signs uploaded bundles with the
-            // real app-signing key regardless, so this has no effect on what you actually publish.
-            signingConfig = signingConfigs.getByName("debug")
+            // Falls back to debug-signing (installable locally, but NOT a valid Play Store
+            // upload) whenever the real keystore env vars above aren't set.
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
