@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Huda Quran</string>
+    <string name="widget_app_label">HUDA KUR\'AN</string>
+    <string name="widget_continue_reading_title">Okumaya devam et</string>
+    <string name="widget_title_placeholder">Kur\'an okumaya başla</string>
+    <string name="widget_subtitle_placeholder">Dokunun ve okumaya başlayın</string>
+    <string name="widget_description">Kaldığınız yerden okumaya devam edin</string>
 </resources>

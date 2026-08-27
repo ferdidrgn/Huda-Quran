@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import org.ferdidrgn.hudaquran.ui.navigation.DeepLinkController
+import org.ferdidrgn.hudaquran.widget.LastReadWidgetProvider
 
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher =
@@ -34,6 +35,11 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleDeepLinkIntent(intent)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        LastReadWidgetProvider.refreshAll(applicationContext)
     }
 
     private fun handleDeepLinkIntent(intent: Intent?) {
