@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -60,7 +61,7 @@ import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
 
