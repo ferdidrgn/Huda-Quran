@@ -25,18 +25,6 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
-
-    // play-services-ads (pulled in via :shared) declares an old androidx.fragment floor
-    // (1.1.0) in its own POM, which Play Console's SDK Index flags as outdated. A `constraint`
-    // only nudges Gradle's normal version-conflict resolution toward this version when fragment
-    // is already present in the graph via that transitive path — unlike a plain `implementation`
-    // dependency, it never pulls in fragment's own transitive deps (activity/lifecycle), so it
-    // can't cause the classpath skew a direct dependency risked last time.
-    constraints {
-        implementation("androidx.fragment:fragment:1.8.5") {
-            because("Play Console SDK Index flags play-services-ads' transitive fragment:1.1.0 as outdated")
-        }
-    }
 }
 
 android {
