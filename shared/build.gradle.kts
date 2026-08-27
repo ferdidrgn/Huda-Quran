@@ -69,11 +69,6 @@ kotlin {
             implementation(libs.androidx.media3.exoplayer)
             implementation(libs.androidx.media3.common)
             implementation(libs.androidx.activity.compose)
-            // play-services-ads' own POM still declares an old androidx.fragment floor (1.1.0),
-            // which Play Console's SDK Index flags as outdated even though nothing in this app
-            // actually uses that old copy. Depending on a current fragment-ktx directly forces
-            // Gradle's default highest-version-wins resolution to settle on the modern one.
-            implementation(libs.androidx.fragment)
             implementation(libs.play.services.ads)
             implementation(libs.android.billing.ktx)
             implementation(project.dependencies.platform(libs.firebase.bom))
