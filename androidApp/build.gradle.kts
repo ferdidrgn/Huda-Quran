@@ -27,6 +27,16 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
 
+// Backstop for Play Console's "SDK version is outdated" warning on androidx.fragment: some
+// transitive dependency (play-services-ads) declares an old 1.1.0 floor in its own POM. Forcing
+// the resolved version here guarantees the AAB actually ships the modern copy regardless of what
+// any dependency requests.
+configurations.all {
+    resolutionStrategy {
+        force("androidx.fragment:fragment:${libs.versions.androidx.fragment.get()}")
+    }
+}
+
 android {
     namespace = "org.ferdidrgn.hudaquran"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
