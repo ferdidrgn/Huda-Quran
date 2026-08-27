@@ -108,7 +108,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(26.dp))
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = strings.cdClose, modifier = Modifier.size(26.dp))
             }
             Text(strings.nowPlayingTitle, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box(
@@ -121,7 +121,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             ) {
                 Icon(
                     Icons.Filled.Repeat,
-                    contentDescription = null,
+                    contentDescription = strings.cdRepeat,
                     tint = if (repeatOne) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
@@ -211,7 +211,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TransportButton(size = 48.dp, enabled = hasPrevious, onClick = { playback.skipPrevious() }) {
-                Icon(Icons.Filled.SkipPrevious, contentDescription = null, modifier = Modifier.size(24.dp))
+                Icon(Icons.Filled.SkipPrevious, contentDescription = strings.cdPrevious, modifier = Modifier.size(24.dp))
             }
             TransportButton(
                 size = 72.dp,
@@ -220,13 +220,13 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                 onClick = { playback.togglePlayPause() },
             ) {
                 if (isPlaying) {
-                    Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
+                    Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
                 } else {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
+                    Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(34.dp))
                 }
             }
             TransportButton(size = 48.dp, enabled = hasNext, onClick = { playback.skipNext() }) {
-                Icon(Icons.Filled.SkipNext, contentDescription = null, modifier = Modifier.size(24.dp))
+                Icon(Icons.Filled.SkipNext, contentDescription = strings.cdNext, modifier = Modifier.size(24.dp))
             }
         }
 

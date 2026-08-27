@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun AyahCard(
@@ -115,6 +116,7 @@ private fun FavoriteToggleButton(isFavorite: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: () -> Unit) {
+    val strings = LocalStrings.current
     val transition = rememberInfiniteTransition()
     val pulse by transition.animateFloat(
         initialValue = 1f,
@@ -147,8 +149,8 @@ fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: () -> Unit
                 strokeWidth = 2.dp,
                 color = MaterialTheme.colorScheme.onPrimary,
             )
-            isPlaying -> Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
-            else -> Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            isPlaying -> Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
+            else -> Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
     }
 }

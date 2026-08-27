@@ -175,6 +175,15 @@ data class Strings(
     val qiblaBearingTemplate: String,
     val qiblaInstructions: String,
     val qiblaLocationUnavailable: String,
+
+    // Accessibility content descriptions
+    val cdBack: String,
+    val cdPlay: String,
+    val cdPause: String,
+    val cdClose: String,
+    val cdRepeat: String,
+    val cdPrevious: String,
+    val cdNext: String,
 )
 
 private val turkish = Strings(
@@ -272,6 +281,7 @@ private val turkish = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Telefonunuzun pusulasını açıp bu açıyı kuzeye göre hizalayın.",
     qiblaLocationUnavailable = "Konum bilgisi alınamadı. Ayarlar'dan şehir/ülke seçtiğinizden emin olun.",
+    cdBack = "Geri", cdPlay = "Oynat", cdPause = "Duraklat", cdClose = "Kapat", cdRepeat = "Tekrarla", cdPrevious = "Önceki", cdNext = "Sonraki",
 )
 
 private val english = Strings(
@@ -369,6 +379,7 @@ private val english = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Open your phone's compass and align this angle with north.",
     qiblaLocationUnavailable = "Couldn't get your location. Make sure you've set a city/country in Settings.",
+    cdBack = "Back", cdPlay = "Play", cdPause = "Pause", cdClose = "Close", cdRepeat = "Repeat", cdPrevious = "Previous", cdNext = "Next",
 )
 
 private val arabic = Strings(
@@ -466,6 +477,7 @@ private val arabic = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "افتح بوصلة هاتفك وقم بمحاذاة هذه الزاوية مع الشمال.",
     qiblaLocationUnavailable = "تعذر الحصول على موقعك. تأكد من تحديد المدينة/الدولة في الإعدادات.",
+    cdBack = "رجوع", cdPlay = "تشغيل", cdPause = "إيقاف مؤقت", cdClose = "إغلاق", cdRepeat = "تكرار", cdPrevious = "السابق", cdNext = "التالي",
 )
 
 private val german = Strings(
@@ -563,6 +575,7 @@ private val german = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Öffnen Sie den Kompass Ihres Telefons und richten Sie diesen Winkel nach Norden aus.",
     qiblaLocationUnavailable = "Standort konnte nicht ermittelt werden. Stellen Sie sicher, dass Stadt/Land in den Einstellungen festgelegt sind.",
+    cdBack = "Zurück", cdPlay = "Abspielen", cdPause = "Pause", cdClose = "Schließen", cdRepeat = "Wiederholen", cdPrevious = "Vorherige", cdNext = "Weiter",
 )
 
 private val french = Strings(
@@ -660,6 +673,7 @@ private val french = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Ouvrez la boussole de votre téléphone et alignez cet angle avec le nord.",
     qiblaLocationUnavailable = "Impossible d'obtenir votre position. Vérifiez que la ville/le pays sont définis dans les Paramètres.",
+    cdBack = "Retour", cdPlay = "Lecture", cdPause = "Pause", cdClose = "Fermer", cdRepeat = "Répéter", cdPrevious = "Précédent", cdNext = "Suivant",
 )
 
 private val uzbek = Strings(
@@ -757,6 +771,7 @@ private val uzbek = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Telefoningizning kompasini oching va bu burchakni shimolga qarab tekislang.",
     qiblaLocationUnavailable = "Joylashuvingizni aniqlab bo'lmadi. Sozlamalarda shahar/davlat tanlanganiga ishonch hosil qiling.",
+    cdBack = "Orqaga", cdPlay = "Ijro et", cdPause = "Pauza", cdClose = "Yopish", cdRepeat = "Takrorlash", cdPrevious = "Oldingi", cdNext = "Keyingi",
 )
 
 private val kyrgyz = Strings(
@@ -854,6 +869,7 @@ private val kyrgyz = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Телефонуңуздун компасын ачып, бул бурчту түндүккө карай тегиздеңиз.",
     qiblaLocationUnavailable = "Жайгашкан жериңизди аныктоо мүмкүн болбоду. Жөндөөлөрдө шаар/өлкө тандалганына ынаныңыз.",
+    cdBack = "Артка", cdPlay = "Ойнотуу", cdPause = "Тыныгуу", cdClose = "Жабуу", cdRepeat = "Кайталоо", cdPrevious = "Мурунку", cdNext = "Кийинки",
 )
 
 private val turkmen = Strings(
@@ -951,6 +967,7 @@ private val turkmen = Strings(
     qiblaBearingTemplate = "{degree}° ({cardinal})",
     qiblaInstructions = "Telefonyňyzyň kompasyny açyp, bu burçy demirgazyga görä deňleşdiriň.",
     qiblaLocationUnavailable = "Ýerleşiş maglumaty alynyp bilinmedi. Sazlamalarda şäher/ýurt saýlanandygyna göz ýetiriň.",
+    cdBack = "Yza", cdPlay = "Ýerine ýetir", cdPause = "Duruzmak", cdClose = "Ýapmak", cdRepeat = "Gaýtalamak", cdPrevious = "Öňki", cdNext = "Indiki",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

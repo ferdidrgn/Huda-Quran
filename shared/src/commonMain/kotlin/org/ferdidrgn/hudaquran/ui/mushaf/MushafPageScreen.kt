@@ -200,9 +200,9 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
                     },
                 ) {
                     if (isThisPagePlaying) {
-                        Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.primary)
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -353,9 +353,9 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                     },
                 ) {
                     if (isSpreadPlaying) {
-                        Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.primary)
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -525,13 +525,14 @@ private fun MushafPageColumn(
 
 @Composable
 private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previousEnabled: Boolean, onNext: () -> Unit) {
+    val strings = LocalStrings.current
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onPrevious, enabled = previousEnabled) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
         }
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))) {
             Text(
@@ -541,7 +542,7 @@ private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previo
             )
         }
         IconButton(onClick = onNext) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = strings.cdNext)
         }
     }
 }

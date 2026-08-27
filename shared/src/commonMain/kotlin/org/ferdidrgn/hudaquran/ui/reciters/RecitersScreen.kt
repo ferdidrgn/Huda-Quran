@@ -238,13 +238,13 @@ private fun ReciterRow(
                     )
                     isPreviewPlaying -> Icon(
                         Icons.Filled.Pause,
-                        contentDescription = null,
+                        contentDescription = strings.cdPause,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(18.dp),
                     )
                     else -> Icon(
                         Icons.Filled.PlayArrow,
-                        contentDescription = null,
+                        contentDescription = strings.cdPlay,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(18.dp),
                     )

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun MiniPlayerBar(
@@ -42,6 +43,7 @@ fun MiniPlayerBar(
     onStop: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val strings = LocalStrings.current
     GlassSurface(
         modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
         shape = MaterialTheme.shapes.large,
@@ -94,13 +96,13 @@ fun MiniPlayerBar(
                         strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
-                    isPlaying -> Icon(Icons.Filled.Pause, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
-                    else -> Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                    isPlaying -> Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.onPrimary)
+                    else -> Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.onPrimary)
                 }
             }
             Box(modifier = Modifier.size(8.dp))
             PlayerRoundButton(background = MaterialTheme.colorScheme.surfaceVariant, onClick = onStop) {
-                Icon(Icons.Filled.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Filled.Close, contentDescription = strings.cdClose, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

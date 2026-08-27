@@ -8,6 +8,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 /**
  * A static "←" glyph doesn't flip when the layout direction is RTL (Arabic UI). This uses
@@ -16,6 +17,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BackButton(onBack: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(onClick = onBack, modifier = modifier.size(48.dp)) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = LocalStrings.current.cdBack)
     }
 }
