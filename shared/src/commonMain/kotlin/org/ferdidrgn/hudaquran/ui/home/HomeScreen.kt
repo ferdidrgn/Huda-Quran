@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.weight
@@ -21,8 +22,11 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,8 +65,11 @@ import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.platform.Platform
+import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import kotlinx.datetime.Clock
 
@@ -137,8 +147,13 @@ fun HomeScreen(
         popularSurahNumbers.mapNotNull { number -> surahs.firstOrNull { it.number == number } }
     }
 
+    val isWeb = currentPlatform == Platform.WEB
+
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 180.dp),
+        // A real website reads as a magazine page, not a phone screen with more room around it —
+        // wider minimum tiles on web mean fewer, larger cards per row instead of the same small
+        // mobile tile just repeated more times.
+        columns = GridCells.Adaptive(minSize = if (isWeb) 240.dp else 180.dp),
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -146,16 +161,25 @@ fun HomeScreen(
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
-                Column {
-                    Text(
-                        "${strings.homeGreeting} 👋",
-                        style = MaterialTheme.typography.headlineMedium
+                if (isWeb) {
+                    WebHomeHero(
+                        greeting = strings.homeGreeting,
+                        subtitle = strings.homeSubtitle,
+                        ctaLabel = strings.navSurahs,
+                        onCtaClick = onOpenSurahList,
                     )
-                    Text(
-                        strings.homeSubtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                } else {
+                    Column {
+                        Text(
+                            "${strings.homeGreeting} 👋",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Text(
+                            strings.homeSubtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -571,6 +595,48 @@ fun HomeScreen(
                 ) {
                     BannerAdView(modifier = Modifier.fillMaxWidth())
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The web-only landing hero: a dark, motif-textured panel with a real headline and a call to
+ * action, replacing the plain "greeting + subtitle" text mobile gets. This is the single biggest
+ * cue that a visitor landed on a real website rather than a phone app opened in a browser tab.
+ */
+@Composable
+private fun WebHomeHero(greeting: String, subtitle: String, ctaLabel: String, onCtaClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF16352A), Color(0xFF081410))))
+            .padding(40.dp),
+    ) {
+        IslamicMotifBackground(modifier = Modifier.matchParentSize(), tint = Color.White, alpha = 0.06f)
+        Column {
+            Text(
+                "$greeting 👋",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Black,
+                color = Color.White,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.75f),
+            )
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onCtaClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF0B1F17)),
+            ) {
+                Text(ctaLabel, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(6.dp))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
             }
         }
     }
