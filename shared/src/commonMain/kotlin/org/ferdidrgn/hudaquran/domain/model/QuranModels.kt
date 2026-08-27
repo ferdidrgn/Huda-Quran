@@ -1,5 +1,10 @@
 package org.ferdidrgn.hudaquran.domain.model
 
+// The standard 15-line Uthmani mushaf layout — the same one AlQuran Cloud's /page endpoints
+// paginate against — always has exactly 604 pages. Shared so khatm-progress tracking (data layer)
+// and its UI (Home, Mushaf mode) agree on the same total without duplicating the literal.
+const val TOTAL_MUSHAF_PAGES = 604
+
 data class Surah(
     val number: Int,
     val name: String,

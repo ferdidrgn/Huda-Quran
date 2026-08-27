@@ -164,6 +164,11 @@ data class Strings(
     val mushafLandscapeHintText: String,
     val mushafResumeSubtitleTemplate: String,
     val mushafStartSubtitle: String,
+
+    // Khatm (hatim) progress
+    val khatmProgressTitle: String,
+    val khatmProgressTemplate: String,
+    val khatmCompletedCountTemplate: String,
 )
 
 private val turkish = Strings(
@@ -252,6 +257,10 @@ private val turkish = Strings(
     mushafLandscapeHintText = "Telefonunuzu yan çevirin, gerçek bir kitap gibi çift sayfa okuyun",
     mushafResumeSubtitleTemplate = "Sayfa {n}'de kaldınız, devam edin",
     mushafStartSubtitle = "Kitap gibi okuyun, sayfa sayfa çevirin",
+
+    khatmProgressTitle = "Hatim İlerlemeniz",
+    khatmProgressTemplate = "Sayfa {page} / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Tamamlanan hatim: {n}",
 )
 
 private val english = Strings(
@@ -340,6 +349,10 @@ private val english = Strings(
     mushafLandscapeHintText = "Rotate your phone sideways to read two pages at once, just like a real book",
     mushafResumeSubtitleTemplate = "You left off on page {n} — continue reading",
     mushafStartSubtitle = "Read like a real book, page by page",
+
+    khatmProgressTitle = "Your Khatm Progress",
+    khatmProgressTemplate = "Page {page} / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Completed khatms: {n}",
 )
 
 private val arabic = Strings(
@@ -428,6 +441,10 @@ private val arabic = Strings(
     mushafLandscapeHintText = "أدر هاتفك أفقيًا لقراءة صفحتين في آنٍ واحد، كما في المصحف الحقيقي",
     mushafResumeSubtitleTemplate = "توقفت عند الصفحة {n}، تابع القراءة",
     mushafStartSubtitle = "اقرأ كأنه كتاب حقيقي، صفحة بصفحة",
+
+    khatmProgressTitle = "تقدمك في الختمة",
+    khatmProgressTemplate = "الصفحة {page} / {total} (%{percent})",
+    khatmCompletedCountTemplate = "الختمات المكتملة: {n}",
 )
 
 private val german = Strings(
@@ -516,6 +533,10 @@ private val german = Strings(
     mushafLandscapeHintText = "Drehen Sie Ihr Telefon quer, um wie in einem echten Buch zwei Seiten gleichzeitig zu lesen",
     mushafResumeSubtitleTemplate = "Sie waren auf Seite {n} — weiterlesen",
     mushafStartSubtitle = "Lesen Sie wie in einem echten Buch, Seite für Seite",
+
+    khatmProgressTitle = "Ihr Khatm-Fortschritt",
+    khatmProgressTemplate = "Seite {page} / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Abgeschlossene Khatms: {n}",
 )
 
 private val french = Strings(
@@ -604,6 +625,10 @@ private val french = Strings(
     mushafLandscapeHintText = "Tournez votre téléphone à l'horizontale pour lire deux pages à la fois, comme un vrai livre",
     mushafResumeSubtitleTemplate = "Vous étiez à la page {n} — continuer la lecture",
     mushafStartSubtitle = "Lisez comme un vrai livre, page par page",
+
+    khatmProgressTitle = "Votre progression du khatm",
+    khatmProgressTemplate = "Page {page} / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Khatms terminés : {n}",
 )
 
 private val uzbek = Strings(
@@ -692,6 +717,10 @@ private val uzbek = Strings(
     mushafLandscapeHintText = "Haqiqiy kitobdek ikki sahifani birga o'qish uchun telefoningizni yonboshlab tuting",
     mushafResumeSubtitleTemplate = "{n}-sahifada to'xtagansiz, davom eting",
     mushafStartSubtitle = "Haqiqiy kitobdek, sahifama-sahifa o'qing",
+
+    khatmProgressTitle = "Xatm jarayoningiz",
+    khatmProgressTemplate = "{page}-sahifa / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Tugallangan xatmlar: {n}",
 )
 
 private val kyrgyz = Strings(
@@ -780,6 +809,10 @@ private val kyrgyz = Strings(
     mushafLandscapeHintText = "Чыныгы китептей эки баракты бирге окуу үчүн телефонуңузду жанбаштата буруңуз",
     mushafResumeSubtitleTemplate = "{n}-барактан токтогонсуз, улантыңыз",
     mushafStartSubtitle = "Чыныгы китептей, барактап окуңуз",
+
+    khatmProgressTitle = "Хатм жүрүшүңүз",
+    khatmProgressTemplate = "{page}-барак / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Аяктаган хатмдар: {n}",
 )
 
 private val turkmen = Strings(
@@ -868,6 +901,10 @@ private val turkmen = Strings(
     mushafLandscapeHintText = "Hakyky kitap ýaly iki sahypany bilelikde okamak üçin telefonyňyzy ýan tarap öwrüň",
     mushafResumeSubtitleTemplate = "{n}-sahypada galdyňyz, dowam ediň",
     mushafStartSubtitle = "Hakyky kitap ýaly, sahypama-sahypa okaň",
+
+    khatmProgressTitle = "Hatmiňiziň dowamy",
+    khatmProgressTemplate = "{page}-sahypa / {total} (%{percent})",
+    khatmCompletedCountTemplate = "Tamamlanan hatmlar: {n}",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

@@ -28,6 +28,8 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
         private const val KEY_LAST_MUSHAF_PAGE = "last_mushaf_page"
         private const val KEY_MUSHAF_LANDSCAPE_HINT_SEEN = "mushaf_landscape_hint_seen"
+        private const val KEY_KHATM_FURTHEST_PAGE = "khatm_furthest_page"
+        private const val KEY_KHATM_COMPLETED_COUNT = "khatm_completed_count"
     }
 
     var adsRemovedUntilMillis: Long
@@ -143,4 +145,30 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     var mushafLandscapeHintSeen: Boolean
         get() = settings.getBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, false)
         set(value) = settings.putBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, value)
+
+    private val _khatmFurthestPage = MutableStateFlow(settings.getInt(KEY_KHATM_FURTHEST_PAGE, 0))
+    val khatmFurthestPage: StateFlow<Int> = _khatmFurthestPage.asStateFlow()
+
+    private val _khatmCompletedCount = MutableStateFlow(settings.getInt(KEY_KHATM_COMPLETED_COUNT, 0))
+    val khatmCompletedCount: StateFlow<Int> = _khatmCompletedCount.asStateFlow()
+
+    /**
+     * Advances hatim (khatm) progress as the reader moves through Mushaf page mode. Progress only
+     * ever moves forward — jumping back to re-read an earlier page doesn't undo it, matching how a
+     * physical mushaf bookmark works. Reaching [totalPages] completes the khatm and starts a new
+     * one from page 0, incrementing the completed count.
+     */
+    fun advanceKhatmProgress(pageNumber: Int, totalPages: Int) {
+        if (pageNumber <= _khatmFurthestPage.value) return
+        if (pageNumber >= totalPages) {
+            settings.putInt(KEY_KHATM_FURTHEST_PAGE, 0)
+            _khatmFurthestPage.value = 0
+            val completed = _khatmCompletedCount.value + 1
+            settings.putInt(KEY_KHATM_COMPLETED_COUNT, completed)
+            _khatmCompletedCount.value = completed
+        } else {
+            settings.putInt(KEY_KHATM_FURTHEST_PAGE, pageNumber)
+            _khatmFurthestPage.value = pageNumber
+        }
+    }
 }

@@ -74,6 +74,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
+import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -161,6 +162,7 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
         }.onSuccess {
             detail = it
             preferences.saveLastMushafPage(pageNumber)
+            preferences.advanceKhatmProgress(pageNumber, TOTAL_MUSHAF_PAGES)
         }.onFailure { loadError = true }
         isLoading = false
     }
@@ -295,6 +297,9 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
         }.onSuccess {
             rightDetail = it
             preferences.saveLastMushafPage(rightPageNumber)
+            // Both pages of the spread are visible at once, so the left (higher-numbered) page
+            // is the honest "furthest read" mark here, not just the right one.
+            preferences.advanceKhatmProgress(leftPageNumber, TOTAL_MUSHAF_PAGES)
         }.onFailure { rightError = true }
         rightLoading = false
     }

@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ import org.ferdidrgn.hudaquran.domain.model.QuranMeta
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
@@ -94,6 +96,8 @@ fun HomeScreen(
 
     val lastRead by preferences.lastRead.collectAsState()
     val lastMushafPage by preferences.lastMushafPage.collectAsState()
+    val khatmFurthestPage by preferences.khatmFurthestPage.collectAsState()
+    val khatmCompletedCount by preferences.khatmCompletedCount.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -259,6 +263,41 @@ fun HomeScreen(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(2) {
+                GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        strings.khatmProgressTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    val khatmPercent = (khatmFurthestPage * 100 / TOTAL_MUSHAF_PAGES).coerceIn(0, 100)
+                    LinearProgressIndicator(
+                        progress = { khatmFurthestPage.toFloat() / TOTAL_MUSHAF_PAGES.toFloat() },
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        strings.khatmProgressTemplate
+                            .replace("{page}", khatmFurthestPage.toString())
+                            .replace("{total}", TOTAL_MUSHAF_PAGES.toString())
+                            .replace("{percent}", khatmPercent.toString()),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (khatmCompletedCount > 0) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            strings.khatmCompletedCountTemplate.replace("{n}", khatmCompletedCount.toString()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
