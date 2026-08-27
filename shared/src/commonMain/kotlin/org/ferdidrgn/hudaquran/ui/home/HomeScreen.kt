@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -41,7 +40,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.ads.BannerAdView
@@ -112,7 +110,12 @@ fun HomeScreen(
         runCatching { repository.getReciters() }.onSuccess { reciters = it }
     }
     LaunchedEffect(Unit) {
-        runCatching { prayerRepository.getTodayTimings(preferences.prayerCity, preferences.prayerCountry) }
+        runCatching {
+            prayerRepository.getTodayTimings(
+                preferences.prayerCity,
+                preferences.prayerCountry
+            )
+        }
             .onSuccess { timings ->
                 prayerTimes = timings
                 if (preferences.prayerNotificationsEnabled.value) {
@@ -142,7 +145,10 @@ fun HomeScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
                 Column {
-                    Text("${strings.homeGreeting} 👋", style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        "${strings.homeGreeting} 👋",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
                     Text(
                         strings.homeSubtitle,
                         style = MaterialTheme.typography.bodyMedium,
@@ -159,7 +165,12 @@ fun HomeScreen(
                     GlassSurface(
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        onClick = { onOpenSurah(currentLastRead.surahNumber, currentLastRead.numberInSurah) },
+                        onClick = {
+                            onOpenSurah(
+                                currentLastRead.surahNumber,
+                                currentLastRead.numberInSurah
+                            )
+                        },
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconBubble(emoji = "▶️")
@@ -171,7 +182,13 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    "${localizedSurahName(currentLastRead.surahNumber, currentLastRead.surahName, appLanguage)} • ${strings.ayahWord} ${currentLastRead.numberInSurah}",
+                                    "${
+                                        localizedSurahName(
+                                            currentLastRead.surahNumber,
+                                            currentLastRead.surahName,
+                                            appLanguage
+                                        )
+                                    } • ${strings.ayahWord} ${currentLastRead.numberInSurah}",
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                             }
@@ -196,10 +213,17 @@ fun HomeScreen(
                         IconBubble(emoji = "📖", accent = true)
                         Spacer(Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(strings.mushafModeLabel, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(
+                                strings.mushafModeLabel,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
                             Text(
                                 if (lastMushafPage != null) {
-                                    strings.mushafResumeSubtitleTemplate.replace("{n}", lastMushafPage.toString())
+                                    strings.mushafResumeSubtitleTemplate.replace(
+                                        "{n}",
+                                        lastMushafPage.toString()
+                                    )
                                 } else {
                                     strings.mushafStartSubtitle
                                 },
@@ -219,7 +243,10 @@ fun HomeScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(3) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     StatBento(
                         modifier = Modifier.weight(1f),
                         value = favorites.size.toString(),
@@ -242,15 +269,29 @@ fun HomeScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(4) {
                 GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(strings.dailyAyahTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("🔄", fontSize = 16.sp, modifier = Modifier.clickable { isLoadingDaily = true })
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            strings.dailyAyahTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "🔄",
+                            fontSize = 16.sp,
+                            modifier = Modifier.clickable { isLoadingDaily = true })
                     }
                     Spacer(Modifier.height(10.dp))
                     when {
-                        isLoadingDaily -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        isLoadingDaily -> Box(
+                            Modifier.fillMaxWidth().padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator()
                         }
+
                         dailyAyah != null -> {
                             Text(
                                 dailyAyah!!.arabicText,
@@ -259,10 +300,19 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text(dailyAyah!!.translationText, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                dailyAyah!!.translationText,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                "${localizedSurahName(dailyAyah!!.surahNumber, dailyAyah!!.surahName, appLanguage)} ${dailyAyah!!.numberInSurah}",
+                                "${
+                                    localizedSurahName(
+                                        dailyAyah!!.surahNumber,
+                                        dailyAyah!!.surahName,
+                                        appLanguage
+                                    )
+                                } ${dailyAyah!!.numberInSurah}",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable {
@@ -270,6 +320,7 @@ fun HomeScreen(
                                 },
                             )
                         }
+
                         else -> Text(strings.dailyAyahError)
                     }
                 }
@@ -279,7 +330,10 @@ fun HomeScreen(
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(4) {
-                    GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
+                    GlassSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(8.dp)
+                    ) {
                         NativeAdCard(modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -292,8 +346,14 @@ fun HomeScreen(
                     SectionHeader(strings.reciters, strings.viewAll, onOpenReciters)
                     Spacer(Modifier.height(10.dp))
                     if (reciters.isEmpty()) {
-                        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        Box(
+                            Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
                         }
                     } else {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -330,9 +390,16 @@ fun HomeScreen(
                         IconBubble(emoji = "📝", accent = true)
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(strings.readingLessonsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(
-                                strings.readingLessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
+                                strings.readingLessonsTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                strings.readingLessonsSubtitleTemplate.replace(
+                                    "{n}",
+                                    tajwidCourse.size.toString()
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -362,11 +429,37 @@ fun HomeScreen(
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
-                        item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                        item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
-                        item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                        item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+                        item {
+                            QuickAction(
+                                "📄",
+                                strings.pagesLabel,
+                                onClick = { onOpenSection(SectionKind.PAGE) })
+                        }
+                        item {
+                            QuickAction(
+                                "📆",
+                                strings.manzilsLabel,
+                                onClick = { onOpenSection(SectionKind.MANZIL) })
+                        }
+                        item {
+                            QuickAction(
+                                "📚",
+                                strings.rukusLabel,
+                                onClick = { onOpenSection(SectionKind.RUKU) })
+                        }
+                        item {
+                            QuickAction(
+                                "🔖",
+                                strings.hizbQuartersLabel,
+                                onClick = { onOpenSection(SectionKind.HIZB_QUARTER) })
+                        }
+                        item {
+                            QuickAction(
+                                "🕋",
+                                strings.sajdaVersesLabel,
+                                onClick = onOpenSajdaAyahs
+                            )
+                        }
                     }
                 }
             }
@@ -376,7 +469,11 @@ fun HomeScreen(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(10) {
                     GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                        Text(strings.quranStatsTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            strings.quranStatsTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                         Spacer(Modifier.height(12.dp))
                         val stats = listOf(
                             strings.statSurah to meta!!.surahCount,
@@ -391,8 +488,17 @@ fun HomeScreen(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             items(stats, key = { it.first }) { (label, value) ->
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(value.toString(), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                                    Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        value.toString(),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        label,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
@@ -438,7 +544,10 @@ fun HomeScreen(
                             )
                         }
                     } else if (surahs.isEmpty()) {
-                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier.fillMaxWidth().padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator()
                         }
                     } else {
@@ -454,7 +563,10 @@ fun HomeScreen(
 
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(8.dp)) {
+                GlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(8.dp)
+                ) {
                     BannerAdView(modifier = Modifier.fillMaxWidth())
                 }
             }
@@ -472,12 +584,25 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
             }
             return@GlassSurface
         }
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val next = prayerTimes.nextPrayer(now.hour, now.minute)
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        // Zamanı kotlinx-datetime ile alıyoruz (Doğru import ile)
+        val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val currentHour = now.hour
+        val currentMinute = now.minute
+
+        val next = prayerTimes.nextPrayer(currentHour, currentMinute)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column {
-                Text(strings.nextPrayerLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    strings.nextPrayerLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (next != null) {
                     Text(
                         "${next.prayer.label} • ${next.prayer.time}",
@@ -488,7 +613,8 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
                     val m = next.minutesUntil % 60
                     Text(
                         if (h > 0) {
-                            strings.hoursMinutesLeftTemplate.replace("{h}", h.toString()).replace("{m}", m.toString())
+                            strings.hoursMinutesLeftTemplate.replace("{h}", h.toString())
+                                .replace("{m}", m.toString())
                         } else {
                             strings.minutesLeftTemplate.replace("{m}", m.toString())
                         },
@@ -523,8 +649,16 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
 }
 
 @Composable
-private fun SectionHeader(title: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+private fun SectionHeader(
+    title: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         if (actionLabel != null && onAction != null) {
             Text(
@@ -543,7 +677,9 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
         modifier = Modifier
             .size(44.dp)
             .background(
-                if (accent) MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                if (accent) MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.primary.copy(
+                    alpha = 0.18f
+                ),
                 CircleShape,
             ),
         contentAlignment = Alignment.Center,
@@ -588,10 +724,18 @@ private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(emoji, fontSize = 24.sp)
             Spacer(Modifier.height(6.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, fontSize = 11.sp)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                fontSize = 11.sp
+            )
         }
     }
 }
@@ -603,7 +747,8 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), CircleShape),
+            modifier = Modifier.size(56.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -630,7 +775,10 @@ private fun EsmaChip(esma: EsmaName) {
         modifier = Modifier.width(118.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 10.dp),
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(esma.arabic, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
             Text(
@@ -663,13 +811,22 @@ private fun SurahPreviewCard(surah: Surah, onClick: () -> Unit) {
         onClick = onClick,
     ) {
         Box(
-            modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            modifier = Modifier.size(28.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(surah.number.toString(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(
+                surah.number.toString(),
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
         Spacer(Modifier.height(28.dp))
-        Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(
+            localizedSurahName(surah.number, surah.englishName, appLanguage),
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1
+        )
         Text(
             "${surah.numberOfAyahs} ${strings.ayahWordLower}",
             style = MaterialTheme.typography.bodyMedium,
