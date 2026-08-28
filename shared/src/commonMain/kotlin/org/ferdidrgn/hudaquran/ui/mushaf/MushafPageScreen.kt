@@ -65,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -127,13 +128,18 @@ fun MushafPageScreen(
                 onChangeSpread = { newRight -> onChangePage(newRight.coerceAtLeast(1)) },
             )
         } else {
-            MushafSinglePageScreen(pageNumber = pageNumber, onBack = onBack, onChangePage = onChangePage)
+            MushafSinglePageScreen(
+                pageNumber = pageNumber,
+                isLandscape = maxWidth > maxHeight,
+                onBack = onBack,
+                onChangePage = onChangePage,
+            )
         }
     }
 }
 
 @Composable
-private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChangePage: (Int) -> Unit) {
+private fun MushafSinglePageScreen(pageNumber: Int, isLandscape: Boolean, onBack: () -> Unit, onChangePage: (Int) -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     val playback = AppContainer.playbackManager
@@ -232,6 +238,8 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
                 strings = strings,
                 onRetry = { reloadKey++ },
                 modifier = Modifier.fillMaxSize(),
+                arabicFontSize = if (isLandscape) 28.sp else TextUnit.Unspecified,
+                arabicLineHeight = if (isLandscape) 50.sp else 44.sp,
             )
         }
 
@@ -386,6 +394,8 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                     strings = strings,
                     onRetry = { reloadKey++ },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
+                    arabicFontSize = 30.sp,
+                    arabicLineHeight = 54.sp,
                 )
                 MushafPageColumn(
                     detail = leftDetail,
@@ -396,6 +406,8 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                     strings = strings,
                     onRetry = { reloadKey++ },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
+                    arabicFontSize = 30.sp,
+                    arabicLineHeight = 54.sp,
                 )
             }
             // The book's binding: a soft shadow gradient straddling the seam between the two
@@ -450,6 +462,8 @@ private fun MushafPageColumn(
     strings: Strings,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    arabicFontSize: TextUnit = TextUnit.Unspecified,
+    arabicLineHeight: TextUnit = 44.sp,
 ) {
     val ink = inkColor()
     when {
@@ -491,8 +505,9 @@ private fun MushafPageColumn(
                     pageText,
                     color = ink,
                     style = MaterialTheme.typography.headlineSmall,
+                    fontSize = arabicFontSize,
                     textAlign = TextAlign.Justify,
-                    lineHeight = 44.sp,
+                    lineHeight = arabicLineHeight,
                 )
                 if (showTranslation) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))

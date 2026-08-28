@@ -129,6 +129,12 @@ fun SettingsScreen(
             NavigationRow(title = strings.translationLabel, value = translationName, onClick = onOpenTranslationPicker)
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(title = strings.tafsirLabel, value = tafsirName, onClick = onOpenTafsirPicker)
+            Text(
+                strings.tafsirVsMealHint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
 
         if (!preferences.isAdFree()) {
