@@ -21,7 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -88,6 +90,7 @@ private val expandedContentMaxWidth = 1100.dp
 fun App() {
     val preferences = AppContainer.preferences
     val themeMode by preferences.themeMode.collectAsState()
+    val textSize by preferences.textSize.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val navigator = remember { AppNavigator() }
     val nowPlaying by AppContainer.playbackManager.nowPlaying.collectAsState()
@@ -109,7 +112,15 @@ fun App() {
 
     val strings = stringsFor(appLanguage)
     val layoutDirection = if (appLanguage == AppLanguage.ARABIC) LayoutDirection.Rtl else LayoutDirection.Ltr
-    CompositionLocalProvider(LocalStrings provides strings, LocalLayoutDirection provides layoutDirection) {
+    val baseDensity = LocalDensity.current
+    val scaledDensity = remember(baseDensity, textSize) {
+        Density(density = baseDensity.density, fontScale = textSize.scale)
+    }
+    CompositionLocalProvider(
+        LocalStrings provides strings,
+        LocalLayoutDirection provides layoutDirection,
+        LocalDensity provides scaledDensity,
+    ) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying

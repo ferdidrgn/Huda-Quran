@@ -45,6 +45,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,6 +77,7 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
+import org.ferdidrgn.hudaquran.platform.OrientationController
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -118,6 +120,11 @@ fun MushafPageScreen(
     onBack: () -> Unit,
     onChangePage: (Int) -> Unit,
 ) {
+    DisposableEffect(Unit) {
+        OrientationController.unlock()
+        onDispose { OrientationController.lockPortrait() }
+    }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isSpread = maxWidth > maxHeight && maxWidth > SPREAD_MIN_WIDTH
         if (isSpread) {
@@ -330,17 +337,14 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
     val isSpreadPlaying = isSpreadQueued && playerState.status == PlaybackStatus.PLAYING
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // No page title here — landscape/book mode gives that space back to the page itself. The
+        // same page range is still readable (and tappable to jump) in the footer below.
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BackButton(onBack = onBack)
-            Text(
-                "${strings.sectionSingular(SectionKind.PAGE)} $rightPageNumber–$leftPageNumber",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).clickable { showJumpDialog = true },
-            )
+            Spacer(Modifier.weight(1f))
             IconButton(onClick = { showTranslation = !showTranslation }) {
                 Icon(
                     Icons.Filled.Translate,
@@ -368,7 +372,6 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                 }
             }
         }
-        HorizontalDivider()
 
         Box(
             modifier = Modifier
@@ -435,6 +438,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
             onPrevious = { if (rightPageNumber > 1) onChangeSpread(rightPageNumber - 2) },
             previousEnabled = rightPageNumber > 1,
             onNext = { onChangeSpread(rightPageNumber + 2) },
+            onCenterClick = { showJumpDialog = true },
         )
     }
 
@@ -539,7 +543,13 @@ private fun MushafPageColumn(
 }
 
 @Composable
-private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previousEnabled: Boolean, onNext: () -> Unit) {
+private fun MushafPageFooter(
+    centerLabel: String,
+    onPrevious: () -> Unit,
+    previousEnabled: Boolean,
+    onNext: () -> Unit,
+    onCenterClick: (() -> Unit)? = null,
+) {
     val strings = LocalStrings.current
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -549,7 +559,11 @@ private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previo
         IconButton(onClick = onPrevious, enabled = previousEnabled) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
         }
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
+                .let { if (onCenterClick != null) it.clickable(onClick = onCenterClick) else it },
+        ) {
             Text(
                 centerLabel,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
