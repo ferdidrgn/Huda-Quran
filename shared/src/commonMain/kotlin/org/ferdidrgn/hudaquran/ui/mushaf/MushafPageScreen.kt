@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +57,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.SpanStyle
@@ -95,11 +101,64 @@ private val PaperDark = Color(0xFF2B2620)
 private val InkLight = Color(0xFF2A2015)
 private val InkDark = Color(0xFFEFE4CB)
 
+// A muted gilt tone for the page's ornamental border and ayah-end markers — the same accent a
+// real illuminated manuscript uses for decoration, kept separate from the app's own theme color.
+private val GiltLight = Color(0xFF9C7A2E)
+private val GiltDark = Color(0xFFC9A857)
+
+private val arabicIndicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
+
+/** Renders a verse number using Arabic-Indic digits, matching the Arabic ayah text beside it. */
+private fun toArabicIndicNumerals(number: Int): String = number.toString().map { arabicIndicDigits[it - '0'] }.joinToString("")
+
 @Composable
 private fun paperColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) PaperDark else PaperLight
 
 @Composable
 private fun inkColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) InkDark else InkLight
+
+@Composable
+private fun giltColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) GiltDark else GiltLight
+
+/** A double-ruled ornamental frame with small diamond corner accents, echoing an illuminated mushaf page border. */
+@Composable
+private fun MushafPageOrnamentBorder(modifier: Modifier = Modifier, color: Color) {
+    Canvas(modifier = modifier) {
+        val outerInset = 10.dp.toPx()
+        val outerStroke = 1.6.dp.toPx()
+        val outerRect = Rect(Offset(outerInset, outerInset), Offset(size.width - outerInset, size.height - outerInset))
+        drawRoundRect(
+            color = color,
+            topLeft = outerRect.topLeft,
+            size = outerRect.size,
+            cornerRadius = CornerRadius(10.dp.toPx()),
+            style = Stroke(width = outerStroke),
+        )
+
+        val innerInset = outerInset + 6.dp.toPx()
+        val innerRect = Rect(Offset(innerInset, innerInset), Offset(size.width - innerInset, size.height - innerInset))
+        drawRoundRect(
+            color = color.copy(alpha = 0.55f),
+            topLeft = innerRect.topLeft,
+            size = innerRect.size,
+            cornerRadius = CornerRadius(6.dp.toPx()),
+            style = Stroke(width = outerStroke * 0.65f),
+        )
+
+        val diamond = 6.dp.toPx()
+        listOf(outerRect.topLeft, Offset(outerRect.right, outerRect.top), Offset(outerRect.left, outerRect.bottom), Offset(outerRect.right, outerRect.bottom))
+            .forEach { corner ->
+                val path = Path().apply {
+                    moveTo(corner.x, corner.y - diamond)
+                    lineTo(corner.x + diamond, corner.y)
+                    lineTo(corner.x, corner.y + diamond)
+                    lineTo(corner.x - diamond, corner.y)
+                    close()
+                }
+                drawPath(path, color = color)
+            }
+    }
+}
 
 /**
  * A "mushaf" (book-style) reading mode: ayahs flow as one continuous justified paragraph on a
@@ -248,6 +307,7 @@ private fun MushafSinglePageScreen(pageNumber: Int, isLandscape: Boolean, onBack
                 arabicFontSize = if (isLandscape) 28.sp else TextUnit.Unspecified,
                 arabicLineHeight = if (isLandscape) 50.sp else 44.sp,
             )
+            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
         }
 
         if (showLandscapeHint) {
@@ -431,6 +491,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                         ),
                     ),
             )
+            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
         }
 
         MushafPageFooter(
@@ -486,25 +547,32 @@ private fun MushafPageColumn(
         else -> {
             val d = detail!!
             val highlightColor = MaterialTheme.colorScheme.primaryContainer
-            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink) {
+            val gilt = giltColor()
+            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink, gilt) {
                 buildAnnotatedString {
+                    fun appendAyahEndMark(numberInSurah: Int) {
+                        append(" ")
+                        withStyle(SpanStyle(color = gilt, fontWeight = FontWeight.Bold, background = gilt.copy(alpha = 0.12f))) {
+                            append(" ${toArabicIndicNumerals(numberInSurah)} ")
+                        }
+                        append(" ")
+                    }
                     d.ayahs.forEach { ayah ->
                         val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
                             currentAyah.numberInSurah == ayah.numberInSurah
                         if (isCurrent) {
                             withStyle(SpanStyle(background = highlightColor)) {
                                 append(ayah.arabicText)
-                                append("  ۝${ayah.numberInSurah}  ")
                             }
                         } else {
                             append(ayah.arabicText)
-                            append("  ۝${ayah.numberInSurah}  ")
                         }
+                        appendAyahEndMark(ayah.numberInSurah)
                     }
                 }
             }
 
-            Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+            Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(30.dp)) {
                 Text(
                     pageText,
                     color = ink,
