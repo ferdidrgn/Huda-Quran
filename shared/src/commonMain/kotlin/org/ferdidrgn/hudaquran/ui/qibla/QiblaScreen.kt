@@ -17,13 +17,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.cardinalDirectionTr
 import org.ferdidrgn.hudaquran.domain.model.qiblaBearing
+import org.ferdidrgn.hudaquran.sensors.QiblaCompass
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import kotlin.math.PI
@@ -42,20 +46,23 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * A static qibla direction finder: reads the coordinates the prayer-time API already resolved
- * from the user's saved city/country (no new location permission needed on any platform), and
- * draws a compass rose with an arrow fixed at the calculated bearing. The reader aligns this
- * against their phone's own compass app (or the sun/stars) rather than the arrow live-tracking
- * device orientation — this needs real device sensors per platform to do safely, which isn't
- * something to guess at blind.
+ * A qibla direction finder: reads the coordinates the prayer-time API already resolved from the
+ * user's saved city/country (no new location permission needed), and draws a compass rose with an
+ * arrow fixed at the calculated bearing. Where the platform exposes a live device heading (see
+ * [QiblaCompass] — Android today), the whole rose rotates with the phone so the reader can just
+ * physically turn until the arrow points to the top of the screen; elsewhere it falls back to a
+ * static rose the reader aligns against their phone's own compass app.
  */
 @Composable
 fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val preferences = AppContainer.preferences
     val prayerRepository = AppContainer.prayerRepository
     val strings = LocalStrings.current
+    val compass = remember { QiblaCompass() }
 
     var bearing by remember { mutableStateOf<Double?>(null) }
+    var latitude by remember { mutableStateOf<Double?>(null) }
+    var longitude by remember { mutableStateOf<Double?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var reloadKey by remember { mutableStateOf(0) }
@@ -68,11 +75,22 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         }.onSuccess { timings ->
             val lat = timings.latitude
             val lon = timings.longitude
+            latitude = lat
+            longitude = lon
             bearing = if (lat != null && lon != null) qiblaBearing(lat, lon) else null
             if (bearing == null) loadError = true
         }.onFailure { loadError = true }
         isLoading = false
     }
+
+    val lat = latitude
+    val lon = longitude
+    DisposableEffect(compass, lat, lon) {
+        if (lat != null && lon != null) compass.start(lat, lon)
+        onDispose { compass.stop() }
+    }
+    val heading by compass.headingDegrees.collectAsState()
+    val hasLiveHeading = compass.isAvailable && heading != null
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
@@ -107,7 +125,19 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 
                 else -> {
                     val degree = bearing!!
-                    CompassRose(bearingDegrees = degree)
+                    if (hasLiveHeading) {
+                        Text("▲", fontSize = 20.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(2.dp))
+                    }
+                    Box(
+                        modifier = if (hasLiveHeading) {
+                            Modifier.graphicsLayer { rotationZ = -(heading ?: 0f) }
+                        } else {
+                            Modifier
+                        },
+                    ) {
+                        CompassRose(bearingDegrees = degree)
+                    }
                     Spacer(Modifier.height(24.dp))
                     Text(
                         strings.qiblaBearingTemplate
@@ -119,7 +149,7 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
-                        strings.qiblaInstructions,
+                        if (hasLiveHeading) strings.qiblaLiveInstructions else strings.qiblaInstructions,
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
