@@ -1,10 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.nowplaying
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -130,19 +124,11 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
 
         Spacer(Modifier.height(28.dp))
 
-        val transition = rememberInfiniteTransition()
-        val pulse by transition.animateFloat(
-            initialValue = 1f,
-            targetValue = if (isPlaying) 1.04f else 1f,
-            animationSpec = infiniteRepeatable(tween(1400), RepeatMode.Reverse),
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .padding(28.dp)
-                .scale(pulse)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
