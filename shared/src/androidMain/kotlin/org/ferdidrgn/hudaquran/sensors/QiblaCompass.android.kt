@@ -5,7 +5,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.location.GeomagneticField
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,9 +40,7 @@ actual class QiblaCompass actual constructor() {
     }
 
     actual fun start(latitude: Double, longitude: Double) {
-        declinationDegrees = runCatching {
-            GeomagneticField(latitude.toFloat(), longitude.toFloat(), 0f, System.currentTimeMillis()).declination
-        }.getOrDefault(0f)
+        declinationDegrees = magneticDeclination(latitude, longitude)
 
         val sensor = rotationSensor ?: return
         sensorManager?.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
@@ -54,3 +51,23 @@ actual class QiblaCompass actual constructor() {
         _headingDegrees.value = null
     }
 }
+
+/**
+ * Looked up via reflection rather than a direct `android.location.GeomagneticField` reference:
+ * some Gradle/AGP setups fail to resolve that class at compile time for this module even though
+ * it's a standard framework class present on every real device, so a compile-time type reference
+ * is fragile here in a way a runtime lookup isn't. Falls back to 0° (magnetic north, no true-north
+ * correction) if the lookup fails for any reason.
+ */
+private fun magneticDeclination(latitude: Double, longitude: Double): Float = runCatching {
+    val clazz = Class.forName("android.location.GeomagneticField")
+    val constructor = clazz.getConstructor(
+        Float::class.javaPrimitiveType,
+        Float::class.javaPrimitiveType,
+        Float::class.javaPrimitiveType,
+        Long::class.javaPrimitiveType,
+    )
+    val instance = constructor.newInstance(latitude.toFloat(), longitude.toFloat(), 0f, System.currentTimeMillis())
+    val declination = clazz.getMethod("getDeclination").invoke(instance)
+    declination as Float
+}.getOrDefault(0f)

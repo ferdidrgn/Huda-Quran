@@ -52,6 +52,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.ads.BannerAdView
 import org.ferdidrgn.hudaquran.ads.NativeAdCard
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.LastRead
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
@@ -630,7 +631,7 @@ private fun ReadingProgressCard(
     lastMushafPage: Int?,
     khatmFurthestPage: Int,
     khatmCompletedCount: Int,
-    appLanguage: String,
+    appLanguage: AppLanguage,
     onOpenSurah: (Int, Int?) -> Unit,
     onOpenMushafMode: (Int) -> Unit,
 ) {
