@@ -123,7 +123,12 @@ fun App() {
     ) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
-        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
+        // Mushaf mode gets the full window too: on tablet/wide-landscape widths the persistent
+        // side nav rail + reading-column width cap below (sized for a single scrolling column of
+        // body text) were squeezing the two-page book spread down to a sliver — the opposite of
+        // what a maximized reading surface needs.
+        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding &&
+            screen != Screen.NowPlaying && screen !is Screen.MushafPage
 
         LaunchedEffect(screen) {
             AppAnalytics.logEvent("screen_view", mapOf("screen" to screen::class.simpleName.orEmpty()))
