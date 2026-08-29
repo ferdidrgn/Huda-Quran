@@ -201,12 +201,8 @@ private fun OnboardingArchMedallion(emoji: String, accent: Color, stepLabel: Str
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) { drawPointedArch(fillColor = Color.White.copy(alpha = 0.05f), strokeColor = Gilt.copy(alpha = 0.55f)) }
 
-            Box(
-                modifier = Modifier
-                    .size(190.dp)
-                    .background(Brush.radialGradient(listOf(accent.copy(alpha = 0.35f), Color.Transparent)), CircleShape),
-            )
-            Text(emoji, fontSize = 92.sp)
+            Canvas(modifier = Modifier.size(240.dp)) { drawOrnamentalRosette(accent = accent) }
+            Text(emoji, fontSize = 132.sp)
 
             Box(
                 modifier = Modifier
@@ -236,6 +232,33 @@ private fun OnboardingStepDiamond(selected: Boolean) {
         }
         drawPath(path, color = if (selected) Gilt else Color.White.copy(alpha = 0.3f))
     }
+}
+
+/**
+ * The medallion backdrop behind each onboarding icon: a soft accent-colored glow, a large
+ * eight-point star rosette outline, and a thin gold ring — an illuminated-manuscript "medallion"
+ * frame instead of the previous plain, flat glow circle.
+ */
+private fun DrawScope.drawOrnamentalRosette(accent: Color) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val outer = size.minDimension / 2f
+
+    drawCircle(
+        brush = Brush.radialGradient(listOf(accent.copy(alpha = 0.38f), Color.Transparent), center = center, radius = outer),
+        radius = outer,
+        center = center,
+    )
+    drawPath(
+        path = eightPointStar(center, outer * 0.92f, outer * 0.92f * 0.42f),
+        color = accent.copy(alpha = 0.4f),
+        style = Stroke(width = 1.6.dp.toPx()),
+    )
+    drawCircle(
+        color = Gilt.copy(alpha = 0.5f),
+        radius = outer * 0.62f,
+        center = center,
+        style = Stroke(width = 1.2.dp.toPx()),
+    )
 }
 
 /** A pointed (two-centered) arch outline — the classic mihrab/mosque-doorway silhouette. */
