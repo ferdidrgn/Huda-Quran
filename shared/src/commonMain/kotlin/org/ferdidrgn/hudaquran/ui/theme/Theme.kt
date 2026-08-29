@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 
 private val DarkColors = darkColorScheme(
-    primary = IndigoBright,
-    onPrimary = Color(0xFF141433),
-    primaryContainer = Indigo,
-    onPrimaryContainer = Color(0xFFEAEAFF),
+    primary = GiltBright,
+    onPrimary = Color(0xFF2A2005),
+    primaryContainer = Gilt,
+    onPrimaryContainer = Color(0xFF241B02),
     secondary = EmeraldBright,
     onSecondary = Color(0xFF042919),
     secondaryContainer = Emerald,
@@ -37,10 +37,10 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = Indigo,
+    primary = Color(0xFF8A6B22),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE4E3FE),
-    onPrimaryContainer = Color(0xFF1D1B4B),
+    primaryContainer = Color(0xFFF3E6C4),
+    onPrimaryContainer = Color(0xFF3A2C0A),
     secondary = Emerald,
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = Color(0xFFD3F5E4),
