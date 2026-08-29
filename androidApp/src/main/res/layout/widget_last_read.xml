@@ -7,36 +7,59 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/widget_eyebrow"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/widget_app_label"
-        android:textColor="#7FBF9E"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:background="@drawable/widget_icon_bubble"
+            android:gravity="center"
+            android:text="📖"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/widget_eyebrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/widget_app_label"
+            android:textColor="#D4B36A"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/widget_title_placeholder"
-        android:textColor="#FFFFFF"
+        android:textColor="#F3EEDF"
         android:textSize="16sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="28dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="6dp"
+        android:background="#D4B36A" />
 
     <TextView
         android:id="@+id/widget_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:maxLines="2"
         android:text="@string/widget_subtitle_placeholder"
-        android:textColor="#C9E4D7"
+        android:textColor="#A9B3A6"
         android:textSize="13sp" />
 
 </LinearLayout>
