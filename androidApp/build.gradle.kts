@@ -49,8 +49,8 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 9
-        versionName = "1.2.9"
+        versionCode = 11
+        versionName = "1.2.11"
     }
     packaging {
         resources {
