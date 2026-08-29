@@ -57,6 +57,13 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    // The app's own UI text is fully custom-localized (LocalStrings), not Android string
+    // resources, so there's no reason to ship the dozens of `values-xx` locale folders that
+    // AndroidX/Play Services/Firebase bundle for their own internal strings — this drops them
+    // from the release build except for the languages the app actually offers.
+    androidResources {
+        localeFilters += setOf("tr", "en", "ar", "de", "fr", "uz", "ky", "tk")
+    }
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {
