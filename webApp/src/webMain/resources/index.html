@@ -24,9 +24,14 @@
     <meta name="twitter:description" content="Kur'an-ı Kerim'i çevrimiçi okuyun, dinleyin ve öğrenin.">
     <meta name="twitter:image" content="https://hudaquran.web.app/app-icon-512.png">
 
-    <!-- Google AdSense (web ad review + serving). -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5779807348211992"
-            crossorigin="anonymous"></script>
+    <!-- Google AdSense "Auto ads" is intentionally NOT included here. That mode (just this
+         script tag, no explicit ad slots) lets Google place ads anywhere it decides, including
+         full-screen interstitial/vignette formats between navigations — but this page's real
+         content is a <canvas> Google's crawler can't read, so Auto ads has nothing sane to place
+         ads around and tends to produce exactly the disruptive, seemingly-unrelated ad
+         experience users report. If web ads come back, they should be specific, manually placed
+         <ins class="adsbygoogle"> units (with a real data-ad-slot from the AdSense dashboard)
+         inside #seo-header/#seo-footer, which are real DOM Google can actually read. -->
 
     <!-- Firebase Web SDK (compat build — exposes the global `firebase` object that
          AppAnalytics.js.kt / AppAnalytics.wasmJs.kt call into via JS interop). -->
