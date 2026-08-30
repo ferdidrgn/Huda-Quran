@@ -73,6 +73,7 @@ import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import kotlinx.datetime.Clock
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
@@ -262,6 +263,7 @@ fun HomeScreen(
                             Text(
                                 dailyAyah!!.arabicText,
                                 style = MaterialTheme.typography.titleLarge,
+                                fontFamily = LocalArabicFontFamily.current,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.fillMaxWidth(),
                             )

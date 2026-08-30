@@ -79,6 +79,8 @@ import org.ferdidrgn.hudaquran.ui.surahdetail.SurahDetailScreen
 import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
 import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
 import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
 
 private const val APP_TITLE = "Huda Qur'an"
 
@@ -116,10 +118,12 @@ fun App() {
     val scaledDensity = remember(baseDensity, textSize) {
         Density(density = baseDensity.density, fontScale = textSize.scale)
     }
+    val arabicFontFamily = rememberArabicFontFamily()
     CompositionLocalProvider(
         LocalStrings provides strings,
         LocalLayoutDirection provides layoutDirection,
         LocalDensity provides scaledDensity,
+        LocalArabicFontFamily provides arabicFontFamily,
     ) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current

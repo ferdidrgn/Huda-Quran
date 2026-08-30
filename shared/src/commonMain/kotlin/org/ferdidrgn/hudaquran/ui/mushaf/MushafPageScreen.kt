@@ -89,6 +89,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 private val SPREAD_MIN_WIDTH = 700.dp
 private val PAGE_SHAPE = RoundedCornerShape(18.dp)
@@ -304,8 +305,6 @@ private fun MushafSinglePageScreen(pageNumber: Int, isLandscape: Boolean, onBack
                 strings = strings,
                 onRetry = { reloadKey++ },
                 modifier = Modifier.fillMaxSize(),
-                arabicFontSize = if (isLandscape) 28.sp else TextUnit.Unspecified,
-                arabicLineHeight = if (isLandscape) 50.sp else 44.sp,
             )
             MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
         }
@@ -457,8 +456,6 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                     strings = strings,
                     onRetry = { reloadKey++ },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
-                    arabicFontSize = 30.sp,
-                    arabicLineHeight = 54.sp,
                 )
                 MushafPageColumn(
                     detail = leftDetail,
@@ -469,8 +466,6 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                     strings = strings,
                     onRetry = { reloadKey++ },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
-                    arabicFontSize = 30.sp,
-                    arabicLineHeight = 54.sp,
                 )
             }
             // The book's binding: a soft shadow gradient straddling the seam between the two
@@ -577,6 +572,7 @@ private fun MushafPageColumn(
                     pageText,
                     color = ink,
                     style = MaterialTheme.typography.headlineSmall,
+                    fontFamily = LocalArabicFontFamily.current,
                     fontSize = arabicFontSize,
                     textAlign = TextAlign.Justify,
                     lineHeight = arabicLineHeight,

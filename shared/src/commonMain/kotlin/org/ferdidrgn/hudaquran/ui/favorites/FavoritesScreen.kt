@@ -37,6 +37,7 @@ import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -145,6 +146,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                                 Text(
                                     ayah.arabicText,
                                     style = MaterialTheme.typography.titleMedium,
+                                    fontFamily = LocalArabicFontFamily.current,
                                     textAlign = TextAlign.End,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,

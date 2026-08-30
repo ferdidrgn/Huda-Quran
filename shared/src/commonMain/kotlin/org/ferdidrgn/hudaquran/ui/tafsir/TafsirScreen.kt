@@ -31,6 +31,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 /**
  * Shows a single tafsir edition's commentary for one ayah. The tafsir edition list and text both
@@ -100,6 +101,7 @@ fun TafsirScreen(
                 Text(
                     arabicText,
                     style = MaterialTheme.typography.titleLarge,
+                    fontFamily = LocalArabicFontFamily.current,
                     textAlign = TextAlign.End,
                     modifier = Modifier.fillMaxWidth(),
                 )

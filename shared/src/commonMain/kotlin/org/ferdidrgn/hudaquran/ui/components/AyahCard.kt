@@ -34,6 +34,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 @Composable
 fun AyahCard(
@@ -81,6 +82,7 @@ fun AyahCard(
             Text(
                 ayah.arabicText,
                 style = MaterialTheme.typography.titleLarge,
+                fontFamily = LocalArabicFontFamily.current,
                 textAlign = TextAlign.End,
                 lineHeight = 40.sp,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
