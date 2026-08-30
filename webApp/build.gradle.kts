@@ -34,8 +34,19 @@ kotlin {
 // fixed. Dropping just --gufa keeps every other optimization pass and all the required
 // --enable-* feature flags the Kotlin/Wasm runtime needs; it trades a little extra optimization
 // for a build that actually completes.
-tasks.withType<org.jetbrains.kotlin.gradle.targets.js.binaryen.BinaryenExec>().configureEach {
-    doFirst {
-        binaryenArgs = binaryenArgs.filterNot { it == "--gufa" }.toMutableList()
+//
+// The task type (org.jetbrains.kotlin.gradle.targets.js.binaryen.BinaryenExec) isn't resolvable
+// from this build script against this Kotlin Gradle plugin version ("Unresolved reference"), so
+// this matches on the runtime class's simple name and reaches the binaryenArgs property through
+// Gradle's Groovy property access instead of a static reference — version-proof either way.
+tasks.configureEach {
+    if (this::class.java.simpleName == "BinaryenExec") {
+        doFirst {
+            withGroovyBuilder {
+                @Suppress("UNCHECKED_CAST")
+                val args = getProperty("binaryenArgs") as MutableList<String>
+                setProperty("binaryenArgs", args.filterNot { it == "--gufa" }.toMutableList())
+            }
+        }
     }
 }
