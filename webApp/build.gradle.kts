@@ -35,21 +35,20 @@ kotlin {
 // --enable-* feature flags the Kotlin/Wasm runtime needs; it trades a little extra optimization
 // for a build that actually completes.
 //
-// The task type (org.jetbrains.kotlin.gradle.targets.js.binaryen.BinaryenExec) isn't resolvable
-// from this build script against this Kotlin Gradle plugin version ("Unresolved reference"), so
-// this matches on the runtime class's simple name and reaches the binaryenArgs property through
-// Gradle's Groovy property access instead of a static reference — version-proof either way.
-tasks.configureEach {
-    if (this::class.java.simpleName == "BinaryenExec") {
-        doFirst {
-            withGroovyBuilder {
-                @Suppress("UNCHECKED_CAST")
-                val args = getProperty("binaryenArgs") as MutableList<String>
-                val filtered = args.filterNot { it == "--gufa" }.toMutableList()
-                logger.lifecycle("[$name] binaryenArgs before: $args")
-                logger.lifecycle("[$name] binaryenArgs after:  $filtered")
-                setProperty("binaryenArgs", filtered)
-            }
+// Matching on the runtime class's simple name ("BinaryenExec") turned out to never actually hit
+// this build's real optimize task — no trace of it in CI logs, so --gufa was never actually being
+// removed by that version of this workaround. The real task name is confirmed directly from CI
+// logs (compileProductionExecutableKotlinWasmJsOptimize), so target it by name instead, reached
+// through Gradle's Groovy property access rather than a static type reference.
+tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.configureEach {
+    doFirst {
+        withGroovyBuilder {
+            @Suppress("UNCHECKED_CAST")
+            val args = getProperty("binaryenArgs") as MutableList<String>
+            val filtered = args.filterNot { it == "--gufa" }.toMutableList()
+            logger.lifecycle("[$name] binaryenArgs before: $args")
+            logger.lifecycle("[$name] binaryenArgs after:  $filtered")
+            setProperty("binaryenArgs", filtered)
         }
     }
 }
