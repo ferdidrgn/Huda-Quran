@@ -45,7 +45,10 @@ tasks.configureEach {
             withGroovyBuilder {
                 @Suppress("UNCHECKED_CAST")
                 val args = getProperty("binaryenArgs") as MutableList<String>
-                setProperty("binaryenArgs", args.filterNot { it == "--gufa" }.toMutableList())
+                val filtered = args.filterNot { it == "--gufa" }.toMutableList()
+                logger.lifecycle("[$name] binaryenArgs before: $args")
+                logger.lifecycle("[$name] binaryenArgs after:  $filtered")
+                setProperty("binaryenArgs", filtered)
             }
         }
     }
