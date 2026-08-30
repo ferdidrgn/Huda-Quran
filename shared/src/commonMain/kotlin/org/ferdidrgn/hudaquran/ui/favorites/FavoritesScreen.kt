@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +34,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -104,11 +104,11 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                     val surahDetail = detailsCache[entry.surahNumber]
                     val ayah = surahDetail?.ayahs?.firstOrNull { it.numberInSurah == entry.numberInSurah }
                     if (showAds && itemIndex == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
-                    Card(
+                    GlassSurface(
                         onClick = { onOpenSurah(entry.surahNumber, entry.numberInSurah) },
                         modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(14.dp),
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                                 val displayName = surahDetail?.surah?.let { localizedSurahName(it.number, it.englishName, appLanguage) }
                                     ?: strings.surahFallbackNumberedTemplate.replace("{n}", entry.surahNumber.toString())
@@ -164,7 +164,6 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                             } else {
                                 CircularProgressIndicator(modifier = Modifier.padding(top = 8.dp))
                             }
-                        }
                     }
                 }
                     if (showAds) item { AdBannerCard() }
