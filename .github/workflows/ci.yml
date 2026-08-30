@@ -56,11 +56,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       # Kotlin/Wasm's production build runs Binaryen's wasm-opt as a native subprocess to
-      # optimize the compiled module. On a real Compose Multiplatform app (much bigger than a
-      # toy example) that process can hit the runner's default memory ceiling and crash with a
-      # segfault instead of a clean out-of-memory error — a documented class of issue with
-      # wasm-opt on Linux CI runners, independent of this project's own code. Extra swap gives it
-      # more headroom without touching the Kotlin/Gradle build itself.
+      # optimize the compiled module. It's been segfaulting (SIGSEGV, exit 139) on this app's
+      # real (non-toy) module size — extra swap space (below) and dropping the heavy --gufa pass
+      # were both tried and ruled out across separate CI runs (identical crash either way), which
+      # points away from memory pressure or that one pass and toward a native stack overflow in
+      # wasm-opt's recursive optimizer instead — a documented class of Binaryen crash on large/
+      # deeply-nested modules. Raising the process stack ulimit is the standard fix for that class.
       - name: Add swap space for the wasm-opt optimizer
         run: |
           sudo fallocate -l 4G /extra-swapfile
@@ -69,7 +70,9 @@ jobs:
           sudo swapon /extra-swapfile
 
       - name: Build web (wasmJs) distribution
-        run: ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
+        run: |
+          ulimit -s unlimited
+          ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
