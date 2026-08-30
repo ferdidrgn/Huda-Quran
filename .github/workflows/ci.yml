@@ -63,10 +63,10 @@ jobs:
       # more headroom without touching the Kotlin/Gradle build itself.
       - name: Add swap space for the wasm-opt optimizer
         run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo fallocate -l 4G /extra-swapfile
+          sudo chmod 600 /extra-swapfile
+          sudo mkswap /extra-swapfile
+          sudo swapon /extra-swapfile
 
       - name: Build web (wasmJs) distribution
         run: ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
