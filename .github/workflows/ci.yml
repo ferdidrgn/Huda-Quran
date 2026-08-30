@@ -55,6 +55,19 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Kotlin/Wasm's production build runs Binaryen's wasm-opt as a native subprocess to
+      # optimize the compiled module. On a real Compose Multiplatform app (much bigger than a
+      # toy example) that process can hit the runner's default memory ceiling and crash with a
+      # segfault instead of a clean out-of-memory error — a documented class of issue with
+      # wasm-opt on Linux CI runners, independent of this project's own code. Extra swap gives it
+      # more headroom without touching the Kotlin/Gradle build itself.
+      - name: Add swap space for the wasm-opt optimizer
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - name: Build web (wasmJs) distribution
         run: ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
 
@@ -124,6 +137,17 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      # macos-14 runners ship several Xcode versions side by side under /Applications, with the
+      # "default" one often older than the project file's format needs. Rather than pinning a
+      # specific version here (which drifts as the runner image updates), always pick whichever
+      # Xcode is newest on the runner.
+      - name: Select newest available Xcode
+        run: |
+          latest_xcode=$(find /Applications -maxdepth 1 -name 'Xcode_*.app' | sort -V | tail -1)
+          echo "Selecting: $latest_xcode"
+          sudo xcode-select -s "$latest_xcode/Contents/Developer"
+          xcodebuild -version
 
       - name: List available Xcode schemes (diagnostic)
         run: xcodebuild -list -project iosApp/iosApp.xcodeproj
