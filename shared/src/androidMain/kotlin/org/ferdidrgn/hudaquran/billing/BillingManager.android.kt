@@ -1,5 +1,6 @@
 package org.ferdidrgn.hudaquran.billing
 
+import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -52,26 +53,33 @@ actual object BillingManager {
         val activity = CurrentActivityHolder.activity ?: return
         if (!isReady) return
         scope.launch {
+            val playType = if (product.type == BillingProductType.SUBSCRIPTION) {
+                BillingClient.ProductType.SUBS
+            } else {
+                BillingClient.ProductType.INAPP
+            }
             val params = QueryProductDetailsParams.newBuilder()
                 .setProductList(
                     listOf(
                         QueryProductDetailsParams.Product.newBuilder()
                             .setProductId(product.productId)
-                            .setProductType(BillingClient.ProductType.INAPP)
+                            .setProductType(playType)
                             .build(),
                     ),
                 )
                 .build()
             val result = runCatching { client.queryProductDetails(params) }.getOrNull() ?: return@launch
             val details = result.productDetailsList?.firstOrNull() ?: return@launch
+            val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
+                .setProductDetails(details)
+            if (product.type == BillingProductType.SUBSCRIPTION) {
+                // Subscriptions need an explicit offer token identifying which base plan to buy
+                // (here, the single prepaid 6-month plan configured in Play Console).
+                val offerToken = details.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return@launch
+                productDetailsParams.setOfferToken(offerToken)
+            }
             val flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(
-                    listOf(
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                            .setProductDetails(details)
-                            .build(),
-                    ),
-                )
+                .setProductDetailsParamsList(listOf(productDetailsParams.build()))
                 .build()
             client.launchBillingFlow(activity, flowParams)
         }
@@ -90,8 +98,18 @@ actual object BillingManager {
         }
 
         if (!purchase.isAcknowledged) {
-            val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
-            client.consumeAsync(consumeParams) { _, _ -> }
+            val isSubscription = purchase.products.any { id ->
+                BillingProduct.entries.any { it.productId == id && it.type == BillingProductType.SUBSCRIPTION }
+            }
+            if (isSubscription) {
+                // Subscriptions are acknowledged, never consumed — consuming would strip Play's
+                // record of the entitlement instead of just confirming receipt of it.
+                val ackParams = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+                client.acknowledgePurchase(ackParams) { }
+            } else {
+                val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+                client.consumeAsync(consumeParams) { _, _ -> }
+            }
         }
     }
 }

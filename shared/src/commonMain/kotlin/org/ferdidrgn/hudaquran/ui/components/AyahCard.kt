@@ -1,14 +1,9 @@
 package org.ferdidrgn.hudaquran.ui.components
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,8 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +32,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 @Composable
 fun AyahCard(
@@ -53,61 +46,56 @@ fun AyahCard(
     onTafsirClick: (() -> Unit)? = null,
 ) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
-    Card(
+    GlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        colors = if (isPlaying) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isPlaying) 6.dp else 1.dp),
+        containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        contentPadding = PaddingValues(16.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            if (showSurahLabel) {
-                Text(
-                    localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.height(2.dp))
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(ayah.numberInSurah.toString(), color = MaterialTheme.colorScheme.onPrimary, fontSize = 11.sp)
-                }
-                Spacer(Modifier.weight(1f))
-                FavoriteToggleButton(isFavorite = isFavorite, onClick = onFavoriteToggle)
-                Spacer(Modifier.size(8.dp))
-                PlayToggleButton(isPlaying = isPlaying, isLoading = isLoading, onClick = onPlayToggle)
-            }
+        if (showSurahLabel) {
             Text(
-                ayah.arabicText,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.End,
-                lineHeight = 40.sp,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
             )
-            if (ayah.translationText.isNotBlank()) {
-                Text(
-                    ayah.translationText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                )
+            Spacer(Modifier.height(2.dp))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier.size(28.dp).background(MaterialTheme.colorScheme.primary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(ayah.numberInSurah.toString(), color = MaterialTheme.colorScheme.onPrimary, fontSize = 11.sp)
             }
-            if (onTafsirClick != null) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    LocalStrings.current.tafsirLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable(onClick = onTafsirClick),
-                )
-            }
+            Spacer(Modifier.weight(1f))
+            FavoriteToggleButton(isFavorite = isFavorite, onClick = onFavoriteToggle)
+            Spacer(Modifier.size(8.dp))
+            PlayToggleButton(isPlaying = isPlaying, isLoading = isLoading, onClick = onPlayToggle)
+        }
+        Text(
+            ayah.arabicText,
+            style = MaterialTheme.typography.titleLarge,
+            fontFamily = LocalArabicFontFamily.current,
+            textAlign = TextAlign.End,
+            lineHeight = 40.sp,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        )
+        if (ayah.translationText.isNotBlank()) {
+            Text(
+                ayah.translationText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
+        }
+        if (onTafsirClick != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                LocalStrings.current.tafsirLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable(onClick = onTafsirClick),
+            )
         }
     }
 }
@@ -128,25 +116,13 @@ private fun FavoriteToggleButton(isFavorite: Boolean, onClick: () -> Unit) {
 @Composable
 fun PlayToggleButton(isPlaying: Boolean, isLoading: Boolean, onClick: () -> Unit) {
     val strings = LocalStrings.current
-    val transition = rememberInfiniteTransition()
-    val pulse by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (isPlaying) 1.12f else 1f,
-        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
-    )
-    val loadingAlpha by transition.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse),
-    )
     Box(
         modifier = Modifier
             .size(34.dp)
-            .scale(if (isPlaying) pulse else 1f)
             .clip(CircleShape)
             .background(
                 when {
-                    isLoading -> MaterialTheme.colorScheme.primary.copy(alpha = loadingAlpha)
+                    isLoading -> MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                     isPlaying -> MaterialTheme.colorScheme.primary
                     else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 },

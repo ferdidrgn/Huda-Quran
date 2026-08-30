@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 data class PickerItem(val id: String, val label: String, val sublabel: String? = null)
@@ -89,12 +89,13 @@ fun EditionPickerScreen(
                 val midIndex = filtered.size / 2
                 LazyColumn(contentPadding = PaddingValues(16.dp)) {
                     itemsIndexed(filtered, key = { _, item -> item.id }) { index, item ->
-                        Card(
+                        GlassSurface(
                             onClick = { onSelect(item.id) },
                             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween,
                             ) {

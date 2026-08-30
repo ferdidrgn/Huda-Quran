@@ -40,6 +40,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 @Composable
 fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -104,7 +105,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
 private fun ExampleCard(example: TajwidExample, pronounceDescription: String, onPronounce: () -> Unit) {
     GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 14.dp, horizontal = 8.dp)) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(example.arabic, fontSize = 30.sp, color = MaterialTheme.colorScheme.primary)
+            Text(example.arabic, fontSize = 30.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
             Text(example.transliteration, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Text(
                 example.explanation,

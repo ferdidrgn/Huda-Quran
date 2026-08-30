@@ -2,6 +2,7 @@ package org.ferdidrgn.hudaquran
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +23,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // The app is portrait-only everywhere except Mushaf (book) mode, which unlocks rotation
+        // itself while it's on screen and locks back to portrait when the reader leaves it.
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         requestNotificationPermissionIfNeeded()
         handleDeepLinkIntent(intent)

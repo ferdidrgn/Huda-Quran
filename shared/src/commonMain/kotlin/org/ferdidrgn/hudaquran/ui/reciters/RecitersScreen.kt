@@ -20,8 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +48,7 @@ import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -176,17 +175,14 @@ private fun ReciterRow(
     onSelect: () -> Unit,
     onPreviewToggle: () -> Unit,
 ) {
-    Card(
+    GlassSurface(
         onClick = onSelect,
         modifier = Modifier.fillMaxWidth(),
-        colors = if (isSelected) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
+        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        contentPadding = PaddingValues(12.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(

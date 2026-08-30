@@ -1,13 +1,13 @@
 package org.ferdidrgn.hudaquran.ads
 
 import android.content.Context
-import android.graphics.Color
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdError
@@ -97,6 +98,8 @@ actual fun BannerAdView(modifier: Modifier) {
 @Composable
 actual fun NativeAdCard(modifier: Modifier) {
     val context = LocalContext.current
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
     DisposableEffect(Unit) {
@@ -122,7 +125,7 @@ actual fun NativeAdCard(modifier: Modifier) {
     AndroidView(
         modifier = modifier.fillMaxWidth(),
         factory = { ctx -> buildNativeAdView(ctx) },
-        update = { view -> bindNativeAd(view, ad) },
+        update = { view -> bindNativeAd(view, ad, textColor, secondaryTextColor) },
     )
 }
 
@@ -136,13 +139,11 @@ private fun buildNativeAdView(context: Context): NativeAdView {
     }
     val headlineTextView = TextView(context).apply {
         id = ViewGroup.generateViewId()
-        setTextColor(Color.WHITE)
         textSize = 15f
         setTypeface(typeface, android.graphics.Typeface.BOLD)
     }
     val bodyTextView = TextView(context).apply {
         id = ViewGroup.generateViewId()
-        setTextColor(Color.LTGRAY)
         textSize = 13f
         maxLines = 2
     }
@@ -167,8 +168,8 @@ private fun buildNativeAdView(context: Context): NativeAdView {
         }
     }
     val adBadge = TextView(context).apply {
+        id = ViewGroup.generateViewId()
         text = "Reklam"
-        setTextColor(Color.LTGRAY)
         textSize = 10f
         setPadding(0, 0, 0, dp(context, 6))
     }
@@ -181,6 +182,7 @@ private fun buildNativeAdView(context: Context): NativeAdView {
     }
     return NativeAdView(context).apply {
         addView(column)
+        tag = adBadge
         this.iconView = iconImageView
         this.headlineView = headlineTextView
         this.bodyView = bodyTextView
@@ -188,15 +190,20 @@ private fun buildNativeAdView(context: Context): NativeAdView {
     }
 }
 
-private fun bindNativeAd(view: NativeAdView, ad: NativeAd) {
-    (view.headlineView as? TextView)?.text = ad.headline
+private fun bindNativeAd(view: NativeAdView, ad: NativeAd, textColor: Int, secondaryTextColor: Int) {
+    (view.headlineView as? TextView)?.apply {
+        text = ad.headline
+        setTextColor(textColor)
+    }
     val bodyText = view.bodyView as? TextView
     if (ad.body.isNullOrBlank()) {
         bodyText?.visibility = android.view.View.GONE
     } else {
         bodyText?.visibility = android.view.View.VISIBLE
         bodyText?.text = ad.body
+        bodyText?.setTextColor(secondaryTextColor)
     }
+    (view.tag as? TextView)?.setTextColor(secondaryTextColor)
     val icon = ad.icon
     val iconImage = view.iconView as? ImageView
     if (icon == null) {

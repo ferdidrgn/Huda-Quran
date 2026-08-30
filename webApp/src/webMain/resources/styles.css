@@ -1,5 +1,5 @@
 :root {
-    --seo-header-height: 88px;
+    --seo-header-height: 52px;
     --paper: #f4ede1;
     --ink: #0b1f17;
 }
@@ -12,31 +12,39 @@ html, body {
 
 /* A real, always-rendered header — see the comment in index.html for why this markup exists
    at all. Sized to stay out of the way of the app below it on small phone screens. */
+/* A slim eyebrow strip, not a second header competing with the app's own top bar right below
+   it — real, visible, crawlable text (required for AdSense content review), but sized and laid
+   out to read as one continuous branded band rather than two stacked headers. */
 #seo-header {
     box-sizing: border-box;
     height: var(--seo-header-height);
-    padding: 10px 20px;
+    padding: 0 20px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    align-items: baseline;
+    gap: 10px;
+    overflow: hidden;
     background: var(--ink);
     color: var(--paper);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 #seo-header h1 {
-    margin: 0 0 4px;
-    font-size: 17px;
+    margin: 0;
+    font-size: 13px;
     font-weight: 700;
-    line-height: 1.2;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 #seo-header p {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.35;
-    color: rgba(244, 237, 225, 0.82);
-    max-width: 680px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: rgba(244, 237, 225, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* The interactive Compose canvas mounts here (see main.kt). Fixed to exactly one viewport minus

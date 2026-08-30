@@ -9,6 +9,13 @@ import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** A global text-size multiplier for readers who need larger type — elderly users especially. */
+enum class TextSizeOption(val scale: Float) {
+    NORMAL(1f),
+    LARGE(1.15f),
+    EXTRA_LARGE(1.3f),
+}
+
 data class LastRead(val surahNumber: Int, val numberInSurah: Int, val surahName: String)
 
 class AppPreferences(private val settings: Settings = createSettings()) {
@@ -31,6 +38,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_MUSHAF_LANDSCAPE_HINT_SEEN = "mushaf_landscape_hint_seen"
         private const val KEY_KHATM_FURTHEST_PAGE = "khatm_furthest_page"
         private const val KEY_KHATM_COMPLETED_COUNT = "khatm_completed_count"
+        private const val KEY_TEXT_SIZE = "text_size_option"
     }
 
     var adsRemovedUntilMillis: Long
@@ -101,6 +109,18 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     fun setThemeMode(value: ThemeMode) {
         settings.putString(KEY_THEME, value.name)
         _themeMode.value = value
+    }
+
+    private fun loadTextSize(): TextSizeOption =
+        runCatching { TextSizeOption.valueOf(settings.getString(KEY_TEXT_SIZE, TextSizeOption.NORMAL.name)) }
+            .getOrDefault(TextSizeOption.NORMAL)
+
+    private val _textSize = MutableStateFlow(loadTextSize())
+    val textSize: StateFlow<TextSizeOption> = _textSize.asStateFlow()
+
+    fun setTextSize(value: TextSizeOption) {
+        settings.putString(KEY_TEXT_SIZE, value.name)
+        _textSize.value = value
     }
 
     private val _favorites = MutableStateFlow(loadFavorites())

@@ -12,11 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -36,7 +37,10 @@ import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.platform.Platform
+import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -99,15 +103,25 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
             }
             else -> {
                 val showAds = !preferences.isAdFree()
-                LazyColumn(
+                val isWeb = currentPlatform == Platform.WEB
+                LazyVerticalGrid(
+                    // On a website, a single-file mobile list stretched across a wide window
+                    // wastes the space and reads as a phone screen — a real multi-column
+                    // "magazine page" layout instead, same pattern already used on Home.
+                    columns = if (isWeb) GridCells.Adaptive(minSize = 320.dp) else GridCells.Fixed(1),
                     contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     itemsIndexed(filtered, key = { _, surah -> surah.number }) { index, surah ->
                         SurahRow(surah, appLanguage, strings) { onOpenSurah(surah.number) }
-                        if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                        if (showAds && index == 7) {
+                            AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                        }
                     }
-                    if (showAds) item { AdBannerCard() }
+                    if (showAds) {
+                        item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard() }
+                    }
                 }
             }
         }
@@ -116,9 +130,9 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
 
 @Composable
 private fun SurahRow(surah: Surah, appLanguage: AppLanguage, strings: Strings, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp), onClick = onClick) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(

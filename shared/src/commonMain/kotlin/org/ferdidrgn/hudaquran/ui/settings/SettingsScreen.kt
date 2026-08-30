@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.billing.BillingManager
 import org.ferdidrgn.hudaquran.billing.BillingProduct
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
+import org.ferdidrgn.hudaquran.data.local.TextSizeOption
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -60,6 +61,7 @@ fun SettingsScreen(
     val repository = AppContainer.repository
     val prayerRepository = AppContainer.prayerRepository
     val selectedTheme by preferences.themeMode.collectAsState()
+    val selectedTextSize by preferences.textSize.collectAsState()
     val notificationsEnabled by preferences.prayerNotificationsEnabled.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -122,6 +124,17 @@ fun SettingsScreen(
             ThemeSegmentedControl(selected = selectedTheme, onSelect = { preferences.setThemeMode(it) })
         }
 
+        SectionTitle(strings.textSizeLabel)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Text(
+                strings.textSizeHint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            TextSizeSegmentedControl(selected = selectedTextSize, onSelect = { preferences.setTextSize(it) })
+        }
+
         SectionTitle(strings.recitationAndTranslation)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             NavigationRow(title = strings.reciterLabel, value = reciterName, onClick = onOpenReciterPicker)
@@ -129,6 +142,12 @@ fun SettingsScreen(
             NavigationRow(title = strings.translationLabel, value = translationName, onClick = onOpenTranslationPicker)
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(title = strings.tafsirLabel, value = tafsirName, onClick = onOpenTafsirPicker)
+            Text(
+                strings.tafsirVsMealHint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
 
         if (!preferences.isAdFree()) {
@@ -242,6 +261,44 @@ private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> 
                 Text(
                     label,
                     fontSize = 12.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSizeOption) -> Unit) {
+    val strings = LocalStrings.current
+    val options = listOf(
+        TextSizeOption.NORMAL to strings.textSizeNormal,
+        TextSizeOption.LARGE to strings.textSizeLarge,
+        TextSizeOption.EXTRA_LARGE to strings.textSizeExtraLarge,
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEach { (option, label) ->
+            val isSelected = selected == option
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onSelect(option) }
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    label,
+                    fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )

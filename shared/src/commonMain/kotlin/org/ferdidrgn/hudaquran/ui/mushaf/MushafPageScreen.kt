@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,8 +57,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.SpanStyle
@@ -65,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -75,11 +83,13 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
+import org.ferdidrgn.hudaquran.platform.OrientationController
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 private val SPREAD_MIN_WIDTH = 700.dp
 private val PAGE_SHAPE = RoundedCornerShape(18.dp)
@@ -92,11 +102,64 @@ private val PaperDark = Color(0xFF2B2620)
 private val InkLight = Color(0xFF2A2015)
 private val InkDark = Color(0xFFEFE4CB)
 
+// A muted gilt tone for the page's ornamental border and ayah-end markers — the same accent a
+// real illuminated manuscript uses for decoration, kept separate from the app's own theme color.
+private val GiltLight = Color(0xFF9C7A2E)
+private val GiltDark = Color(0xFFC9A857)
+
+private val arabicIndicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
+
+/** Renders a verse number using Arabic-Indic digits, matching the Arabic ayah text beside it. */
+private fun toArabicIndicNumerals(number: Int): String = number.toString().map { arabicIndicDigits[it - '0'] }.joinToString("")
+
 @Composable
 private fun paperColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) PaperDark else PaperLight
 
 @Composable
 private fun inkColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) InkDark else InkLight
+
+@Composable
+private fun giltColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) GiltDark else GiltLight
+
+/** A double-ruled ornamental frame with small diamond corner accents, echoing an illuminated mushaf page border. */
+@Composable
+private fun MushafPageOrnamentBorder(modifier: Modifier = Modifier, color: Color) {
+    Canvas(modifier = modifier) {
+        val outerInset = 10.dp.toPx()
+        val outerStroke = 1.6.dp.toPx()
+        val outerRect = Rect(Offset(outerInset, outerInset), Offset(size.width - outerInset, size.height - outerInset))
+        drawRoundRect(
+            color = color,
+            topLeft = outerRect.topLeft,
+            size = outerRect.size,
+            cornerRadius = CornerRadius(10.dp.toPx()),
+            style = Stroke(width = outerStroke),
+        )
+
+        val innerInset = outerInset + 6.dp.toPx()
+        val innerRect = Rect(Offset(innerInset, innerInset), Offset(size.width - innerInset, size.height - innerInset))
+        drawRoundRect(
+            color = color.copy(alpha = 0.55f),
+            topLeft = innerRect.topLeft,
+            size = innerRect.size,
+            cornerRadius = CornerRadius(6.dp.toPx()),
+            style = Stroke(width = outerStroke * 0.65f),
+        )
+
+        val diamond = 6.dp.toPx()
+        listOf(outerRect.topLeft, Offset(outerRect.right, outerRect.top), Offset(outerRect.left, outerRect.bottom), Offset(outerRect.right, outerRect.bottom))
+            .forEach { corner ->
+                val path = Path().apply {
+                    moveTo(corner.x, corner.y - diamond)
+                    lineTo(corner.x + diamond, corner.y)
+                    lineTo(corner.x, corner.y + diamond)
+                    lineTo(corner.x - diamond, corner.y)
+                    close()
+                }
+                drawPath(path, color = color)
+            }
+    }
+}
 
 /**
  * A "mushaf" (book-style) reading mode: ayahs flow as one continuous justified paragraph on a
@@ -117,6 +180,11 @@ fun MushafPageScreen(
     onBack: () -> Unit,
     onChangePage: (Int) -> Unit,
 ) {
+    DisposableEffect(Unit) {
+        OrientationController.unlock()
+        onDispose { OrientationController.lockPortrait() }
+    }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isSpread = maxWidth > maxHeight && maxWidth > SPREAD_MIN_WIDTH
         if (isSpread) {
@@ -127,13 +195,18 @@ fun MushafPageScreen(
                 onChangeSpread = { newRight -> onChangePage(newRight.coerceAtLeast(1)) },
             )
         } else {
-            MushafSinglePageScreen(pageNumber = pageNumber, onBack = onBack, onChangePage = onChangePage)
+            MushafSinglePageScreen(
+                pageNumber = pageNumber,
+                isLandscape = maxWidth > maxHeight,
+                onBack = onBack,
+                onChangePage = onChangePage,
+            )
         }
     }
 }
 
 @Composable
-private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChangePage: (Int) -> Unit) {
+private fun MushafSinglePageScreen(pageNumber: Int, isLandscape: Boolean, onBack: () -> Unit, onChangePage: (Int) -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     val playback = AppContainer.playbackManager
@@ -233,6 +306,7 @@ private fun MushafSinglePageScreen(pageNumber: Int, onBack: () -> Unit, onChange
                 onRetry = { reloadKey++ },
                 modifier = Modifier.fillMaxSize(),
             )
+            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
         }
 
         if (showLandscapeHint) {
@@ -322,17 +396,14 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
     val isSpreadPlaying = isSpreadQueued && playerState.status == PlaybackStatus.PLAYING
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // No page title here — landscape/book mode gives that space back to the page itself. The
+        // same page range is still readable (and tappable to jump) in the footer below.
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BackButton(onBack = onBack)
-            Text(
-                "${strings.sectionSingular(SectionKind.PAGE)} $rightPageNumber–$leftPageNumber",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).clickable { showJumpDialog = true },
-            )
+            Spacer(Modifier.weight(1f))
             IconButton(onClick = { showTranslation = !showTranslation }) {
                 Icon(
                     Icons.Filled.Translate,
@@ -360,7 +431,6 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                 }
             }
         }
-        HorizontalDivider()
 
         Box(
             modifier = Modifier
@@ -416,6 +486,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
                         ),
                     ),
             )
+            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
         }
 
         MushafPageFooter(
@@ -423,6 +494,7 @@ private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChang
             onPrevious = { if (rightPageNumber > 1) onChangeSpread(rightPageNumber - 2) },
             previousEnabled = rightPageNumber > 1,
             onNext = { onChangeSpread(rightPageNumber + 2) },
+            onCenterClick = { showJumpDialog = true },
         )
     }
 
@@ -450,6 +522,8 @@ private fun MushafPageColumn(
     strings: Strings,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    arabicFontSize: TextUnit = TextUnit.Unspecified,
+    arabicLineHeight: TextUnit = 44.sp,
 ) {
     val ink = inkColor()
     when {
@@ -468,31 +542,40 @@ private fun MushafPageColumn(
         else -> {
             val d = detail!!
             val highlightColor = MaterialTheme.colorScheme.primaryContainer
-            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink) {
+            val gilt = giltColor()
+            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink, gilt) {
                 buildAnnotatedString {
+                    fun appendAyahEndMark(numberInSurah: Int) {
+                        append(" ")
+                        withStyle(SpanStyle(color = gilt, fontWeight = FontWeight.Bold, background = gilt.copy(alpha = 0.12f))) {
+                            append(" ${toArabicIndicNumerals(numberInSurah)} ")
+                        }
+                        append(" ")
+                    }
                     d.ayahs.forEach { ayah ->
                         val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
                             currentAyah.numberInSurah == ayah.numberInSurah
                         if (isCurrent) {
                             withStyle(SpanStyle(background = highlightColor)) {
                                 append(ayah.arabicText)
-                                append("  ۝${ayah.numberInSurah}  ")
                             }
                         } else {
                             append(ayah.arabicText)
-                            append("  ۝${ayah.numberInSurah}  ")
                         }
+                        appendAyahEndMark(ayah.numberInSurah)
                     }
                 }
             }
 
-            Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+            Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(30.dp)) {
                 Text(
                     pageText,
                     color = ink,
                     style = MaterialTheme.typography.headlineSmall,
+                    fontFamily = LocalArabicFontFamily.current,
+                    fontSize = arabicFontSize,
                     textAlign = TextAlign.Justify,
-                    lineHeight = 44.sp,
+                    lineHeight = arabicLineHeight,
                 )
                 if (showTranslation) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
@@ -524,7 +607,13 @@ private fun MushafPageColumn(
 }
 
 @Composable
-private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previousEnabled: Boolean, onNext: () -> Unit) {
+private fun MushafPageFooter(
+    centerLabel: String,
+    onPrevious: () -> Unit,
+    previousEnabled: Boolean,
+    onNext: () -> Unit,
+    onCenterClick: (() -> Unit)? = null,
+) {
     val strings = LocalStrings.current
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -534,7 +623,11 @@ private fun MushafPageFooter(centerLabel: String, onPrevious: () -> Unit, previo
         IconButton(onClick = onPrevious, enabled = previousEnabled) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
         }
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))) {
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
+                .let { if (onCenterClick != null) it.clickable(onClick = onCenterClick) else it },
+        ) {
             Text(
                 centerLabel,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),

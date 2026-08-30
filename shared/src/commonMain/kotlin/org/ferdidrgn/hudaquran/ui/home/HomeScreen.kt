@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.ads.BannerAdView
 import org.ferdidrgn.hudaquran.ads.NativeAdCard
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
+import org.ferdidrgn.hudaquran.data.local.LastRead
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -63,7 +66,6 @@ import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
@@ -71,6 +73,7 @@ import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import kotlinx.datetime.Clock
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
@@ -187,121 +190,21 @@ fun HomeScreen(
             }
         }
 
-        val currentLastRead = lastRead
-        if (currentLastRead != null) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                StaggeredEntrance(1) {
-                    GlassSurface(
-                        modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        onClick = {
-                            onOpenSurah(
-                                currentLastRead.surahNumber,
-                                currentLastRead.numberInSurah
-                            )
-                        },
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconBubble(emoji = "▶️")
-                            Spacer(Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    strings.continueReading,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    "${
-                                        localizedSurahName(
-                                            currentLastRead.surahNumber,
-                                            currentLastRead.surahName,
-                                            appLanguage
-                                        )
-                                    } • ${strings.ayahWord} ${currentLastRead.numberInSurah}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(2) { PrayerWidget(prayerTimes) }
+            StaggeredEntrance(1) { PrayerWidget(prayerTimes) }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(2) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
-                    onClick = { onOpenMushafMode(lastMushafPage ?: 1) },
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconBubble(emoji = "📖", accent = true)
-                        Spacer(Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                strings.mushafModeLabel,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                if (lastMushafPage != null) {
-                                    strings.mushafResumeSubtitleTemplate.replace(
-                                        "{n}",
-                                        lastMushafPage.toString()
-                                    )
-                                } else {
-                                    strings.mushafStartSubtitle
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Icon(
-                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(2) {
-                GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        strings.khatmProgressTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    val khatmPercent = (khatmFurthestPage * 100 / TOTAL_MUSHAF_PAGES).coerceIn(0, 100)
-                    LinearProgressIndicator(
-                        progress = { khatmFurthestPage.toFloat() / TOTAL_MUSHAF_PAGES.toFloat() },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        strings.khatmProgressTemplate
-                            .replace("{page}", khatmFurthestPage.toString())
-                            .replace("{total}", TOTAL_MUSHAF_PAGES.toString())
-                            .replace("{percent}", khatmPercent.toString()),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (khatmCompletedCount > 0) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            strings.khatmCompletedCountTemplate.replace("{n}", khatmCompletedCount.toString()),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
+                ReadingProgressCard(
+                    lastRead = lastRead,
+                    lastMushafPage = lastMushafPage,
+                    khatmFurthestPage = khatmFurthestPage,
+                    khatmCompletedCount = khatmCompletedCount,
+                    appLanguage = appLanguage,
+                    onOpenSurah = onOpenSurah,
+                    onOpenMushafMode = onOpenMushafMode,
+                )
             }
         }
 
@@ -360,6 +263,7 @@ fun HomeScreen(
                             Text(
                                 dailyAyah!!.arabicText,
                                 style = MaterialTheme.typography.titleLarge,
+                                fontFamily = LocalArabicFontFamily.current,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -437,38 +341,9 @@ fun HomeScreen(
                     item { QuickAction("🔢", strings.juz, onClick = onOpenJuzList) }
                     item { QuickAction("🔍", strings.search, onClick = onOpenSearch) }
                     item { QuickAction("🎙️", strings.reciters, onClick = onOpenReciters) }
+                    item { QuickAction("📝", strings.readingLessonsTitle, onClick = onOpenArabicAlphabet) }
                     item { QuickAction("⭐", strings.navFavorites, onClick = onOpenFavorites) }
                     item { QuickAction("⚙️", strings.navSettings, onClick = onOpenSettings) }
-                }
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(7) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                    onClick = onOpenArabicAlphabet,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconBubble(emoji = "📝", accent = true)
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                strings.readingLessonsTitle,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                strings.readingLessonsSubtitleTemplate.replace(
-                                    "{n}",
-                                    tajwidCourse.size.toString()
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -578,53 +453,43 @@ fun HomeScreen(
             }
         }
 
-        if (popularSurahs.isNotEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                StaggeredEntrance(11) {
-                    Column {
-                        SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
-                        Spacer(Modifier.height(10.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
-                                SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(11) {
+                Column {
+                    SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
+                    Spacer(Modifier.height(10.dp))
+                    when {
+                        loadError -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    strings.surahsLoadErrorShort,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    strings.retry,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.clickable { surahReloadKey++ },
+                                )
                             }
                         }
-                    }
-                }
-            }
-        }
 
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(12) {
-                Column {
-                    SectionHeader(strings.navSurahs, strings.viewAll, onOpenSurahList)
-                    Spacer(Modifier.height(10.dp))
-                    if (loadError) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                strings.surahsLoadErrorShort,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                            Spacer(Modifier.width(10.dp))
-                            Text(
-                                strings.retry,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.clickable { surahReloadKey++ },
-                            )
+                        popularSurahs.isEmpty() -> {
+                            Box(
+                                Modifier.fillMaxWidth().padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
                         }
-                    } else if (surahs.isEmpty()) {
-                        Box(
-                            Modifier.fillMaxWidth().padding(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(surahs.take(10), key = { "all-${it.number}" }) { surah ->
-                                SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+
+                        else -> {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
+                                    SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
+                                }
                             }
                         }
                     }
@@ -753,6 +618,107 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?) {
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * One card for "where you're at": the classic continue-reading row (when there's a last-read
+ * ayah), the Mushaf/book-mode row, and the Khatm progress bar underneath — previously three
+ * separate full-width cards stacked on Home.
+ */
+@Composable
+private fun ReadingProgressCard(
+    lastRead: LastRead?,
+    lastMushafPage: Int?,
+    khatmFurthestPage: Int,
+    khatmCompletedCount: Int,
+    appLanguage: AppLanguage,
+    onOpenSurah: (Int, Int?) -> Unit,
+    onOpenMushafMode: (Int) -> Unit,
+) {
+    val strings = LocalStrings.current
+    GlassSurface(modifier = Modifier.fillMaxWidth()) {
+        if (lastRead != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clickable { onOpenSurah(lastRead.surahNumber, lastRead.numberInSurah) },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconBubble(emoji = "▶️")
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        strings.continueReading,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        "${
+                            localizedSurahName(lastRead.surahNumber, lastRead.surahName, appLanguage)
+                        } • ${strings.ayahWord} ${lastRead.numberInSurah}",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable { onOpenMushafMode(lastMushafPage ?: 1) },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconBubble(emoji = "📖", accent = true)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    strings.mushafModeLabel,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    if (lastMushafPage != null) {
+                        strings.mushafResumeSubtitleTemplate.replace("{n}", lastMushafPage.toString())
+                    } else {
+                        strings.mushafStartSubtitle
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
+        val khatmPercent = (khatmFurthestPage * 100 / TOTAL_MUSHAF_PAGES).coerceIn(0, 100)
+        LinearProgressIndicator(
+            progress = { khatmFurthestPage.toFloat() / TOTAL_MUSHAF_PAGES.toFloat() },
+            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50)),
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            strings.khatmProgressTemplate
+                .replace("{page}", khatmFurthestPage.toString())
+                .replace("{total}", TOTAL_MUSHAF_PAGES.toString())
+                .replace("{percent}", khatmPercent.toString()),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (khatmCompletedCount > 0) {
+            Text(
+                strings.khatmCompletedCountTemplate.replace("{n}", khatmCompletedCount.toString()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }

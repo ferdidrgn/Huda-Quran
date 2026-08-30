@@ -191,6 +191,13 @@ data class Strings(
     val changeTafsirLabel: String,
     val tafsirUnavailable: String,
     val tafsirNotSelected: String,
+    val qiblaLiveInstructions: String,
+    val tafsirVsMealHint: String,
+    val textSizeLabel: String,
+    val textSizeHint: String,
+    val textSizeNormal: String,
+    val textSizeLarge: String,
+    val textSizeExtraLarge: String,
 )
 
 private val turkish = Strings(
@@ -290,6 +297,9 @@ private val turkish = Strings(
     qiblaLocationUnavailable = "Konum bilgisi alınamadı. Ayarlar'dan şehir/ülke seçtiğinizden emin olun.",
     cdBack = "Geri", cdPlay = "Oynat", cdPause = "Duraklat", cdClose = "Kapat", cdRepeat = "Tekrarla", cdPrevious = "Önceki", cdNext = "Sonraki",
     tafsirLabel = "Tefsir", selectTafsirTitle = "Tefsir Seç", changeTafsirLabel = "Tefsiri Değiştir", tafsirUnavailable = "Bu ayet için tefsir metni alınamadı.", tafsirNotSelected = "Tefsir seçilmedi",
+    qiblaLiveInstructions = "Telefonu düz tutun ve ok, dairenin üstündeki üçgene gelene kadar yavaşça çevirin.",
+    tafsirVsMealHint = "Meal, ayetin çevirisidir. Tefsir ise ayetin bağlamını ve anlamını ayrıntılı açıklayan yorumdur.",
+    textSizeLabel = "Yazı Boyutu", textSizeHint = "Görmekte zorlanıyorsanız yazıları büyütün.", textSizeNormal = "Normal", textSizeLarge = "Büyük", textSizeExtraLarge = "Çok Büyük",
 )
 
 private val english = Strings(
@@ -389,6 +399,9 @@ private val english = Strings(
     qiblaLocationUnavailable = "Couldn't get your location. Make sure you've set a city/country in Settings.",
     cdBack = "Back", cdPlay = "Play", cdPause = "Pause", cdClose = "Close", cdRepeat = "Repeat", cdPrevious = "Previous", cdNext = "Next",
     tafsirLabel = "Tafsir", selectTafsirTitle = "Select Tafsir", changeTafsirLabel = "Change Tafsir", tafsirUnavailable = "Couldn't load the tafsir for this ayah.", tafsirNotSelected = "No tafsir selected",
+    qiblaLiveInstructions = "Hold your phone flat and slowly turn until the arrow lines up with the triangle above the circle.",
+    tafsirVsMealHint = "Translation renders the ayah's meaning in your language. Tafsir is a longer scholarly explanation of its context and meaning.",
+    textSizeLabel = "Text Size", textSizeHint = "Make text bigger if you have trouble reading it.", textSizeNormal = "Normal", textSizeLarge = "Large", textSizeExtraLarge = "Extra Large",
 )
 
 private val arabic = Strings(
@@ -488,6 +501,9 @@ private val arabic = Strings(
     qiblaLocationUnavailable = "تعذر الحصول على موقعك. تأكد من تحديد المدينة/الدولة في الإعدادات.",
     cdBack = "رجوع", cdPlay = "تشغيل", cdPause = "إيقاف مؤقت", cdClose = "إغلاق", cdRepeat = "تكرار", cdPrevious = "السابق", cdNext = "التالي",
     tafsirLabel = "تفسير", selectTafsirTitle = "اختر التفسير", changeTafsirLabel = "تغيير التفسير", tafsirUnavailable = "تعذر تحميل تفسير هذه الآية.", tafsirNotSelected = "لم يتم اختيار تفسير",
+    qiblaLiveInstructions = "أمسك هاتفك أفقيًا وأدره ببطء حتى يتوافق السهم مع المثلث أعلى الدائرة.",
+    tafsirVsMealHint = "الترجمة (المعنى) هي نقل معنى الآية. أما التفسير فهو شرح تفصيلي لسياق الآية ومعناها.",
+    textSizeLabel = "حجم النص", textSizeHint = "كبّر النص إذا كنت تواجه صعوبة في القراءة.", textSizeNormal = "عادي", textSizeLarge = "كبير", textSizeExtraLarge = "كبير جدًا",
 )
 
 private val german = Strings(
@@ -587,6 +603,9 @@ private val german = Strings(
     qiblaLocationUnavailable = "Standort konnte nicht ermittelt werden. Stellen Sie sicher, dass Stadt/Land in den Einstellungen festgelegt sind.",
     cdBack = "Zurück", cdPlay = "Abspielen", cdPause = "Pause", cdClose = "Schließen", cdRepeat = "Wiederholen", cdPrevious = "Vorherige", cdNext = "Weiter",
     tafsirLabel = "Tafsir", selectTafsirTitle = "Tafsir auswählen", changeTafsirLabel = "Tafsir ändern", tafsirUnavailable = "Der Tafsir für diesen Vers konnte nicht geladen werden.", tafsirNotSelected = "Kein Tafsir ausgewählt",
+    qiblaLiveInstructions = "Halte dein Telefon flach und drehe dich langsam, bis der Pfeil mit dem Dreieck über dem Kreis übereinstimmt.",
+    tafsirVsMealHint = "Die Übersetzung überträgt die Bedeutung des Verses. Der Tafsir ist eine ausführliche Erklärung seines Kontexts und seiner Bedeutung.",
+    textSizeLabel = "Textgröße", textSizeHint = "Vergrößern Sie den Text, wenn Sie Schwierigkeiten beim Lesen haben.", textSizeNormal = "Normal", textSizeLarge = "Groß", textSizeExtraLarge = "Sehr groß",
 )
 
 private val french = Strings(
@@ -686,6 +705,9 @@ private val french = Strings(
     qiblaLocationUnavailable = "Impossible d'obtenir votre position. Vérifiez que la ville/le pays sont définis dans les Paramètres.",
     cdBack = "Retour", cdPlay = "Lecture", cdPause = "Pause", cdClose = "Fermer", cdRepeat = "Répéter", cdPrevious = "Précédent", cdNext = "Suivant",
     tafsirLabel = "Tafsir", selectTafsirTitle = "Choisir le tafsir", changeTafsirLabel = "Changer le tafsir", tafsirUnavailable = "Impossible de charger le tafsir de ce verset.", tafsirNotSelected = "Aucun tafsir sélectionné",
+    qiblaLiveInstructions = "Tenez votre téléphone à plat et tournez lentement jusqu'à ce que la flèche s'aligne avec le triangle au-dessus du cercle.",
+    tafsirVsMealHint = "La traduction rend le sens du verset. Le tafsir est une explication savante plus détaillée de son contexte et de sa signification.",
+    textSizeLabel = "Taille du texte", textSizeHint = "Agrandissez le texte si vous avez du mal à le lire.", textSizeNormal = "Normal", textSizeLarge = "Grand", textSizeExtraLarge = "Très grand",
 )
 
 private val uzbek = Strings(
@@ -785,6 +807,9 @@ private val uzbek = Strings(
     qiblaLocationUnavailable = "Joylashuvingizni aniqlab bo'lmadi. Sozlamalarda shahar/davlat tanlanganiga ishonch hosil qiling.",
     cdBack = "Orqaga", cdPlay = "Ijro et", cdPause = "Pauza", cdClose = "Yopish", cdRepeat = "Takrorlash", cdPrevious = "Oldingi", cdNext = "Keyingi",
     tafsirLabel = "Tafsir", selectTafsirTitle = "Tafsirni tanlang", changeTafsirLabel = "Tafsirni o'zgartirish", tafsirUnavailable = "Bu oyat uchun tafsir yuklanmadi.", tafsirNotSelected = "Tafsir tanlanmagan",
+    qiblaLiveInstructions = "Telefoningizni tekis tuting va o'q doira ustidagi uchburchak bilan tekislanguncha asta aylantiring.",
+    tafsirVsMealHint = "Tarjima oyatning ma'nosini beradi. Tafsir esa uning konteksti va ma'nosining batafsil izohidir.",
+    textSizeLabel = "Matn o'lchami", textSizeHint = "O'qishda qiynalsangiz, matnni kattalashtiring.", textSizeNormal = "Oddiy", textSizeLarge = "Katta", textSizeExtraLarge = "Juda katta",
 )
 
 private val kyrgyz = Strings(
@@ -884,6 +909,9 @@ private val kyrgyz = Strings(
     qiblaLocationUnavailable = "Жайгашкан жериңизди аныктоо мүмкүн болбоду. Жөндөөлөрдө шаар/өлкө тандалганына ынаныңыз.",
     cdBack = "Артка", cdPlay = "Ойнотуу", cdPause = "Тыныгуу", cdClose = "Жабуу", cdRepeat = "Кайталоо", cdPrevious = "Мурунку", cdNext = "Кийинки",
     tafsirLabel = "Тафсир", selectTafsirTitle = "Тафсирди тандаңыз", changeTafsirLabel = "Тафсирди өзгөртүү", tafsirUnavailable = "Бул аят үчүн тафсир жүктөлгөн жок.", tafsirNotSelected = "Тафсир тандалган жок",
+    qiblaLiveInstructions = "Телефонуңузду түз кармап, жебе тегеректин үстүндөгү үч бурчтук менен дал келгенче жай бурулуңуз.",
+    tafsirVsMealHint = "Котормо аяттын маанисин берет. Тафсир болсо анын мазмунун жана маанисин кеңири түшүндүрөт.",
+    textSizeLabel = "Тексттин өлчөмү", textSizeHint = "Окууга кыйналсаңыз, текстти чоңойтуңуз.", textSizeNormal = "Кадимки", textSizeLarge = "Чоң", textSizeExtraLarge = "Өтө чоң",
 )
 
 private val turkmen = Strings(
@@ -983,6 +1011,9 @@ private val turkmen = Strings(
     qiblaLocationUnavailable = "Ýerleşiş maglumaty alynyp bilinmedi. Sazlamalarda şäher/ýurt saýlanandygyna göz ýetiriň.",
     cdBack = "Yza", cdPlay = "Ýerine ýetir", cdPause = "Duruzmak", cdClose = "Ýapmak", cdRepeat = "Gaýtalamak", cdPrevious = "Öňki", cdNext = "Indiki",
     tafsirLabel = "Tefsir", selectTafsirTitle = "Tefsir saýlaň", changeTafsirLabel = "Tefsiri üýtget", tafsirUnavailable = "Bu aýat üçin tefsir ýüklenip bilinmedi.", tafsirNotSelected = "Tefsir saýlanmady",
+    qiblaLiveInstructions = "Telefonyňyzy tekiz saklaň we ok, tegeleg üstündäki üçburçluk bilen deňeşýänçä ýuwaş öwrüň.",
+    tafsirVsMealHint = "Terjime aýatyň manysyny berýär. Tefsir bolsa onuň manysynyň we mazmunynyň jikme-jik düşündirişidir.",
+    textSizeLabel = "Ýazy ölçegi", textSizeHint = "Okamakda kynçylyk çekseňiz, ýazyny ulaldyň.", textSizeNormal = "Adaty", textSizeLarge = "Uly", textSizeExtraLarge = "Has uly",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

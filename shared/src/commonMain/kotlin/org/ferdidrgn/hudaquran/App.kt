@@ -21,7 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -77,6 +79,8 @@ import org.ferdidrgn.hudaquran.ui.surahdetail.SurahDetailScreen
 import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
 import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
 import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
 
 private const val APP_TITLE = "Huda Qur'an"
 
@@ -88,6 +92,7 @@ private val expandedContentMaxWidth = 1100.dp
 fun App() {
     val preferences = AppContainer.preferences
     val themeMode by preferences.themeMode.collectAsState()
+    val textSize by preferences.textSize.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val navigator = remember { AppNavigator() }
     val nowPlaying by AppContainer.playbackManager.nowPlaying.collectAsState()
@@ -109,10 +114,25 @@ fun App() {
 
     val strings = stringsFor(appLanguage)
     val layoutDirection = if (appLanguage == AppLanguage.ARABIC) LayoutDirection.Rtl else LayoutDirection.Ltr
-    CompositionLocalProvider(LocalStrings provides strings, LocalLayoutDirection provides layoutDirection) {
+    val baseDensity = LocalDensity.current
+    val scaledDensity = remember(baseDensity, textSize) {
+        Density(density = baseDensity.density, fontScale = textSize.scale)
+    }
+    val arabicFontFamily = rememberArabicFontFamily()
+    CompositionLocalProvider(
+        LocalStrings provides strings,
+        LocalLayoutDirection provides layoutDirection,
+        LocalDensity provides scaledDensity,
+        LocalArabicFontFamily provides arabicFontFamily,
+    ) {
     HudaQuranTheme(themeMode = themeMode) {
         val screen = navigator.current
-        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen != Screen.NowPlaying
+        // Mushaf mode gets the full window too: on tablet/wide-landscape widths the persistent
+        // side nav rail + reading-column width cap below (sized for a single scrolling column of
+        // body text) were squeezing the two-page book spread down to a sliver — the opposite of
+        // what a maximized reading surface needs.
+        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding &&
+            screen != Screen.NowPlaying && screen !is Screen.MushafPage
 
         LaunchedEffect(screen) {
             AppAnalytics.logEvent("screen_view", mapOf("screen" to screen::class.simpleName.orEmpty()))

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +39,7 @@ import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private enum class SearchStatus { IDLE, LOADING, DONE, ERROR }
@@ -118,23 +118,22 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
                     val showAds = !preferences.isAdFree()
                     LazyColumn(contentPadding = PaddingValues(16.dp)) {
                         itemsIndexed(results, key = { _, match -> "${match.surahNumber}:${match.numberInSurah}" }) { index, match ->
-                            Card(
+                            GlassSurface(
                                 onClick = { onOpenSurah(match.surahNumber, match.numberInSurah) },
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                                contentPadding = PaddingValues(14.dp),
                             ) {
-                                Column(modifier = Modifier.padding(14.dp)) {
-                                    Text(
-                                        "${localizedSurahName(match.surahNumber, match.surahName, appLanguage)} • ${strings.ayahWord} ${match.numberInSurah}",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        match.text,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.padding(top = 4.dp),
-                                    )
-                                }
+                                Text(
+                                    "${localizedSurahName(match.surahNumber, match.surahName, appLanguage)} • ${strings.ayahWord} ${match.numberInSurah}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                Text(
+                                    match.text,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
                             }
                             if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
                         }

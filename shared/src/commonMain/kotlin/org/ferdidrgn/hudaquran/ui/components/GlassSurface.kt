@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,7 @@ fun GlassSurface(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large,
     containerColor: Color = MaterialTheme.colorScheme.surface,
-    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
+    borderColor: Color = lerp(MaterialTheme.colorScheme.outlineVariant, MaterialTheme.colorScheme.primary, 0.22f),
     contentPadding: PaddingValues = PaddingValues(18.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
