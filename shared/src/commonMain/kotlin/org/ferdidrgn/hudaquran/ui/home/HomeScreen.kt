@@ -93,6 +93,7 @@ fun HomeScreen(
     onOpenSajdaAyahs: () -> Unit,
     onOpenMushafMode: (Int) -> Unit,
     onOpenQibla: () -> Unit,
+    onOpenEsmaulHusna: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -336,14 +337,20 @@ fun HomeScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(6) {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    item { QuickAction("📖", strings.navSurahs, onClick = onOpenSurahList) }
-                    item { QuickAction("🔢", strings.juz, onClick = onOpenJuzList) }
-                    item { QuickAction("🔍", strings.search, onClick = onOpenSearch) }
-                    item { QuickAction("🎙️", strings.reciters, onClick = onOpenReciters) }
-                    item { QuickAction("📝", strings.readingLessonsTitle, onClick = onOpenArabicAlphabet) }
-                    item { QuickAction("⭐", strings.navFavorites, onClick = onOpenFavorites) }
-                    item { QuickAction("⚙️", strings.navSettings, onClick = onOpenSettings) }
+                Column {
+                    SectionHeader(strings.quickActionsTitle)
+                    Spacer(Modifier.height(10.dp))
+                    QuickActionGrid(
+                        listOf(
+                            QuickActionItem("📖", strings.navSurahs, onOpenSurahList),
+                            QuickActionItem("🔢", strings.juz, onOpenJuzList),
+                            QuickActionItem("🔍", strings.search, onOpenSearch),
+                            QuickActionItem("🎙️", strings.reciters, onOpenReciters),
+                            QuickActionItem("📝", strings.readingLessonsTitle, onOpenArabicAlphabet),
+                            QuickActionItem("⭐", strings.navFavorites, onOpenFavorites),
+                            QuickActionItem("⚙️", strings.navSettings, onOpenSettings),
+                        ),
+                    )
                 }
             }
         }
@@ -351,10 +358,10 @@ fun HomeScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(8) {
                 Column {
-                    SectionHeader(strings.esmaulHusnaTitle, null, null)
+                    SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(esmaulHusna, key = { it.name }) { esma ->
+                        items(esmaulHusna.take(12), key = { it.name }) { esma ->
                             EsmaChip(esma)
                         }
                     }
@@ -367,46 +374,16 @@ fun HomeScreen(
                 Column {
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item {
-                            QuickAction(
-                                "📄",
-                                strings.pagesLabel,
-                                onClick = { onOpenSection(SectionKind.PAGE) })
-                        }
-                        item {
-                            QuickAction(
-                                "📆",
-                                strings.manzilsLabel,
-                                onClick = { onOpenSection(SectionKind.MANZIL) })
-                        }
-                        item {
-                            QuickAction(
-                                "📚",
-                                strings.rukusLabel,
-                                onClick = { onOpenSection(SectionKind.RUKU) })
-                        }
-                        item {
-                            QuickAction(
-                                "🔖",
-                                strings.hizbQuartersLabel,
-                                onClick = { onOpenSection(SectionKind.HIZB_QUARTER) })
-                        }
-                        item {
-                            QuickAction(
-                                "🧭",
-                                strings.qiblaTitle,
-                                onClick = onOpenQibla,
-                            )
-                        }
-                        item {
-                            QuickAction(
-                                "🕋",
-                                strings.sajdaVersesLabel,
-                                onClick = onOpenSajdaAyahs
-                            )
-                        }
-                    }
+                    QuickActionGrid(
+                        listOf(
+                            QuickActionItem("📄", strings.pagesLabel) { onOpenSection(SectionKind.PAGE) },
+                            QuickActionItem("📆", strings.manzilsLabel) { onOpenSection(SectionKind.MANZIL) },
+                            QuickActionItem("📚", strings.rukusLabel) { onOpenSection(SectionKind.RUKU) },
+                            QuickActionItem("🔖", strings.hizbQuartersLabel) { onOpenSection(SectionKind.HIZB_QUARTER) },
+                            QuickActionItem("🧭", strings.qiblaTitle, onOpenQibla),
+                            QuickActionItem("🕋", strings.sajdaVersesLabel, onOpenSajdaAyahs),
+                        ),
+                    )
                 }
             }
         }
@@ -792,24 +769,52 @@ private fun StatBento(
     }
 }
 
+private data class QuickActionItem(val emoji: String, val label: String, val onClick: () -> Unit)
+
+/**
+ * Three cards per row, wrapping to as many rows as needed — everything visible at once instead
+ * of tucked behind a horizontal scroll strip that's easy for an older user to miss entirely.
+ */
 @Composable
-private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
+private fun QuickActionGrid(actions: List<QuickActionItem>) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        actions.chunked(3).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { action ->
+                    QuickAction(
+                        emoji = action.emoji,
+                        label = action.label,
+                        onClick = action.onClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickAction(emoji: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     GlassSurface(
-        modifier = Modifier.width(88.dp),
-        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 24.sp)
-            Spacer(Modifier.height(6.dp))
+            Text(emoji, fontSize = 28.sp)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
