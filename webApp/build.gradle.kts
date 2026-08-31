@@ -39,14 +39,16 @@ kotlin {
 // dynamically (via the root project's registered extensions, matched by class simple name) rather
 // than a static type reference, since that type's exact package isn't resolvable from this build
 // script against this Kotlin Gradle plugin version (confirmed the hard way earlier).
-val binaryenRootExtension = rootProject.extensions.asMap.values
-    .firstOrNull { it::class.java.simpleName == "BinaryenRootExtension" }
-if (binaryenRootExtension != null) {
+val binaryenExtensionName = rootProject.extensions.extensionsSchema.elements
+    .map { it.name }
+    .firstOrNull { it.contains("binaryen", ignoreCase = true) }
+if (binaryenExtensionName != null) {
+    val binaryenRootExtension = rootProject.extensions.getByName(binaryenExtensionName)
     binaryenRootExtension.withGroovyBuilder { setProperty("version", "116") }
-    logger.lifecycle("Pinned Binaryen version to 116 via ${binaryenRootExtension::class.java.name}")
+    logger.lifecycle("Pinned Binaryen version to 116 via extension '$binaryenExtensionName' (${binaryenRootExtension::class.java.name})")
 } else {
     logger.lifecycle(
-        "BinaryenRootExtension not found; registered rootProject extensions: " +
+        "No binaryen-named extension found; registered rootProject extensions: " +
             rootProject.extensions.extensionsSchema.elements.joinToString { it.name },
     )
 }
