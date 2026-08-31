@@ -63,24 +63,20 @@ tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.conf
     // filtered by the time it printed. That means whatever builds the actual command line reads
     // binaryenArgs (or snapshots it) before task execution begins — the same timing as the version
     // pin above, which we know works because binaryen-version_116 really did show up in the
-    // executed process path. So this runs at the same configuration-time point.
+    // executed process path. So this runs at the same configuration-time point. Confirmed working
+    // via CI logs: the before/after print showed --no-inline etc. correctly stripped down to just
+    // the --enable-* flags, and wasm-opt no longer errored on them.
+    //
+    // (A doFirst block here that logged the input .wasm file size and re-printed binaryenArgs at
+    // execution time was removed — it referenced fileTree/layout/logger inside the task's action,
+    // which captures a Gradle script object reference the configuration cache can't serialize:
+    // "cannot serialize object of type 'DefaultProject'... not supported with the configuration
+    // cache". Configuration cache is enabled project-wide (org.gradle.configuration-cache=true in
+    // gradle.properties), so any such capture fails the whole build even after every task runs
+    // successfully. The diagnostic already did its job confirming the fix above; not needed anymore.)
     withGroovyBuilder {
         @Suppress("UNCHECKED_CAST")
         val args = getProperty("binaryenArgs") as MutableList<String>
-        logger.lifecycle("[$name] binaryenArgs before (configuration time): $args")
         args.removeIf { !it.startsWith("--enable-") }
-        logger.lifecycle("[$name] binaryenArgs after (configuration time):  $args")
-    }
-
-    doFirst {
-        // Ground truth on the module this crashes on, since nothing about tuning wasm-opt's pass
-        // flags has changed the outcome so far — worth knowing the actual size involved.
-        val wasmFiles = fileTree(layout.buildDirectory.get().asFile).matching { include("**/*.wasm") }.files
-        wasmFiles.forEach {
-            logger.lifecycle("[$name] input wasm file: ${it.path} (${it.length() / 1024} KB)")
-        }
-        withGroovyBuilder {
-            logger.lifecycle("[$name] binaryenArgs at execution time: ${getProperty("binaryenArgs")}")
-        }
     }
 }
