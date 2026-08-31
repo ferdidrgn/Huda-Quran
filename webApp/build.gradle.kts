@@ -56,6 +56,22 @@ if (binaryenExtensionName != null) {
 }
 
 tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.configureEach {
+    // Filtering binaryenArgs here — at configuration time, not inside doFirst — because two
+    // earlier attempts that mutated it inside doFirst (both replacing the property and mutating
+    // the same list in place) still ran wasm-opt with --no-inline= present: "Unknown option
+    // '--no-inline'" kept happening even though the doFirst logging proved the list was correctly
+    // filtered by the time it printed. That means whatever builds the actual command line reads
+    // binaryenArgs (or snapshots it) before task execution begins — the same timing as the version
+    // pin above, which we know works because binaryen-version_116 really did show up in the
+    // executed process path. So this runs at the same configuration-time point.
+    withGroovyBuilder {
+        @Suppress("UNCHECKED_CAST")
+        val args = getProperty("binaryenArgs") as MutableList<String>
+        logger.lifecycle("[$name] binaryenArgs before (configuration time): $args")
+        args.removeIf { !it.startsWith("--enable-") }
+        logger.lifecycle("[$name] binaryenArgs after (configuration time):  $args")
+    }
+
     doFirst {
         // Ground truth on the module this crashes on, since nothing about tuning wasm-opt's pass
         // flags has changed the outcome so far — worth knowing the actual size involved.
@@ -63,21 +79,8 @@ tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.conf
         wasmFiles.forEach {
             logger.lifecycle("[$name] input wasm file: ${it.path} (${it.length() / 1024} KB)")
         }
-
         withGroovyBuilder {
-            @Suppress("UNCHECKED_CAST")
-            val args = getProperty("binaryenArgs") as MutableList<String>
-            logger.lifecycle("[$name] binaryenArgs before: $args")
-            // Binaryen 116 (pinned above) doesn't understand --no-inline=..., a flag Kotlin's
-            // default arg list assumes is available — confirmed by CI failing cleanly with
-            // "Unknown option '--no-inline'" (exit 1, not a crash) once the version pin actually
-            // took effect. Mutating the list in place (rather than replacing it via
-            // setProperty(...)) because a previous attempt that built a new filtered list and
-            // reassigned the property still ran wasm-opt with the *old* args, meaning whatever
-            // actually launches the process holds a direct reference to this exact list object
-            // rather than re-reading the property.
-            args.removeIf { !it.startsWith("--enable-") }
-            logger.lifecycle("[$name] binaryenArgs after:  $args")
+            logger.lifecycle("[$name] binaryenArgs at execution time: ${getProperty("binaryenArgs")}")
         }
     }
 }
