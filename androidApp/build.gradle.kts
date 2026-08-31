@@ -23,6 +23,10 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.android.appUpdate)
+    // Forces a modern Fragment resolution so lint's InvalidFragmentVersionForActivityResult
+    // check passes for registerForActivityResult() call sites — whatever transitively pulled
+    // in Fragment before resolved to something below the 1.3.0 minimum that check requires.
+    implementation(libs.androidx.fragment.ktx)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
