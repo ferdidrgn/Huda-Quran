@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.SplashGold
 import org.ferdidrgn.hudaquran.ui.theme.SplashGreen
@@ -48,6 +49,11 @@ fun SplashScreen(onFinished: () -> Unit) {
             .background(SplashGreenDark),
         contentAlignment = Alignment.Center,
     ) {
+        IslamicMotifBackground(
+            modifier = Modifier.fillMaxSize(),
+            tint = SplashGold,
+            alpha = 0.07f,
+        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
