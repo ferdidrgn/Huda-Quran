@@ -67,15 +67,17 @@ tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.conf
         withGroovyBuilder {
             @Suppress("UNCHECKED_CAST")
             val args = getProperty("binaryenArgs") as MutableList<String>
+            logger.lifecycle("[$name] binaryenArgs before: $args")
             // Binaryen 116 (pinned above) doesn't understand --no-inline=..., a flag Kotlin's
             // default arg list assumes is available — confirmed by CI failing cleanly with
             // "Unknown option '--no-inline'" (exit 1, not a crash) once the version pin actually
-            // took effect. So --enable-* only; the version pin is the fix, this is just keeping
-            // wasm-opt's own CLI happy about it.
-            val filtered = args.filter { it.startsWith("--enable-") }.toMutableList()
-            logger.lifecycle("[$name] binaryenArgs before: $args")
-            logger.lifecycle("[$name] binaryenArgs after:  $filtered")
-            setProperty("binaryenArgs", filtered)
+            // took effect. Mutating the list in place (rather than replacing it via
+            // setProperty(...)) because a previous attempt that built a new filtered list and
+            // reassigned the property still ran wasm-opt with the *old* args, meaning whatever
+            // actually launches the process holds a direct reference to this exact list object
+            // rather than re-reading the property.
+            args.removeIf { !it.startsWith("--enable-") }
+            logger.lifecycle("[$name] binaryenArgs after:  $args")
         }
     }
 }
