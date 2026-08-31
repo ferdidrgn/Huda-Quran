@@ -23,6 +23,7 @@ media3 = "1.4.1"
 kotlinx-datetime = "0.8.0-0.6.x-compat"
 playServicesAds = "23.6.0"
 billing = "8.0.0"
+appUpdate = "2.1.0"
 googleServices = "4.5.0"
 firebaseBom = "34.17.0"
 firebaseCrashlyticsPlugin = "3.0.3"
@@ -64,6 +65,7 @@ compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-previ
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 android-billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
+android-appUpdate = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
