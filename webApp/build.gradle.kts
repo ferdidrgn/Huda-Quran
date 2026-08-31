@@ -30,17 +30,36 @@ kotlin {
 // The production wasmJs build runs Binaryen's wasm-opt to optimize the compiled module, and it
 // segfaults (SIGSEGV, exit 139) on this app's real (non-toy) module size on GitHub's CI runners.
 // Confirmed via CI logs across several isolated attempts, each verified to have actually taken
-// effect: extra swap space, removing just --gufa, and raising the process stack ulimit each made
-// zero difference — the exact same crash every time, including a run where the before/after log
-// below proved --gufa really was gone from the args. That rules out memory pressure, that one
-// pass, and stack depth as the cause, which points at wasm-opt's heavier IR-analysis passes in
-// general (-O3/-Oz, --closed-world, --type-ssa, --type-merging, --gufa) rather than any single
-// one of them. So this drops every optimization pass and keeps only the --enable-* feature flags
-// (required for the module to validate/run) and the --no-inline= entries (protect specific
-// exception-handling intrinsics from being inlined away, unrelated to the crash-prone passes) —
-// trading real optimization for a build that completes.
+// effect: extra swap space, removing just --gufa, raising the process stack ulimit, and even
+// stripping every optimization pass down to just the mandatory --enable-* feature flags all made
+// zero difference — the exact same crash every time. The task still runs for ~2 minutes before
+// crashing even with virtually no passes left to run, which points away from any specific pass
+// and toward wasm-opt 125 itself choking on parsing/writing a module this large — so this pins an
+// older, longer-established Binaryen release instead of continuing to tune pass flags. Reached
+// dynamically (via the root project's registered extensions, matched by class simple name) rather
+// than a static type reference, since that type's exact package isn't resolvable from this build
+// script against this Kotlin Gradle plugin version (confirmed the hard way earlier).
+val binaryenRootExtension = rootProject.extensions.asMap.values
+    .firstOrNull { it::class.java.simpleName == "BinaryenRootExtension" }
+if (binaryenRootExtension != null) {
+    binaryenRootExtension.withGroovyBuilder { setProperty("version", "116") }
+    logger.lifecycle("Pinned Binaryen version to 116 via ${binaryenRootExtension::class.java.name}")
+} else {
+    logger.lifecycle(
+        "BinaryenRootExtension not found; registered rootProject extensions: " +
+            rootProject.extensions.extensionsSchema.elements.joinToString { it.name },
+    )
+}
+
 tasks.matching { it.name.contains("Wasm") && it.name.endsWith("Optimize") }.configureEach {
     doFirst {
+        // Ground truth on the module this crashes on, since nothing about tuning wasm-opt's pass
+        // flags has changed the outcome so far — worth knowing the actual size involved.
+        val wasmFiles = fileTree(layout.buildDirectory.get().asFile).matching { include("**/*.wasm") }.files
+        wasmFiles.forEach {
+            logger.lifecycle("[$name] input wasm file: ${it.path} (${it.length() / 1024} KB)")
+        }
+
         withGroovyBuilder {
             @Suppress("UNCHECKED_CAST")
             val args = getProperty("binaryenArgs") as MutableList<String>
