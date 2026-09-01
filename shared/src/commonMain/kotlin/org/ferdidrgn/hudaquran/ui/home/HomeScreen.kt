@@ -203,25 +203,18 @@ fun HomeScreen(
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
-                if (isWeb) {
-                    WebHomeHero(
-                        greeting = strings.homeGreeting,
-                        subtitle = strings.homeSubtitle,
-                        ctaLabel = strings.navSurahs,
-                        onCtaClick = onOpenSurahList,
+                // isWeb is always false here: the isWeb branch above already returns out of
+                // HomeScreen via WebHomeContent before this mobile grid is ever composed.
+                Column {
+                    Text(
+                        "${strings.homeGreeting} 👋",
+                        style = MaterialTheme.typography.headlineMedium
                     )
-                } else {
-                    Column {
-                        Text(
-                            "${strings.homeGreeting} 👋",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Text(
-                            strings.homeSubtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(
+                        strings.homeSubtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
