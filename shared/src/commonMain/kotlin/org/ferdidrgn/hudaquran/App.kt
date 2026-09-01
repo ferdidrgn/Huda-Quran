@@ -326,10 +326,12 @@ private fun AppDestinationContent(
             onOpenReciters = { navigator.navigate(Screen.ReciterPicker) },
             onOpenArabicAlphabet = { navigator.navigate(Screen.TajwidLessonList) },
             onOpenSection = { kind -> navigator.navigate(Screen.SectionList(kind)) },
+            onOpenSectionDetail = { kind, number -> navigator.navigate(Screen.SectionDetail(kind, number)) },
             onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
             onOpenQibla = { navigator.navigate(Screen.Qibla) },
             onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
+            onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
         )
 
         is Screen.SurahList -> SurahListScreen(
