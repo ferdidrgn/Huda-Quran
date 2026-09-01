@@ -19,10 +19,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,12 +67,15 @@ import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
+import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
@@ -90,9 +96,11 @@ fun HomeScreen(
     onOpenReciters: () -> Unit,
     onOpenArabicAlphabet: () -> Unit,
     onOpenSection: (SectionKind) -> Unit,
+    onOpenSectionDetail: (SectionKind, Int) -> Unit,
     onOpenSajdaAyahs: () -> Unit,
     onOpenMushafMode: (Int) -> Unit,
     onOpenQibla: () -> Unit,
+    onOpenLesson: (String) -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -155,11 +163,36 @@ fun HomeScreen(
 
     val isWeb = currentPlatform == Platform.WEB
 
+    if (isWeb) {
+        WebHomeContent(
+            modifier = modifier,
+            strings = strings,
+            surahs = surahs,
+            appLanguage = appLanguage,
+            lastRead = lastRead,
+            khatmFurthestPage = khatmFurthestPage,
+            khatmCompletedCount = khatmCompletedCount,
+            dailyAyah = dailyAyah,
+            isLoadingDaily = isLoadingDaily,
+            onRefreshDaily = { isLoadingDaily = true },
+            onOpenSurah = onOpenSurah,
+            onOpenSurahList = onOpenSurahList,
+            onOpenSearch = onOpenSearch,
+            onOpenMushafMode = onOpenMushafMode,
+            onOpenLesson = onOpenLesson,
+            onOpenSection = onOpenSection,
+            onOpenSectionDetail = onOpenSectionDetail,
+            onOpenQibla = onOpenQibla,
+            onOpenSajdaAyahs = onOpenSajdaAyahs,
+            onOpenFavorites = onOpenFavorites,
+            onOpenReciters = onOpenReciters,
+            onOpenSettings = onOpenSettings,
+        )
+        return
+    }
+
     LazyVerticalGrid(
-        // A real website reads as a magazine page, not a phone screen with more room around it —
-        // wider minimum tiles on web mean fewer, larger cards per row instead of the same small
-        // mobile tile just repeated more times.
-        columns = GridCells.Adaptive(minSize = if (isWeb) 240.dp else 180.dp),
+        columns = GridCells.Adaptive(minSize = 180.dp),
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -167,25 +200,16 @@ fun HomeScreen(
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
-                if (isWeb) {
-                    WebHomeHero(
-                        greeting = strings.homeGreeting,
-                        subtitle = strings.homeSubtitle,
-                        ctaLabel = strings.navSurahs,
-                        onCtaClick = onOpenSurahList,
+                Column {
+                    Text(
+                        "${strings.homeGreeting} 👋",
+                        style = MaterialTheme.typography.headlineMedium
                     )
-                } else {
-                    Column {
-                        Text(
-                            "${strings.homeGreeting} 👋",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Text(
-                            strings.homeSubtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(
+                        strings.homeSubtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -336,14 +360,20 @@ fun HomeScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(6) {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    item { QuickAction("📖", strings.navSurahs, onClick = onOpenSurahList) }
-                    item { QuickAction("🔢", strings.juz, onClick = onOpenJuzList) }
-                    item { QuickAction("🔍", strings.search, onClick = onOpenSearch) }
-                    item { QuickAction("🎙️", strings.reciters, onClick = onOpenReciters) }
-                    item { QuickAction("📝", strings.readingLessonsTitle, onClick = onOpenArabicAlphabet) }
-                    item { QuickAction("⭐", strings.navFavorites, onClick = onOpenFavorites) }
-                    item { QuickAction("⚙️", strings.navSettings, onClick = onOpenSettings) }
+                Column {
+                    SectionHeader(strings.quickActionsTitle)
+                    Spacer(Modifier.height(10.dp))
+                    QuickActionGrid(
+                        listOf(
+                            QuickActionItem("📖", strings.navSurahs, onOpenSurahList),
+                            QuickActionItem("🔢", strings.juz, onOpenJuzList),
+                            QuickActionItem("🔍", strings.search, onOpenSearch),
+                            QuickActionItem("🎙️", strings.reciters, onOpenReciters),
+                            QuickActionItem("📝", strings.readingLessonsTitle, onOpenArabicAlphabet),
+                            QuickActionItem("⭐", strings.navFavorites, onOpenFavorites),
+                            QuickActionItem("⚙️", strings.navSettings, onOpenSettings),
+                        ),
+                    )
                 }
             }
         }
@@ -354,7 +384,7 @@ fun HomeScreen(
                     SectionHeader(strings.esmaulHusnaTitle, null, null)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(esmaulHusna, key = { it.name }) { esma ->
+                        items(esmaulHusna.take(12), key = { it.name }) { esma ->
                             EsmaChip(esma)
                         }
                     }
@@ -367,46 +397,16 @@ fun HomeScreen(
                 Column {
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item {
-                            QuickAction(
-                                "📄",
-                                strings.pagesLabel,
-                                onClick = { onOpenSection(SectionKind.PAGE) })
-                        }
-                        item {
-                            QuickAction(
-                                "📆",
-                                strings.manzilsLabel,
-                                onClick = { onOpenSection(SectionKind.MANZIL) })
-                        }
-                        item {
-                            QuickAction(
-                                "📚",
-                                strings.rukusLabel,
-                                onClick = { onOpenSection(SectionKind.RUKU) })
-                        }
-                        item {
-                            QuickAction(
-                                "🔖",
-                                strings.hizbQuartersLabel,
-                                onClick = { onOpenSection(SectionKind.HIZB_QUARTER) })
-                        }
-                        item {
-                            QuickAction(
-                                "🧭",
-                                strings.qiblaTitle,
-                                onClick = onOpenQibla,
-                            )
-                        }
-                        item {
-                            QuickAction(
-                                "🕋",
-                                strings.sajdaVersesLabel,
-                                onClick = onOpenSajdaAyahs
-                            )
-                        }
-                    }
+                    QuickActionGrid(
+                        listOf(
+                            QuickActionItem("📄", strings.pagesLabel) { onOpenSection(SectionKind.PAGE) },
+                            QuickActionItem("📆", strings.manzilsLabel) { onOpenSection(SectionKind.MANZIL) },
+                            QuickActionItem("📚", strings.rukusLabel) { onOpenSection(SectionKind.RUKU) },
+                            QuickActionItem("🔖", strings.hizbQuartersLabel) { onOpenSection(SectionKind.HIZB_QUARTER) },
+                            QuickActionItem("🧭", strings.qiblaTitle, onOpenQibla),
+                            QuickActionItem("🕋", strings.sajdaVersesLabel, onOpenSajdaAyahs),
+                        ),
+                    )
                 }
             }
         }
@@ -511,12 +511,494 @@ fun HomeScreen(
 }
 
 /**
- * The web-only landing hero: a dark, motif-textured panel with a real headline and a call to
- * action, replacing the plain "greeting + subtitle" text mobile gets. This is the single biggest
- * cue that a visitor landed on a real website rather than a phone app opened in a browser tab.
+ * The web homepage — deliberately a different composition from the mobile bento grid above, not
+ * just the same widgets restyled. A phone app opens straight into "your" state (last read, daily
+ * ayah); a website's first-time visitor has no state yet, so this reads top-to-bottom like a real
+ * site: a hero with a search entry point, real reading progress once there is any, a course
+ * carousel, the verse of the day, then a genuine full browsing surface (every surah and every juz,
+ * not a curated "featured eight"), the same discovery shortcuts mobile gets, and a plain-text
+ * footer. Every number and list here comes from data the app already has — nothing is invented to
+ * imitate a bigger site's social-proof numbers (view/comment counts, a "community" feed, other
+ * apps) this app has no backend for.
  */
 @Composable
-private fun WebHomeHero(greeting: String, subtitle: String, ctaLabel: String, onCtaClick: () -> Unit) {
+private fun WebHomeContent(
+    modifier: Modifier,
+    strings: Strings,
+    surahs: List<Surah>,
+    appLanguage: AppLanguage,
+    lastRead: LastRead?,
+    khatmFurthestPage: Int,
+    khatmCompletedCount: Int,
+    dailyAyah: DailyAyah?,
+    isLoadingDaily: Boolean,
+    onRefreshDaily: () -> Unit,
+    onOpenSurah: (Int, Int?) -> Unit,
+    onOpenSurahList: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onOpenMushafMode: (Int) -> Unit,
+    onOpenLesson: (String) -> Unit,
+    onOpenSection: (SectionKind) -> Unit,
+    onOpenSectionDetail: (SectionKind, Int) -> Unit,
+    onOpenQibla: () -> Unit,
+    onOpenSajdaAyahs: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenReciters: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+    ) {
+        WebHomeHero(
+            greeting = strings.homeGreeting,
+            subtitle = strings.homeSubtitle,
+            ctaLabel = strings.navSurahs,
+            onCtaClick = onOpenSurahList,
+            searchPlaceholder = strings.searchAyahPlaceholder,
+            onSearchClick = onOpenSearch,
+        )
+
+        WebContinueSection(
+            strings = strings,
+            lastRead = lastRead,
+            khatmFurthestPage = khatmFurthestPage,
+            khatmCompletedCount = khatmCompletedCount,
+            appLanguage = appLanguage,
+            onOpenSurah = onOpenSurah,
+            onOpenSurahList = onOpenSurahList,
+            onOpenMushafMode = onOpenMushafMode,
+        )
+
+        WebLessonCarousel(strings = strings, onOpenLesson = onOpenLesson)
+
+        WebDailyAyahSection(
+            strings = strings,
+            dailyAyah = dailyAyah,
+            isLoadingDaily = isLoadingDaily,
+            appLanguage = appLanguage,
+            onRefresh = onRefreshDaily,
+            onOpenSurah = onOpenSurah,
+        )
+
+        WebBrowseSection(
+            strings = strings,
+            surahs = surahs,
+            appLanguage = appLanguage,
+            onOpenSurah = onOpenSurah,
+            onOpenSectionDetail = onOpenSectionDetail,
+        )
+
+        Column {
+            SectionHeader(strings.discoverQuranTitle)
+            Spacer(Modifier.height(10.dp))
+            QuickActionGrid(
+                listOf(
+                    QuickActionItem("📄", strings.pagesLabel) { onOpenSection(SectionKind.PAGE) },
+                    QuickActionItem("📆", strings.manzilsLabel) { onOpenSection(SectionKind.MANZIL) },
+                    QuickActionItem("📚", strings.rukusLabel) { onOpenSection(SectionKind.RUKU) },
+                    QuickActionItem("🔖", strings.hizbQuartersLabel) { onOpenSection(SectionKind.HIZB_QUARTER) },
+                    QuickActionItem("🧭", strings.qiblaTitle, onOpenQibla),
+                    QuickActionItem("🕋", strings.sajdaVersesLabel, onOpenSajdaAyahs),
+                ),
+                perRow = 6,
+            )
+        }
+
+        WebFooter(
+            strings = strings,
+            onOpenFavorites = onOpenFavorites,
+            onOpenReciters = onOpenReciters,
+            onOpenSettings = onOpenSettings,
+        )
+    }
+}
+
+/**
+ * The "where you're at" band: the last-read ayah (once there is one) beside the hatim/khatm goal
+ * progress — side by side on web's wider canvas instead of stacked the way the phone card is,
+ * matching how a website spreads related state across the width instead of a single column.
+ */
+@Composable
+private fun WebContinueSection(
+    strings: Strings,
+    lastRead: LastRead?,
+    khatmFurthestPage: Int,
+    khatmCompletedCount: Int,
+    appLanguage: AppLanguage,
+    onOpenSurah: (Int, Int?) -> Unit,
+    onOpenSurahList: () -> Unit,
+    onOpenMushafMode: (Int) -> Unit,
+) {
+    Column {
+        SectionHeader(strings.continueReading)
+        Spacer(Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            GlassSurface(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                onClick = if (lastRead != null) {
+                    { onOpenSurah(lastRead.surahNumber, lastRead.numberInSurah) }
+                } else {
+                    onOpenSurahList
+                },
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconBubble(emoji = "▶️")
+                    Spacer(Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            strings.continueReading,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            if (lastRead != null) {
+                                "${localizedSurahName(lastRead.surahNumber, lastRead.surahName, appLanguage)} • ${strings.ayahWord} ${lastRead.numberInSurah}"
+                            } else {
+                                strings.navSurahs
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            GlassSurface(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                onClick = { onOpenMushafMode(1) },
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconBubble(emoji = "🎯", accent = true)
+                    Spacer(Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            strings.khatmProgressTitle,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        val khatmPercent = (khatmFurthestPage * 100 / TOTAL_MUSHAF_PAGES).coerceIn(0, 100)
+                        Text(
+                            strings.khatmProgressTemplate
+                                .replace("{page}", khatmFurthestPage.toString())
+                                .replace("{total}", TOTAL_MUSHAF_PAGES.toString())
+                                .replace("{percent}", khatmPercent.toString()),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { khatmFurthestPage.toFloat() / TOTAL_MUSHAF_PAGES.toFloat() },
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50)),
+                        )
+                        if (khatmCompletedCount > 0) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                strings.khatmCompletedCountTemplate.replace("{n}", khatmCompletedCount.toString()),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A horizontal course carousel built from the app's own real, already-built Tajwid/Elifba lessons. */
+@Composable
+private fun WebLessonCarousel(strings: Strings, onOpenLesson: (String) -> Unit) {
+    val gradients = listOf(
+        listOf(Color(0xFF1F3D2E), Color(0xFF0B1F17)),
+        listOf(Color(0xFF2E2A17), Color(0xFF171408)),
+        listOf(Color(0xFF1B2A3D), Color(0xFF0A121C)),
+        listOf(Color(0xFF3A1F2E), Color(0xFF190D14)),
+    )
+    Column {
+        SectionHeader(strings.readingLessonsTitle)
+        Spacer(Modifier.height(12.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(tajwidCourse, key = { it.id }) { lesson: TajwidLesson ->
+                val colors = gradients[lesson.order % gradients.size]
+                Box(
+                    modifier = Modifier
+                        .size(width = 220.dp, height = 140.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Brush.linearGradient(colors))
+                        .clickable { onOpenLesson(lesson.id) }
+                        .padding(18.dp),
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            lesson.order.toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White.copy(alpha = 0.55f),
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            lesson.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            lesson.summary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A large, centered verse-of-the-day panel — the ambient motif texture ties it to the splash and
+ * onboarding screens' visual language instead of reading as a bare list item, the way it does on
+ * the mobile bento grid. No engagement numbers are shown here: the app has no view/comment counts
+ * to report, and inventing them would be dishonest. */
+@Composable
+private fun WebDailyAyahSection(
+    strings: Strings,
+    dailyAyah: DailyAyah?,
+    isLoadingDaily: Boolean,
+    appLanguage: AppLanguage,
+    onRefresh: () -> Unit,
+    onOpenSurah: (Int, Int?) -> Unit,
+) {
+    Column {
+        SectionHeader(strings.dailyAyahTitle)
+        Spacer(Modifier.height(12.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Brush.linearGradient(listOf(Color(0xFF16352A), Color(0xFF081410))))
+                .padding(vertical = 40.dp, horizontal = 32.dp),
+        ) {
+            IslamicMotifBackground(modifier = Modifier.matchParentSize(), tint = Color.White, alpha = 0.05f)
+            when {
+                isLoadingDaily -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+                dailyAyah != null -> Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        dailyAyah.arabicText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontFamily = LocalArabicFontFamily.current,
+                        textAlign = TextAlign.Center,
+                        color = Color.White,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        dailyAyah.translationText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = Color.White.copy(alpha = 0.85f),
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        "${localizedSurahName(dailyAyah.surahNumber, dailyAyah.surahName, appLanguage)} ${dailyAyah.numberInSurah}",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE8C776),
+                        modifier = Modifier.clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) },
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "🔄",
+                        fontSize = 16.sp,
+                        modifier = Modifier.clickable(onClick = onRefresh),
+                    )
+                }
+                else -> Text(strings.dailyAyahError, color = Color.White, modifier = Modifier.align(Alignment.Center))
+            }
+        }
+    }
+}
+
+/**
+ * The real browsing surface: every surah and every juz, tab-switchable, in a dense responsive
+ * grid — replacing the mobile "featured eight" strip with the actual full list a website visitor
+ * expects to be able to scan, matching quran.com's own surah/juz grid.
+ */
+@Composable
+private fun WebBrowseSection(
+    strings: Strings,
+    surahs: List<Surah>,
+    appLanguage: AppLanguage,
+    onOpenSurah: (Int, Int?) -> Unit,
+    onOpenSectionDetail: (SectionKind, Int) -> Unit,
+) {
+    var showJuz by remember { mutableStateOf(false) }
+    Column {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            BrowseTab(strings.navSurahs, selected = !showJuz) { showJuz = false }
+            BrowseTab(strings.juz, selected = showJuz) { showJuz = true }
+        }
+        Spacer(Modifier.height(14.dp))
+        if (showJuz) {
+            (1..30).chunked(6).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { juzNumber ->
+                        GlassSurface(
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                            onClick = { onOpenSectionDetail(SectionKind.JUZ, juzNumber) },
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    juzNumber.toString(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                Text(
+                                    strings.juzSingular,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    repeat(6 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+        } else if (surahs.isEmpty()) {
+            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        } else {
+            surahs.chunked(4).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { surah ->
+                        GlassSurface(
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentPadding = PaddingValues(14.dp),
+                            onClick = { onOpenSurah(surah.number, null) },
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(surah.number.toString(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        localizedSurahName(surah.number, surah.englishName, appLanguage),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        "${surah.numberOfAyahs} ${strings.ayahWordLower} • " +
+                                            if (surah.revelationType == "Meccan") strings.meccan else strings.medinan,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun BrowseTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    GlassSurface(
+        modifier = Modifier.width(140.dp),
+        contentPadding = PaddingValues(vertical = 10.dp),
+        onClick = onClick,
+        containerColor = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+    ) {
+        Text(
+            label,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+/** Honest footer: the app's own description and real internal links only — no invented community
+ * feed, external "sister apps," or newsletter signup this app has no backend for. */
+@Composable
+private fun WebFooter(
+    strings: Strings,
+    onOpenFavorites: () -> Unit,
+    onOpenReciters: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    Column(modifier = Modifier.padding(vertical = 16.dp)) {
+        Text("Huda Qur'an", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            strings.appTagline,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            listOf(
+                strings.navFavorites to onOpenFavorites,
+                strings.reciters to onOpenReciters,
+                strings.navSettings to onOpenSettings,
+            ).forEach { (label, action) ->
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = action),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The web-only landing hero: a dark, motif-textured panel with a real headline, a call to action,
+ * and a clickable search entry point, replacing the plain "greeting + subtitle" text mobile gets.
+ * This is the single biggest cue that a visitor landed on a real website rather than a phone app
+ * opened in a browser tab.
+ */
+@Composable
+private fun WebHomeHero(
+    greeting: String,
+    subtitle: String,
+    ctaLabel: String,
+    onCtaClick: () -> Unit,
+    searchPlaceholder: String,
+    onSearchClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -539,6 +1021,20 @@ private fun WebHomeHero(greeting: String, subtitle: String, ctaLabel: String, on
                 color = Color.White.copy(alpha = 0.75f),
             )
             Spacer(Modifier.height(24.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color.White.copy(alpha = 0.12f))
+                    .clickable(onClick = onSearchClick)
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Search, contentDescription = null, tint = Color.White.copy(alpha = 0.7f))
+                Spacer(Modifier.width(10.dp))
+                Text(searchPlaceholder, color = Color.White.copy(alpha = 0.7f))
+            }
+            Spacer(Modifier.height(16.dp))
             Button(
                 onClick = onCtaClick,
                 shape = RoundedCornerShape(50),
@@ -792,24 +1288,52 @@ private fun StatBento(
     }
 }
 
+private data class QuickActionItem(val emoji: String, val label: String, val onClick: () -> Unit)
+
+/**
+ * Three cards per row, wrapping to as many rows as needed — everything visible at once instead
+ * of tucked behind a horizontal scroll strip that's easy for an older user to miss entirely.
+ */
 @Composable
-private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
+private fun QuickActionGrid(actions: List<QuickActionItem>, perRow: Int = 3) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        actions.chunked(perRow).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { action ->
+                    QuickAction(
+                        emoji = action.emoji,
+                        label = action.label,
+                        onClick = action.onClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(perRow - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickAction(emoji: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     GlassSurface(
-        modifier = Modifier.width(88.dp),
-        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 24.sp)
-            Spacer(Modifier.height(6.dp))
+            Text(emoji, fontSize = 28.sp)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
