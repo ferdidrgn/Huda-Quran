@@ -2,6 +2,16 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <!-- Firebase Hosting rewrites every path ("**") to this same index.html so client-side
+         routing works on refresh/direct links — but the browser still resolves this file's own
+         relative asset URLs (styles.css, webApp.js, favicon, etc.) against whatever path is in
+         the address bar, not against "/". Without this <base>, opening /surah/27 directly (or
+         clicking one of the crawlable links in #seo-footer below) tried to load
+         /surah/styles.css and /surah/webApp.js — both 404 — so the real app's CSS and Kotlin/Wasm
+         bundle never loaded there, leaving only the static SEO fallback content visible forever
+         instead of the actual app. This makes every relative reference below resolve against the
+         site root regardless of which path served this file. -->
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Huda Qur'an</title>
     <meta name="description" content="Kur'an-ı Kerim'i çevrimiçi okuyun, dinleyin ve öğrenin. Meal, hatim takibi, ezan vakitleri ve tecvid dersleri tek uygulamada.">
