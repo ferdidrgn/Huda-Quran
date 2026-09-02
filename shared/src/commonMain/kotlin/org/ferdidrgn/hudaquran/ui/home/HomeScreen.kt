@@ -113,6 +113,7 @@ fun HomeScreen(
     val lastMushafPage by preferences.lastMushafPage.collectAsState()
     val khatmFurthestPage by preferences.khatmFurthestPage.collectAsState()
     val khatmCompletedCount by preferences.khatmCompletedCount.collectAsState()
+    val readingStreak by preferences.readingStreak.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -175,6 +176,7 @@ fun HomeScreen(
             lastRead = lastRead,
             khatmFurthestPage = khatmFurthestPage,
             khatmCompletedCount = khatmCompletedCount,
+            readingStreak = readingStreak,
             dailyAyah = dailyAyah,
             isLoadingDaily = isLoadingDaily,
             onRefreshDaily = { isLoadingDaily = true },
@@ -220,6 +222,14 @@ fun HomeScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (readingStreak >= 2) {
+                        Text(
+                            "🔥 " + strings.streakDaysTemplate.replace("{n}", readingStreak.toString()),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
             }
         }
@@ -564,6 +574,7 @@ private fun WebHomeContent(
     lastRead: LastRead?,
     khatmFurthestPage: Int,
     khatmCompletedCount: Int,
+    readingStreak: Int,
     dailyAyah: DailyAyah?,
     isLoadingDaily: Boolean,
     onRefreshDaily: () -> Unit,
@@ -597,6 +608,7 @@ private fun WebHomeContent(
             onCtaClick = onOpenSurahList,
             searchPlaceholder = strings.searchAyahPlaceholder,
             onSearchClick = onOpenSearch,
+            streakText = if (readingStreak >= 2) strings.streakDaysTemplate.replace("{n}", readingStreak.toString()) else null,
         )
 
         WebContinueSection(
@@ -1041,6 +1053,7 @@ private fun WebHomeHero(
     onCtaClick: () -> Unit,
     searchPlaceholder: String,
     onSearchClick: () -> Unit,
+    streakText: String?,
 ) {
     Box(
         modifier = Modifier
@@ -1063,6 +1076,15 @@ private fun WebHomeHero(
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.75f),
             )
+            if (streakText != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "🔥 $streakText",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
             Spacer(Modifier.height(24.dp))
             Row(
                 modifier = Modifier

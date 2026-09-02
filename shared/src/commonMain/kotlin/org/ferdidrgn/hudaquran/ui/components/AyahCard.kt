@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.util.shareText
 
 @Composable
 fun AyahCard(
@@ -68,6 +70,22 @@ fun AyahCard(
                 Text(ayah.numberInSurah.toString(), color = MaterialTheme.colorScheme.onPrimary, fontSize = 11.sp)
             }
             Spacer(Modifier.weight(1f))
+            ShareButton(
+                onClick = {
+                    val reference = "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} ${ayah.numberInSurah}"
+                    val text = buildString {
+                        append(ayah.arabicText)
+                        if (ayah.translationText.isNotBlank()) {
+                            append("\n\n")
+                            append(ayah.translationText)
+                        }
+                        append("\n\n")
+                        append(reference)
+                    }
+                    shareText(text)
+                },
+            )
+            Spacer(Modifier.size(8.dp))
             FavoriteToggleButton(isFavorite = isFavorite, onClick = onFavoriteToggle)
             Spacer(Modifier.size(8.dp))
             PlayToggleButton(isPlaying = isPlaying, isLoading = isLoading, onClick = onPlayToggle)
@@ -97,6 +115,25 @@ fun AyahCard(
                 modifier = Modifier.clickable(onClick = onTafsirClick),
             )
         }
+    }
+}
+
+@Composable
+private fun ShareButton(onClick: () -> Unit) {
+    val strings = LocalStrings.current
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Filled.Share,
+            contentDescription = strings.cdShare,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 
