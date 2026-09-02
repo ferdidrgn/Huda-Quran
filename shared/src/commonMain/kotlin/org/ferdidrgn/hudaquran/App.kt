@@ -51,6 +51,7 @@ import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
+import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
 import org.ferdidrgn.hudaquran.ui.dua.DuaListScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
@@ -357,6 +358,7 @@ private fun AppDestinationContent(
             onOpenLanguagePicker = { navigator.navigate(Screen.LanguagePicker) },
             onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
             onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.ReciterPicker -> RecitersScreen(
@@ -522,6 +524,11 @@ private fun AppDestinationContent(
         )
 
         is Screen.DuaList -> DuaListScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.IslamicCalendar -> IslamicCalendarScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
         )

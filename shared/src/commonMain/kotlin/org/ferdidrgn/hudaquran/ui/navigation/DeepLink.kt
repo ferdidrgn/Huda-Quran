@@ -52,6 +52,7 @@ object DeepLink {
             }
             "zakat" -> Screen.ZakatCalculator
             "dua" -> Screen.DuaList
+            "islamic-calendar" -> Screen.IslamicCalendar
             else -> null
         }
     }
@@ -123,5 +124,6 @@ object DeepLink {
         is Screen.EsmaulHusnaDetail -> "/esma-ul-husna/${screen.index}"
         is Screen.ZakatCalculator -> "/zakat"
         is Screen.DuaList -> "/dua"
+        is Screen.IslamicCalendar -> "/islamic-calendar"
     }
 }

@@ -61,6 +61,7 @@ fun SettingsScreen(
     onOpenLanguagePicker: () -> Unit,
     onOpenZakatCalculator: () -> Unit,
     onOpenDuaList: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -242,6 +243,12 @@ fun SettingsScreen(
                 title = strings.duaListTitle,
                 value = "",
                 onClick = onOpenDuaList,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
+                title = strings.islamicCalendarTitle,
+                value = "",
+                onClick = onOpenIslamicCalendar,
             )
             Spacer(modifier = Modifier.height(4.dp))
             val uriHandler = LocalUriHandler.current
