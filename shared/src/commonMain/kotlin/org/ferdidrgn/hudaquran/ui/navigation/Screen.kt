@@ -25,4 +25,6 @@ sealed class Screen {
     data object NowPlaying : Screen()
     data class MushafPage(val pageNumber: Int) : Screen()
     data object Qibla : Screen()
+    data object EsmaulHusnaList : Screen()
+    data class EsmaulHusnaDetail(val index: Int) : Screen()
 }

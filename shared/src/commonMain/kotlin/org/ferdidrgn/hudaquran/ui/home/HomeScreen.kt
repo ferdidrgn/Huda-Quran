@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -101,6 +102,8 @@ fun HomeScreen(
     onOpenQibla: () -> Unit,
     onOpenSectionDetail: (SectionKind, Int) -> Unit,
     onOpenLesson: (String) -> Unit,
+    onOpenEsmaulHusna: () -> Unit,
+    onOpenEsmaulHusnaDetail: (Int) -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -187,6 +190,8 @@ fun HomeScreen(
             onOpenFavorites = onOpenFavorites,
             onOpenReciters = onOpenReciters,
             onOpenSettings = onOpenSettings,
+            onOpenEsmaulHusna = onOpenEsmaulHusna,
+            onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
         )
         return
     }
@@ -380,11 +385,11 @@ fun HomeScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(8) {
                 Column {
-                    SectionHeader(strings.esmaulHusnaTitle, null, null)
+                    SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(esmaulHusna, key = { it.name }) { esma ->
-                            EsmaChip(esma)
+                        itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
+                            EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
                         }
                     }
                 }
@@ -574,6 +579,8 @@ private fun WebHomeContent(
     onOpenFavorites: () -> Unit,
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenEsmaulHusna: () -> Unit,
+    onOpenEsmaulHusnaDetail: (Int) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -621,6 +628,16 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
             onOpenSectionDetail = onOpenSectionDetail,
         )
+
+        Column {
+            SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
+            Spacer(Modifier.height(10.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
+                    EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
+                }
+            }
+        }
 
         Column {
             SectionHeader(strings.discoverQuranTitle)
@@ -1367,10 +1384,11 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EsmaChip(esma: EsmaName) {
+private fun EsmaChip(esma: EsmaName, onClick: () -> Unit) {
     GlassSurface(
         modifier = Modifier.width(118.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 10.dp),
+        onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),

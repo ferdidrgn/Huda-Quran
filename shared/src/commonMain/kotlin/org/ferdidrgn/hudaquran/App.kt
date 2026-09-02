@@ -49,6 +49,8 @@ import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
@@ -330,6 +332,8 @@ private fun AppDestinationContent(
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
             onOpenQibla = { navigator.navigate(Screen.Qibla) },
             onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
+            onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
+            onOpenEsmaulHusnaDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -493,6 +497,19 @@ private fun AppDestinationContent(
         is Screen.Qibla -> QiblaScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
+        )
+
+        is Screen.EsmaulHusnaList -> EsmaulHusnaScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+        )
+
+        is Screen.EsmaulHusnaDetail -> EsmaulHusnaDetailScreen(
+            index = screen.index,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onChangeIndex = { newIndex -> navigator.replaceAll(Screen.EsmaulHusnaDetail(newIndex)) },
         )
 
     }

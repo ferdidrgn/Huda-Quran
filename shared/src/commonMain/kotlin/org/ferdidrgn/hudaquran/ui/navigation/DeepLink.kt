@@ -46,6 +46,10 @@ object DeepLink {
             }
             "mushaf" -> Screen.MushafPage(segments.getOrNull(1)?.toIntOrNull() ?: 1)
             "qibla" -> Screen.Qibla
+            "esma-ul-husna" -> {
+                val index = segments.getOrNull(1)?.toIntOrNull()
+                if (index != null) Screen.EsmaulHusnaDetail(index) else Screen.EsmaulHusnaList
+            }
             else -> null
         }
     }
@@ -113,5 +117,7 @@ object DeepLink {
         is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
         is Screen.Qibla -> "/qibla"
+        is Screen.EsmaulHusnaList -> "/esma-ul-husna"
+        is Screen.EsmaulHusnaDetail -> "/esma-ul-husna/${screen.index}"
     }
 }
