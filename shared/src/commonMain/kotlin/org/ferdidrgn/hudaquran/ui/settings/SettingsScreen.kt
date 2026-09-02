@@ -3,6 +3,7 @@ package org.ferdidrgn.hudaquran.ui.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -100,8 +102,15 @@ fun SettingsScreen(
         }
     }
 
+    // Capped at readable-line-width and centered so a wide desktop browser window reads like a
+    // page, not the same phone column stretched full-bleed across the screen. A no-op on mobile,
+    // where the available width is always under the cap.
+    Box(
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter,
+    ) {
     Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
     ) {
         Text(
             strings.settingsTitle,
@@ -228,6 +237,7 @@ fun SettingsScreen(
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             modifier = Modifier.padding(16.dp),
         )
+    }
     }
 }
 
