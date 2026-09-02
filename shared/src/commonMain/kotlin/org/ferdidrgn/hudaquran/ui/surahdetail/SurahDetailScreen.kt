@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -98,7 +99,14 @@ fun SurahDetailScreen(
         isLoading = false
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    // Capped at readable-line-width and centered so a wide desktop browser window reads like a
+    // book page, not the same phone column stretched full-bleed across the screen. A no-op on
+    // mobile, where the available width is always under the cap.
+    Box(
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 760.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -178,5 +186,6 @@ fun SurahDetailScreen(
                 }
             }
         }
+    }
     }
 }

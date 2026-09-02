@@ -49,7 +49,6 @@ import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
-import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
@@ -330,7 +329,6 @@ private fun AppDestinationContent(
             onOpenSajdaAyahs = { navigator.navigate(Screen.SajdaAyahs) },
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
             onOpenQibla = { navigator.navigate(Screen.Qibla) },
-            onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
             onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
         )
 
@@ -497,9 +495,5 @@ private fun AppDestinationContent(
             onBack = { navigator.back() },
         )
 
-        is Screen.EsmaulHusnaList -> EsmaulHusnaScreen(
-            modifier = contentModifier,
-            onBack = { navigator.back() },
-        )
     }
 }

@@ -20,9 +20,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
@@ -68,9 +68,9 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
+import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
@@ -96,11 +96,10 @@ fun HomeScreen(
     onOpenReciters: () -> Unit,
     onOpenArabicAlphabet: () -> Unit,
     onOpenSection: (SectionKind) -> Unit,
-    onOpenSectionDetail: (SectionKind, Int) -> Unit,
     onOpenSajdaAyahs: () -> Unit,
     onOpenMushafMode: (Int) -> Unit,
     onOpenQibla: () -> Unit,
-    onOpenEsmaulHusna: () -> Unit,
+    onOpenSectionDetail: (SectionKind, Int) -> Unit,
     onOpenLesson: (String) -> Unit,
 ) {
     val preferences = AppContainer.preferences
@@ -188,13 +187,15 @@ fun HomeScreen(
             onOpenFavorites = onOpenFavorites,
             onOpenReciters = onOpenReciters,
             onOpenSettings = onOpenSettings,
-            onOpenEsmaulHusna = onOpenEsmaulHusna,
         )
         return
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 180.dp),
+        // A real website reads as a magazine page, not a phone screen with more room around it —
+        // wider minimum tiles on web mean fewer, larger cards per row instead of the same small
+        // mobile tile just repeated more times.
+        columns = GridCells.Adaptive(minSize = if (isWeb) 240.dp else 180.dp),
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -202,6 +203,8 @@ fun HomeScreen(
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
+                // isWeb is always false here: the isWeb branch above already returns out of
+                // HomeScreen via WebHomeContent before this mobile grid is ever composed.
                 Column {
                     Text(
                         "${strings.homeGreeting} 👋",
@@ -362,20 +365,14 @@ fun HomeScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(6) {
-                Column {
-                    SectionHeader(strings.quickActionsTitle)
-                    Spacer(Modifier.height(10.dp))
-                    QuickActionGrid(
-                        listOf(
-                            QuickActionItem("📖", strings.navSurahs, onOpenSurahList),
-                            QuickActionItem("🔢", strings.juz, onOpenJuzList),
-                            QuickActionItem("🔍", strings.search, onOpenSearch),
-                            QuickActionItem("🎙️", strings.reciters, onOpenReciters),
-                            QuickActionItem("📝", strings.readingLessonsTitle, onOpenArabicAlphabet),
-                            QuickActionItem("⭐", strings.navFavorites, onOpenFavorites),
-                            QuickActionItem("⚙️", strings.navSettings, onOpenSettings),
-                        ),
-                    )
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    item { QuickAction("📖", strings.navSurahs, onClick = onOpenSurahList) }
+                    item { QuickAction("🔢", strings.juz, onClick = onOpenJuzList) }
+                    item { QuickAction("🔍", strings.search, onClick = onOpenSearch) }
+                    item { QuickAction("🎙️", strings.reciters, onClick = onOpenReciters) }
+                    item { QuickAction("📝", strings.readingLessonsTitle, onClick = onOpenArabicAlphabet) }
+                    item { QuickAction("⭐", strings.navFavorites, onClick = onOpenFavorites) }
+                    item { QuickAction("⚙️", strings.navSettings, onClick = onOpenSettings) }
                 }
             }
         }
@@ -383,10 +380,10 @@ fun HomeScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(8) {
                 Column {
-                    SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
+                    SectionHeader(strings.esmaulHusnaTitle, null, null)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(esmaulHusna.take(12), key = { it.name }) { esma ->
+                        items(esmaulHusna, key = { it.name }) { esma ->
                             EsmaChip(esma)
                         }
                     }
@@ -399,16 +396,46 @@ fun HomeScreen(
                 Column {
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(10.dp))
-                    QuickActionGrid(
-                        listOf(
-                            QuickActionItem("📄", strings.pagesLabel) { onOpenSection(SectionKind.PAGE) },
-                            QuickActionItem("📆", strings.manzilsLabel) { onOpenSection(SectionKind.MANZIL) },
-                            QuickActionItem("📚", strings.rukusLabel) { onOpenSection(SectionKind.RUKU) },
-                            QuickActionItem("🔖", strings.hizbQuartersLabel) { onOpenSection(SectionKind.HIZB_QUARTER) },
-                            QuickActionItem("🧭", strings.qiblaTitle, onOpenQibla),
-                            QuickActionItem("🕋", strings.sajdaVersesLabel, onOpenSajdaAyahs),
-                        ),
-                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item {
+                            QuickAction(
+                                "📄",
+                                strings.pagesLabel,
+                                onClick = { onOpenSection(SectionKind.PAGE) })
+                        }
+                        item {
+                            QuickAction(
+                                "📆",
+                                strings.manzilsLabel,
+                                onClick = { onOpenSection(SectionKind.MANZIL) })
+                        }
+                        item {
+                            QuickAction(
+                                "📚",
+                                strings.rukusLabel,
+                                onClick = { onOpenSection(SectionKind.RUKU) })
+                        }
+                        item {
+                            QuickAction(
+                                "🔖",
+                                strings.hizbQuartersLabel,
+                                onClick = { onOpenSection(SectionKind.HIZB_QUARTER) })
+                        }
+                        item {
+                            QuickAction(
+                                "🧭",
+                                strings.qiblaTitle,
+                                onClick = onOpenQibla,
+                            )
+                        }
+                        item {
+                            QuickAction(
+                                "🕋",
+                                strings.sajdaVersesLabel,
+                                onClick = onOpenSajdaAyahs
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -547,7 +574,6 @@ private fun WebHomeContent(
     onOpenFavorites: () -> Unit,
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEsmaulHusna: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -599,17 +625,14 @@ private fun WebHomeContent(
         Column {
             SectionHeader(strings.discoverQuranTitle)
             Spacer(Modifier.height(10.dp))
-            QuickActionGrid(
-                listOf(
-                    QuickActionItem("📄", strings.pagesLabel) { onOpenSection(SectionKind.PAGE) },
-                    QuickActionItem("📆", strings.manzilsLabel) { onOpenSection(SectionKind.MANZIL) },
-                    QuickActionItem("📚", strings.rukusLabel) { onOpenSection(SectionKind.RUKU) },
-                    QuickActionItem("🔖", strings.hizbQuartersLabel) { onOpenSection(SectionKind.HIZB_QUARTER) },
-                    QuickActionItem("🧭", strings.qiblaTitle, onOpenQibla),
-                    QuickActionItem("🕋", strings.sajdaVersesLabel, onOpenSajdaAyahs),
-                ),
-                perRow = 6,
-            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
+                item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+            }
         }
 
         WebFooter(
@@ -617,7 +640,6 @@ private fun WebHomeContent(
             onOpenFavorites = onOpenFavorites,
             onOpenReciters = onOpenReciters,
             onOpenSettings = onOpenSettings,
-            onOpenEsmaulHusna = onOpenEsmaulHusna,
         )
     }
 }
@@ -960,7 +982,6 @@ private fun WebFooter(
     onOpenFavorites: () -> Unit,
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEsmaulHusna: () -> Unit,
 ) {
     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
@@ -976,7 +997,6 @@ private fun WebFooter(
             listOf(
                 strings.navFavorites to onOpenFavorites,
                 strings.reciters to onOpenReciters,
-                strings.esmaulHusnaTitle to onOpenEsmaulHusna,
                 strings.navSettings to onOpenSettings,
             ).forEach { (label, action) ->
                 Text(
@@ -1294,52 +1314,24 @@ private fun StatBento(
     }
 }
 
-private data class QuickActionItem(val emoji: String, val label: String, val onClick: () -> Unit)
-
-/**
- * Three cards per row, wrapping to as many rows as needed — everything visible at once instead
- * of tucked behind a horizontal scroll strip that's easy for an older user to miss entirely.
- */
 @Composable
-private fun QuickActionGrid(actions: List<QuickActionItem>, perRow: Int = 3) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        actions.chunked(perRow).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { action ->
-                    QuickAction(
-                        emoji = action.emoji,
-                        label = action.label,
-                        onClick = action.onClick,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                repeat(perRow - row.size) { Spacer(Modifier.weight(1f)) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickAction(emoji: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
     GlassSurface(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 6.dp),
+        modifier = Modifier.width(88.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 28.sp)
-            Spacer(Modifier.height(8.dp))
+            Text(emoji, fontSize = 24.sp)
+            Spacer(Modifier.height(6.dp))
             Text(
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                fontSize = 11.sp
             )
         }
     }

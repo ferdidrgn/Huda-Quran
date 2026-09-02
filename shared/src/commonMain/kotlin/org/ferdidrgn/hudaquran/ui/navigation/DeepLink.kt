@@ -46,7 +46,6 @@ object DeepLink {
             }
             "mushaf" -> Screen.MushafPage(segments.getOrNull(1)?.toIntOrNull() ?: 1)
             "qibla" -> Screen.Qibla
-            "esma-ul-husna" -> Screen.EsmaulHusnaList
             else -> null
         }
     }
@@ -114,6 +113,5 @@ object DeepLink {
         is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
         is Screen.Qibla -> "/qibla"
-        is Screen.EsmaulHusnaList -> "/esma-ul-husna"
     }
 }
