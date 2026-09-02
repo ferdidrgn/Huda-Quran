@@ -27,4 +27,6 @@ sealed class Screen {
     data object Qibla : Screen()
     data object EsmaulHusnaList : Screen()
     data class EsmaulHusnaDetail(val index: Int) : Screen()
+    data object ZakatCalculator : Screen()
+    data object DuaList : Screen()
 }

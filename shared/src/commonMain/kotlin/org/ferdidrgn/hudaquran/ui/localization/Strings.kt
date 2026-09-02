@@ -199,6 +199,20 @@ data class Strings(
     val textSizeNormal: String,
     val textSizeLarge: String,
     val textSizeExtraLarge: String,
+
+    // New feature additions (zakat/dua/calendar/streak/share/hajj)
+    val zakatCalculatorTitle: String,
+    val zakatWealthLabel: String,
+    val zakatCalculateButton: String,
+    val zakatResultTemplate: String,
+    val zakatNisabInfo: String,
+    val duaListTitle: String,
+    val islamicCalendarTitle: String,
+    val islamicDaysRemainingTemplate: String,
+    val streakDaysTemplate: String,
+    val cdShare: String,
+    val hacKuraLabel: String,
+    val moreTitle: String,
 )
 
 private val turkish = Strings(
@@ -302,6 +316,18 @@ private val turkish = Strings(
     qiblaLiveInstructions = "Telefonu düz tutun ve ok, dairenin üstündeki üçgene gelene kadar yavaşça çevirin.",
     tafsirVsMealHint = "Meal, ayetin çevirisidir. Tefsir ise ayetin bağlamını ve anlamını ayrıntılı açıklayan yorumdur.",
     textSizeLabel = "Yazı Boyutu", textSizeHint = "Görmekte zorlanıyorsanız yazıları büyütün.", textSizeNormal = "Normal", textSizeLarge = "Büyük", textSizeExtraLarge = "Çok Büyük",
+    zakatCalculatorTitle = "Zekât Hesaplayıcı",
+    zakatWealthLabel = "Toplam Varlığınız (nakit, altın, gümüş vb.)",
+    zakatCalculateButton = "Hesapla",
+    zakatResultTemplate = "Zekâtınız: {amount}",
+    zakatNisabInfo = "Zekât, nisap miktarına (yaklaşık 85 gr altın değeri) ulaşan ve üzerinden bir yıl geçen varlığın %2,5'idir. Bu hesaplama genel bir rehberdir, dini danışmanlık yerine geçmez.",
+    duaListTitle = "Dualar",
+    islamicCalendarTitle = "İslami Takvim",
+    islamicDaysRemainingTemplate = "{n} gün kaldı",
+    streakDaysTemplate = "{n} günlük okuma serisi",
+    cdShare = "Paylaş",
+    hacKuraLabel = "Hac Kur'ası Sonuç Sorgulama",
+    moreTitle = "Diğer",
 )
 
 private val english = Strings(
@@ -405,6 +431,18 @@ private val english = Strings(
     qiblaLiveInstructions = "Hold your phone flat and slowly turn until the arrow lines up with the triangle above the circle.",
     tafsirVsMealHint = "Translation renders the ayah's meaning in your language. Tafsir is a longer scholarly explanation of its context and meaning.",
     textSizeLabel = "Text Size", textSizeHint = "Make text bigger if you have trouble reading it.", textSizeNormal = "Normal", textSizeLarge = "Large", textSizeExtraLarge = "Extra Large",
+    zakatCalculatorTitle = "Zakat Calculator",
+    zakatWealthLabel = "Your Total Wealth (cash, gold, silver, etc.)",
+    zakatCalculateButton = "Calculate",
+    zakatResultTemplate = "Your Zakat: {amount}",
+    zakatNisabInfo = "Zakat is 2.5% of wealth that has reached the nisab threshold (about 85g of gold in value) and been held for a full year. This is a general guide, not religious advice.",
+    duaListTitle = "Supplications",
+    islamicCalendarTitle = "Islamic Calendar",
+    islamicDaysRemainingTemplate = "{n} days left",
+    streakDaysTemplate = "{n}-day reading streak",
+    cdShare = "Share",
+    hacKuraLabel = "Hajj Lottery Result Lookup",
+    moreTitle = "More",
 )
 
 private val arabic = Strings(
@@ -508,6 +546,18 @@ private val arabic = Strings(
     qiblaLiveInstructions = "أمسك هاتفك أفقيًا وأدره ببطء حتى يتوافق السهم مع المثلث أعلى الدائرة.",
     tafsirVsMealHint = "الترجمة (المعنى) هي نقل معنى الآية. أما التفسير فهو شرح تفصيلي لسياق الآية ومعناها.",
     textSizeLabel = "حجم النص", textSizeHint = "كبّر النص إذا كنت تواجه صعوبة في القراءة.", textSizeNormal = "عادي", textSizeLarge = "كبير", textSizeExtraLarge = "كبير جدًا",
+    zakatCalculatorTitle = "حاسبة الزكاة",
+    zakatWealthLabel = "إجمالي ثروتك (نقد، ذهب، فضة، إلخ)",
+    zakatCalculateButton = "احسب",
+    zakatResultTemplate = "زكاتك: {amount}",
+    zakatNisabInfo = "الزكاة هي 2.5% من المال الذي بلغ النصاب (حوالي 85 جرامًا من الذهب) وحال عليه الحول. هذا دليل عام وليس فتوى دينية.",
+    duaListTitle = "الأدعية",
+    islamicCalendarTitle = "التقويم الإسلامي",
+    islamicDaysRemainingTemplate = "باقي {n} يومًا",
+    streakDaysTemplate = "سلسلة قراءة لمدة {n} يومًا",
+    cdShare = "مشاركة",
+    hacKuraLabel = "الاستعلام عن نتيجة قرعة الحج",
+    moreTitle = "المزيد",
 )
 
 private val german = Strings(
@@ -611,6 +661,18 @@ private val german = Strings(
     qiblaLiveInstructions = "Halte dein Telefon flach und drehe dich langsam, bis der Pfeil mit dem Dreieck über dem Kreis übereinstimmt.",
     tafsirVsMealHint = "Die Übersetzung überträgt die Bedeutung des Verses. Der Tafsir ist eine ausführliche Erklärung seines Kontexts und seiner Bedeutung.",
     textSizeLabel = "Textgröße", textSizeHint = "Vergrößern Sie den Text, wenn Sie Schwierigkeiten beim Lesen haben.", textSizeNormal = "Normal", textSizeLarge = "Groß", textSizeExtraLarge = "Sehr groß",
+    zakatCalculatorTitle = "Zakat-Rechner",
+    zakatWealthLabel = "Ihr Gesamtvermögen (Bargeld, Gold, Silber usw.)",
+    zakatCalculateButton = "Berechnen",
+    zakatResultTemplate = "Ihre Zakat: {amount}",
+    zakatNisabInfo = "Die Zakat beträgt 2,5 % des Vermögens, das die Nisab-Grenze (etwa 85 g Gold) erreicht und ein volles Jahr gehalten wurde. Dies ist eine allgemeine Orientierung, keine religiöse Rechtsauskunft.",
+    duaListTitle = "Bittgebete",
+    islamicCalendarTitle = "Islamischer Kalender",
+    islamicDaysRemainingTemplate = "Noch {n} Tage",
+    streakDaysTemplate = "{n}-Tage-Leseserie",
+    cdShare = "Teilen",
+    hacKuraLabel = "Haddsch-Losergebnis abfragen",
+    moreTitle = "Weiteres",
 )
 
 private val french = Strings(
@@ -714,6 +776,18 @@ private val french = Strings(
     qiblaLiveInstructions = "Tenez votre téléphone à plat et tournez lentement jusqu'à ce que la flèche s'aligne avec le triangle au-dessus du cercle.",
     tafsirVsMealHint = "La traduction rend le sens du verset. Le tafsir est une explication savante plus détaillée de son contexte et de sa signification.",
     textSizeLabel = "Taille du texte", textSizeHint = "Agrandissez le texte si vous avez du mal à le lire.", textSizeNormal = "Normal", textSizeLarge = "Grand", textSizeExtraLarge = "Très grand",
+    zakatCalculatorTitle = "Calculateur de zakat",
+    zakatWealthLabel = "Votre patrimoine total (espèces, or, argent, etc.)",
+    zakatCalculateButton = "Calculer",
+    zakatResultTemplate = "Votre zakat : {amount}",
+    zakatNisabInfo = "La zakat est de 2,5 % du patrimoine ayant atteint le seuil du nisab (environ 85 g d'or) et conservé pendant une année complète. Ceci est un guide général, pas un avis religieux.",
+    duaListTitle = "Invocations",
+    islamicCalendarTitle = "Calendrier islamique",
+    islamicDaysRemainingTemplate = "{n} jours restants",
+    streakDaysTemplate = "Série de lecture de {n} jours",
+    cdShare = "Partager",
+    hacKuraLabel = "Consulter le résultat du tirage au sort du Hajj",
+    moreTitle = "Plus",
 )
 
 private val uzbek = Strings(
@@ -817,6 +891,18 @@ private val uzbek = Strings(
     qiblaLiveInstructions = "Telefoningizni tekis tuting va o'q doira ustidagi uchburchak bilan tekislanguncha asta aylantiring.",
     tafsirVsMealHint = "Tarjima oyatning ma'nosini beradi. Tafsir esa uning konteksti va ma'nosining batafsil izohidir.",
     textSizeLabel = "Matn o'lchami", textSizeHint = "O'qishda qiynalsangiz, matnni kattalashtiring.", textSizeNormal = "Oddiy", textSizeLarge = "Katta", textSizeExtraLarge = "Juda katta",
+    zakatCalculatorTitle = "Zakot kalkulyatori",
+    zakatWealthLabel = "Umumiy boyligingiz (naqd pul, oltin, kumush va h.k.)",
+    zakatCalculateButton = "Hisoblash",
+    zakatResultTemplate = "Zakotingiz: {amount}",
+    zakatNisabInfo = "Zakot — nisob miqdoriga (taxminan 85 gramm oltin qiymati) yetgan va bir yil saqlangan mol-mulkning 2,5 foizi. Bu umumiy qo'llanma, diniy fatvo emas.",
+    duaListTitle = "Dualar",
+    islamicCalendarTitle = "Islom taqvimi",
+    islamicDaysRemainingTemplate = "{n} kun qoldi",
+    streakDaysTemplate = "{n} kunlik o'qish seriyasi",
+    cdShare = "Ulashish",
+    hacKuraLabel = "Haj qur'asi natijasini so'rash",
+    moreTitle = "Boshqa",
 )
 
 private val kyrgyz = Strings(
@@ -920,6 +1006,18 @@ private val kyrgyz = Strings(
     qiblaLiveInstructions = "Телефонуңузду түз кармап, жебе тегеректин үстүндөгү үч бурчтук менен дал келгенче жай бурулуңуз.",
     tafsirVsMealHint = "Котормо аяттын маанисин берет. Тафсир болсо анын мазмунун жана маанисин кеңири түшүндүрөт.",
     textSizeLabel = "Тексттин өлчөмү", textSizeHint = "Окууга кыйналсаңыз, текстти чоңойтуңуз.", textSizeNormal = "Кадимки", textSizeLarge = "Чоң", textSizeExtraLarge = "Өтө чоң",
+    zakatCalculatorTitle = "Зекет эсептегич",
+    zakatWealthLabel = "Жалпы байлыгыңыз (накталай акча, алтын, күмүш ж.б.)",
+    zakatCalculateButton = "Эсептөө",
+    zakatResultTemplate = "Зекетиңиз: {amount}",
+    zakatNisabInfo = "Зекет — нисап өлчөмүнө (болжол менен 85 грамм алтын баасына) жеткен жана бир жыл сакталган мал-мүлктүн 2,5 пайызы. Бул жалпы көрсөтмө, диний фетва эмес.",
+    duaListTitle = "Дубалар",
+    islamicCalendarTitle = "Ислам календары",
+    islamicDaysRemainingTemplate = "{n} күн калды",
+    streakDaysTemplate = "{n} күндүк окуу сериясы",
+    cdShare = "Бөлүшүү",
+    hacKuraLabel = "Хаж кура жыйынтыгын текшерүү",
+    moreTitle = "Дагы",
 )
 
 private val turkmen = Strings(
@@ -1023,6 +1121,18 @@ private val turkmen = Strings(
     qiblaLiveInstructions = "Telefonyňyzy tekiz saklaň we ok, tegeleg üstündäki üçburçluk bilen deňeşýänçä ýuwaş öwrüň.",
     tafsirVsMealHint = "Terjime aýatyň manysyny berýär. Tefsir bolsa onuň manysynyň we mazmunynyň jikme-jik düşündirişidir.",
     textSizeLabel = "Ýazy ölçegi", textSizeHint = "Okamakda kynçylyk çekseňiz, ýazyny ulaldyň.", textSizeNormal = "Adaty", textSizeLarge = "Uly", textSizeExtraLarge = "Has uly",
+    zakatCalculatorTitle = "Zekat hasaplaýjy",
+    zakatWealthLabel = "Umumy baýlygyňyz (nagt pul, altyn, kümüş we ş.m.)",
+    zakatCalculateButton = "Hasapla",
+    zakatResultTemplate = "Zekatyňyz: {amount}",
+    zakatNisabInfo = "Zekat — nisap mukdaryna (takmynan 85 gram altyn bahasyna) ýeten we bir ýyl saklanan baýlygyň 2,5 göterimi. Bu umumy gollanma, dini pikir däl.",
+    duaListTitle = "Dogalar",
+    islamicCalendarTitle = "Yslam senenamasy",
+    islamicDaysRemainingTemplate = "{n} gün galdy",
+    streakDaysTemplate = "{n} günlük okaýyş seriýasy",
+    cdShare = "Paýlaş",
+    hacKuraLabel = "Hac kurasy netijesini soragy",
+    moreTitle = "Ýene",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {
