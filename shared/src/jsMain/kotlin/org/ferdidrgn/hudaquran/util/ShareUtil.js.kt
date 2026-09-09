@@ -5,4 +5,4 @@ actual fun shareText(text: String) {
 }
 
 private fun jsShareText(text: String): Unit =
-    js("if (navigator.share) { navigator.share({ text: text }).catch(function(e) {}); } else if (navigator.clipboard) { navigator.clipboard.writeText(text); }")
+    js("{ if (navigator.share) { navigator.share({ text: text }).catch(function(e) {}); } else if (navigator.clipboard) { navigator.clipboard.writeText(text); } }")
