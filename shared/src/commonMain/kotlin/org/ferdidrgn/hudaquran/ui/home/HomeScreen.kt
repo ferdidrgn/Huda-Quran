@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -104,6 +105,9 @@ fun HomeScreen(
     onOpenLesson: (String) -> Unit,
     onOpenEsmaulHusna: () -> Unit,
     onOpenEsmaulHusnaDetail: (Int) -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -194,6 +198,9 @@ fun HomeScreen(
             onOpenSettings = onOpenSettings,
             onOpenEsmaulHusna = onOpenEsmaulHusna,
             onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
+            onOpenDuaList = onOpenDuaList,
+            onOpenZakatCalculator = onOpenZakatCalculator,
+            onOpenIslamicCalendar = onOpenIslamicCalendar,
         )
         return
     }
@@ -229,6 +236,29 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
+                    }
+                }
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(1) {
+                val uriHandler = LocalUriHandler.current
+                Column {
+                    SectionHeader(strings.quickActionsTitle)
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
+                        item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                        item {
+                            QuickAction(
+                                "🕋",
+                                strings.hacKuraLabel,
+                                onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+                            )
+                        }
+                        item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                        item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
                     }
                 }
             }
@@ -592,6 +622,9 @@ private fun WebHomeContent(
     onOpenSettings: () -> Unit,
     onOpenEsmaulHusna: () -> Unit,
     onOpenEsmaulHusnaDetail: (Int) -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -610,6 +643,25 @@ private fun WebHomeContent(
             onSearchClick = onOpenSearch,
             streakText = if (readingStreak >= 2) strings.streakDaysTemplate.replace("{n}", readingStreak.toString()) else null,
         )
+
+        Column {
+            val uriHandler = LocalUriHandler.current
+            SectionHeader(strings.quickActionsTitle)
+            Spacer(Modifier.height(10.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
+                item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                item {
+                    QuickAction(
+                        "🕋",
+                        strings.hacKuraLabel,
+                        onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+                    )
+                }
+                item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+            }
+        }
 
         WebContinueSection(
             strings = strings,

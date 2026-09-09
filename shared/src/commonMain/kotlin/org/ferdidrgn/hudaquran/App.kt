@@ -337,6 +337,9 @@ private fun AppDestinationContent(
             onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
             onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
             onOpenEsmaulHusnaDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+            onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.SurahList -> SurahListScreen(
