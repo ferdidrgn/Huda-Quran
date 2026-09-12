@@ -2,6 +2,7 @@ package org.ferdidrgn.hudaquran.ui.esmaulhusna
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 /**
  * All 99 names in a fixed 3-per-row grid so nothing is hidden behind a horizontal scroll —
@@ -38,7 +40,13 @@ import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 fun EsmaulHusnaScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenDetail: (Int) -> Unit) {
     val strings = LocalStrings.current
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -58,6 +66,7 @@ fun EsmaulHusnaScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenD
                 EsmaGridCard(esma, onClick = { onOpenDetail(index) })
             }
         }
+    }
     }
 }
 

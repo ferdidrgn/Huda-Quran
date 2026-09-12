@@ -113,6 +113,11 @@ fun SettingsScreen(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.TopCenter,
     ) {
+    org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground(
+        modifier = Modifier.matchParentSize(),
+        tint = MaterialTheme.colorScheme.primary,
+        alpha = 0.035f,
+    )
     Column(
         modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
     ) {
@@ -351,12 +356,9 @@ private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSi
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
+    org.ferdidrgn.hudaquran.ui.components.SectionHeader(
+        title = text,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp),
     )
 }
 

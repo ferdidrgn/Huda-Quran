@@ -32,6 +32,7 @@ import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 /**
  * Shows a single tafsir edition's commentary for one ayah. The tafsir edition list and text both
@@ -81,7 +82,13 @@ fun TafsirScreen(
         isLoading = false
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             BackButton(onBack = onBack)
             Text(strings.tafsirLabel, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -135,5 +142,6 @@ fun TafsirScreen(
                 }
             }
         }
+    }
     }
 }
