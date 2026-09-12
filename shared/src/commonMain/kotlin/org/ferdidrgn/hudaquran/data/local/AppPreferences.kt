@@ -38,6 +38,8 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_MUSHAF_LANDSCAPE_HINT_SEEN = "mushaf_landscape_hint_seen"
         private const val KEY_KHATM_FURTHEST_PAGE = "khatm_furthest_page"
         private const val KEY_KHATM_COMPLETED_COUNT = "khatm_completed_count"
+        private const val KEY_STREAK_CURRENT = "reading_streak_current"
+        private const val KEY_STREAK_LAST_DAY = "reading_streak_last_day"
         private const val KEY_TEXT_SIZE = "text_size_option"
     }
 
@@ -158,6 +160,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         settings.putInt(KEY_LAST_READ_AYAH, numberInSurah)
         settings.putString(KEY_LAST_READ_SURAH_NAME, surahName)
         _lastRead.value = LastRead(surahNumber, numberInSurah, surahName)
+        recordReadingActivity()
     }
 
     private val _lastMushafPage = MutableStateFlow(settings.getIntOrNull(KEY_LAST_MUSHAF_PAGE))
@@ -166,6 +169,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     fun saveLastMushafPage(page: Int) {
         settings.putInt(KEY_LAST_MUSHAF_PAGE, page)
         _lastMushafPage.value = page
+        recordReadingActivity()
     }
 
     var mushafLandscapeHintSeen: Boolean
@@ -196,5 +200,27 @@ class AppPreferences(private val settings: Settings = createSettings()) {
             settings.putInt(KEY_KHATM_FURTHEST_PAGE, pageNumber)
             _khatmFurthestPage.value = pageNumber
         }
+    }
+
+    private val _readingStreak = MutableStateFlow(settings.getInt(KEY_STREAK_CURRENT, 0))
+    val readingStreak: StateFlow<Int> = _readingStreak.asStateFlow()
+
+    /**
+     * Called whenever the user genuinely reads something (an ayah or a Mushaf page), not on every
+     * screen open. Consecutive calendar days (UTC, coarse on purpose — this is a motivational
+     * streak, not a precise attendance log) extend the streak; a gap of more than one day resets
+     * it to 1; a second call on the same day is a no-op so re-reading doesn't inflate it.
+     */
+    private fun recordReadingActivity() {
+        val today = Clock.System.now().toEpochMilliseconds() / 86_400_000L
+        val lastDay = settings.getLong(KEY_STREAK_LAST_DAY, -1L)
+        val newStreak = when (lastDay) {
+            today -> return
+            today - 1 -> _readingStreak.value + 1
+            else -> 1
+        }
+        settings.putLong(KEY_STREAK_LAST_DAY, today)
+        settings.putInt(KEY_STREAK_CURRENT, newStreak)
+        _readingStreak.value = newStreak
     }
 }

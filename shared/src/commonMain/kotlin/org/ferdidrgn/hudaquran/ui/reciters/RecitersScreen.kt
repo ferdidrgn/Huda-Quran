@@ -51,6 +51,7 @@ import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private const val PREVIEW_SURAH_NUMBER = 1
 private const val PREVIEW_SURAH_NAME = "Al-Faatiha"
@@ -85,7 +86,13 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         if (query.isBlank()) reciters else reciters.filter { it.displayName.contains(query, ignoreCase = true) }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -162,6 +169,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
             }
         }
+    }
     }
 }
 

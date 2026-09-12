@@ -49,7 +49,12 @@ import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
+import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
+import org.ferdidrgn.hudaquran.ui.dua.DuaListScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
+import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonListScreen
@@ -330,6 +335,11 @@ private fun AppDestinationContent(
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
             onOpenQibla = { navigator.navigate(Screen.Qibla) },
             onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
+            onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
+            onOpenEsmaulHusnaDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+            onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -349,6 +359,9 @@ private fun AppDestinationContent(
             onOpenTafsirPicker = { navigator.navigate(Screen.TafsirPicker) },
             onOpenLocationPicker = { navigator.navigate(Screen.PrayerLocationPicker) },
             onOpenLanguagePicker = { navigator.navigate(Screen.LanguagePicker) },
+            onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
+            onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.ReciterPicker -> RecitersScreen(
@@ -491,6 +504,34 @@ private fun AppDestinationContent(
         )
 
         is Screen.Qibla -> QiblaScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.EsmaulHusnaList -> EsmaulHusnaScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+        )
+
+        is Screen.EsmaulHusnaDetail -> EsmaulHusnaDetailScreen(
+            index = screen.index,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onChangeIndex = { newIndex -> navigator.replaceAll(Screen.EsmaulHusnaDetail(newIndex)) },
+        )
+
+        is Screen.ZakatCalculator -> ZakatCalculatorScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.DuaList -> DuaListScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.IslamicCalendar -> IslamicCalendarScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
         )

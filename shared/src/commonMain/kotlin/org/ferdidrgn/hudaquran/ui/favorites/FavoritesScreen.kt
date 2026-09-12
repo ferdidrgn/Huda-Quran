@@ -38,6 +38,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -80,7 +81,13 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Text(strings.myFavoritesTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
 
         when {
@@ -170,5 +177,6 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                 }
             }
         }
+    }
     }
 }

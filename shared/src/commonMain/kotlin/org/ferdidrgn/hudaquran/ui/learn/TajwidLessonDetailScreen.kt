@@ -41,6 +41,7 @@ import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 @Composable
 fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -52,7 +53,13 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
         onDispose { pronouncer.release() }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -98,6 +105,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
                 }
             }
         }
+    }
     }
 }
 

@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,6 +59,9 @@ fun SettingsScreen(
     onOpenTafsirPicker: () -> Unit,
     onOpenLocationPicker: () -> Unit,
     onOpenLanguagePicker: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -109,6 +113,11 @@ fun SettingsScreen(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.TopCenter,
     ) {
+    org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground(
+        modifier = Modifier.matchParentSize(),
+        tint = MaterialTheme.colorScheme.primary,
+        alpha = 0.035f,
+    )
     Column(
         modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
     ) {
@@ -227,6 +236,34 @@ fun SettingsScreen(
             ) { Text(strings.sixMonthAdFreeButton) }
         }
 
+        SectionTitle(strings.moreTitle)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            NavigationRow(
+                title = strings.zakatCalculatorTitle,
+                value = "",
+                onClick = onOpenZakatCalculator,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
+                title = strings.duaListTitle,
+                value = "",
+                onClick = onOpenDuaList,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
+                title = strings.islamicCalendarTitle,
+                value = "",
+                onClick = onOpenIslamicCalendar,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            val uriHandler = LocalUriHandler.current
+            NavigationRow(
+                title = strings.hacKuraLabel,
+                value = "hacumre.diyanet.gov.tr",
+                onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+            )
+        }
+
         if (!preferences.isAdFree()) {
             AdBannerCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
@@ -319,12 +356,9 @@ private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSi
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
+    org.ferdidrgn.hudaquran.ui.components.SectionHeader(
+        title = text,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp),
     )
 }
 
