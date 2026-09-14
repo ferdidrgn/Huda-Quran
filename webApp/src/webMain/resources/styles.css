@@ -1,20 +1,29 @@
 :root {
     --seo-header-height: 52px;
-    --paper: #f4ede1;
-    --ink: #0b1f17;
+    --canvas: #0a140f;
+    --surface: #14231c;
+    --surface-2: #1e3227;
+    --ink: #f3eedf;
+    --ink-muted: #a9b3a6;
+    --gilt: #d4b36a;
+    --gilt-bright: #e7cc8f;
+    --emerald: #1f9e6c;
 }
 
 html, body {
     width: 100%;
     margin: 0;
     padding: 0;
+    background: var(--canvas);
 }
 
 /* A real, always-rendered header — see the comment in index.html for why this markup exists
    at all. Sized to stay out of the way of the app below it on small phone screens. */
 /* A slim eyebrow strip, not a second header competing with the app's own top bar right below
    it — real, visible, crawlable text (required for AdSense content review), but sized and laid
-   out to read as one continuous branded band rather than two stacked headers. */
+   out to read as one continuous branded band rather than two stacked headers. Colored to match
+   the app's own dark "illuminated manuscript" theme (Canvas/Gilt/Emerald) instead of a
+   mismatched light paper tone, so it reads as one brand rather than two different sites. */
 #seo-header {
     box-sizing: border-box;
     height: var(--seo-header-height);
@@ -23,8 +32,9 @@ html, body {
     align-items: baseline;
     gap: 10px;
     overflow: hidden;
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--canvas);
+    border-bottom: 1px solid rgba(212, 179, 106, 0.18);
+    color: var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -33,6 +43,7 @@ html, body {
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.02em;
+    color: var(--gilt-bright);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -41,7 +52,7 @@ html, body {
     margin: 0;
     font-size: 11px;
     line-height: 1.3;
-    color: rgba(244, 237, 225, 0.6);
+    color: var(--ink-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -55,6 +66,7 @@ html, body {
     width: 100%;
     height: calc(100vh - var(--seo-header-height));
     overflow: hidden;
+    background: var(--canvas);
 }
 
 /* Absolutely positioned rather than flex-centered, so nothing on this container competes with
@@ -66,43 +78,86 @@ html, body {
     transform: translate(-50%, -50%);
 }
 
-/* Real, visible, scrollable-to content — not a crawler-only trick. Styled plainly since its job
-   is to be genuinely readable, not to compete visually with the app above it. */
+#seo-loading-spinner circle:first-child {
+    stroke: rgba(212, 179, 106, 0.2);
+}
+
+#seo-loading-spinner circle:last-child {
+    stroke: var(--gilt);
+}
+
+/* Real, visible, scrollable-to content — not a crawler-only trick. Kept in the app's own dark
+   brand palette (see the note above #seo-header) instead of a jarring light "paper" panel. */
 #seo-footer {
     box-sizing: border-box;
-    padding: 32px 20px 56px;
-    background: var(--paper);
+    padding: 40px 20px 56px;
+    background: var(--canvas);
     color: var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Once the Compose app has actually painted (see the canvas-detection script in index.html),
+   #seo-header/#seo-footer are pushed off-screen instead of display:none — real users never see
+   them again, but the markup stays in the DOM and in the accessibility tree, so it's still real
+   content to a crawler that renders the page, not display:none cloaking. */
+.seo-fallback--dismissed {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 #seo-footer section {
     max-width: 760px;
-    margin: 0 auto 32px;
+    margin: 0 auto 40px;
 }
 
 #seo-footer h2 {
-    font-size: 18px;
-    margin: 0 0 10px;
+    font-size: 19px;
+    margin: 0 0 12px;
+    color: var(--gilt-bright);
+    font-weight: 700;
 }
 
 #seo-footer p {
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
     margin: 0 0 10px;
+    color: var(--ink-muted);
 }
 
 #seo-surah-list {
-    columns: 2;
-    column-gap: 24px;
-    padding-left: 20px;
-    margin: 12px 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
 }
 
 #seo-surah-list li {
+    font-size: 0;
+}
+
+#seo-surah-list a {
+    display: block;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid rgba(212, 179, 106, 0.14);
     font-size: 13px;
-    line-height: 1.9;
-    break-inside: avoid;
+    line-height: 1.5;
+}
+
+#seo-surah-list a:hover {
+    background: var(--surface-2);
+    border-color: rgba(212, 179, 106, 0.4);
 }
 
 #seo-nav-list {
@@ -111,28 +166,51 @@ html, body {
     margin: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 18px;
+    gap: 10px 12px;
 }
 
 #seo-footer a {
     color: var(--ink);
     text-decoration: none;
-    border-bottom: 1px solid rgba(11, 31, 23, 0.35);
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
 }
 
 #seo-footer a:hover {
-    border-bottom-color: var(--ink);
+    color: var(--gilt-bright);
+    border-bottom-color: var(--gilt);
+}
+
+#seo-nav-list a {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid rgba(212, 179, 106, 0.14);
+    font-size: 13px;
+}
+
+#seo-nav-list a:hover {
+    background: var(--surface-2);
+    border-color: rgba(212, 179, 106, 0.4);
+    border-bottom: none;
 }
 
 #seo-copyright {
     max-width: 760px;
     margin: 0 auto;
     font-size: 12px;
-    color: rgba(11, 31, 23, 0.6);
+    color: rgba(169, 179, 166, 0.6);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
     #seo-surah-list {
-        columns: 1;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 380px) {
+    #seo-surah-list {
+        grid-template-columns: 1fr;
     }
 }
