@@ -11,7 +11,8 @@ import org.ferdidrgn.hudaquran.notifications.NOTIFICATION_ACCENT_COLOR
 import org.ferdidrgn.hudaquran.notifications.notificationIconRes
 import org.ferdidrgn.hudaquran.notifications.openAppPendingIntent
 
-private const val CHANNEL_ID = "huda_quran_push"
+// Versioned: Android never raises an existing channel's importance, so bumping it needs a new ID.
+private const val CHANNEL_ID = "huda_quran_push_v2"
 
 class HudaQuranMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {

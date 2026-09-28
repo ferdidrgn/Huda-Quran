@@ -26,7 +26,12 @@ object DeepLink {
         val sectionKind = SectionKind.entries.firstOrNull { it.apiPath == segments[0] }
         if (sectionKind != null) {
             val number = segments.getOrNull(1)?.toIntOrNull()
-            return if (number != null) Screen.SectionDetail(sectionKind, number) else Screen.SectionList(sectionKind)
+            return when {
+                number == null -> Screen.SectionList(sectionKind)
+                // A single page opens in the book reader, matching in-app taps (old /page/N links too).
+                sectionKind == SectionKind.PAGE -> Screen.MushafPage(number)
+                else -> Screen.SectionDetail(sectionKind, number)
+            }
         }
 
         return when (segments[0]) {

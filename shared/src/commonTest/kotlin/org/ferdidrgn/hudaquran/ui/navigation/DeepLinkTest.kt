@@ -63,7 +63,12 @@ class DeepLinkTest {
     fun sectionKindsListAndDetail() {
         assertEquals(Screen.SectionList(SectionKind.JUZ), DeepLink.parse("/juz"))
         assertEquals(Screen.SectionDetail(SectionKind.JUZ, 5), DeepLink.parse("/juz/5"))
-        assertEquals(Screen.SectionDetail(SectionKind.PAGE, 100), DeepLink.parse("/page/100"))
+        assertEquals(Screen.SectionList(SectionKind.PAGE), DeepLink.parse("/page"))
+    }
+
+    @Test
+    fun singlePageOpensMushafReader() {
+        assertEquals(Screen.MushafPage(100), DeepLink.parse("/page/100"))
     }
 
     @Test

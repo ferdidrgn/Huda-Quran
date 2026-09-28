@@ -1,6 +1,6 @@
 package org.ferdidrgn.hudaquran.ui.navigation
 
-actual fun syncBrowserUrl(path: String) {
+actual fun syncBrowserUrl(path: String, replace: Boolean) {
     // No address bar on Android.
 }
 

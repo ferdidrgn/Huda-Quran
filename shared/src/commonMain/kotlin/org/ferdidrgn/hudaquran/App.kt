@@ -17,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -152,9 +154,14 @@ fun App() {
         val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding &&
             screen != Screen.NowPlaying && screen !is Screen.MushafPage
 
+        var previousScreen by remember { mutableStateOf<Screen?>(null) }
         LaunchedEffect(screen) {
-            AppAnalytics.logEvent("screen_view", mapOf("screen" to screen::class.simpleName.orEmpty()))
-            syncBrowserUrl(DeepLink.toPath(screen))
+            // Turning Mushaf pages updates the address in place: one history entry and one
+            // screen_view per reading session, not one per page.
+            val isPageTurn = previousScreen is Screen.MushafPage && screen is Screen.MushafPage
+            previousScreen = screen
+            if (!isPageTurn) AppAnalytics.logEvent("screen_view", mapOf("screen" to screen::class.simpleName.orEmpty()))
+            syncBrowserUrl(DeepLink.toPath(screen), replace = isPageTurn)
             if (screen is Screen.SurahDetail || screen is Screen.LanguagePicker) maybeShowInterstitial()
         }
 
@@ -171,7 +178,7 @@ fun App() {
         LaunchedEffect(poppedScreen, screen) {
             val target = poppedScreen ?: return@LaunchedEffect
             if (screen !is Screen.Splash) {
-                navigator.replaceAll(target)
+                navigator.resetTo(target)
                 DeepLinkController.consumePopped()
             }
         }
@@ -331,7 +338,7 @@ private fun AppDestinationContent(
                     deepLinkTarget != null -> deepLinkTarget
                     else -> Screen.Home
                 }
-                navigator.replaceAll(target)
+                if (target == Screen.Onboarding) navigator.replaceAll(target) else navigator.resetTo(target)
             },
         )
 
@@ -523,7 +530,8 @@ private fun AppDestinationContent(
         is Screen.MushafPage -> MushafPageScreen(
             pageNumber = screen.pageNumber,
             modifier = contentModifier,
-            onBack = { navigator.back() },
+            // Mushaf hides every nav bar, so its back arrow must never be a dead end.
+            onBack = { if (!navigator.back()) navigator.replaceAll(Screen.Home) },
             onPageSettled = { page -> navigator.replaceTop(Screen.MushafPage(page)) },
         )
 

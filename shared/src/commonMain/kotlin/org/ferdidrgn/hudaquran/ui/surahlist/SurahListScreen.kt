@@ -42,6 +42,7 @@ import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -103,7 +104,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                 }
             }
             else -> {
-                val showAds = !preferences.isAdFree()
+                val showAds = adsSupported && !preferences.isAdFree()
                 val isWeb = currentPlatform == Platform.WEB
                 LazyVerticalGrid(
                     // On a website, a single-file mobile list stretched across a wide window

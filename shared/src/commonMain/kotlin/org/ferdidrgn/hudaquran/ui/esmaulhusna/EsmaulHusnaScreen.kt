@@ -33,6 +33,7 @@ import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
@@ -40,7 +41,7 @@ import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 @Composable
 fun EsmaulHusnaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val strings = LocalStrings.current
-    val showAds = !AppContainer.preferences.isAdFree()
+    val showAds = adsSupported && !AppContainer.preferences.isAdFree()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Row(

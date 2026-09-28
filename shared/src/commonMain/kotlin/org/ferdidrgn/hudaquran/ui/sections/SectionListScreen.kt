@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -74,7 +75,7 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
         if (total == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
-            val showAds = !preferences.isAdFree()
+            val showAds = adsSupported && !preferences.isAdFree()
             val midCount = total / 2
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 96.dp),
