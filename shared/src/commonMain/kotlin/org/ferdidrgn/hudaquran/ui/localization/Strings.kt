@@ -90,6 +90,7 @@ data class Strings(
     val themeSystem: String,
     val themeLight: String,
     val themeDark: String,
+    val themeSakura: String,
 
     // EditionPicker
     val editionSearchPlaceholder: String,
@@ -241,7 +242,7 @@ private val turkish = Strings(
     supportUsTitle = "Destek Ol", adFreeActiveMessage = "Reklamsız üyeliğiniz aktif, teşekkürler! 💚",
     supportUsMessage = "Uygulamayı geliştirmemize destek olun", smallDonationButton = "☕ Küçük Bağış",
     mediumDonationButton = "🎁 Orta Bağış", sixMonthAdFreeButton = "✨ 6 Aylık Reklamsız Üyelik",
-    themeSystem = "🖥️ Sistem", themeLight = "☀️ Açık", themeDark = "🌙 Koyu",
+    themeSystem = "🖥️ Sistem", themeLight = "☀️ Açık", themeDark = "🌙 Koyu", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Ara",
     selectTranslationTitle = "Meal Seçin", selectLocationTitle = "Konum Seçin", selectLanguageTitle = "Dil Seçin",
@@ -343,7 +344,7 @@ private val english = Strings(
     supportUsTitle = "Support Us", adFreeActiveMessage = "Your ad-free membership is active, thank you! 💚",
     supportUsMessage = "Help us keep improving the app", smallDonationButton = "☕ Small Donation",
     mediumDonationButton = "🎁 Medium Donation", sixMonthAdFreeButton = "✨ 6-Month Ad-Free Membership",
-    themeSystem = "🖥️ System", themeLight = "☀️ Light", themeDark = "🌙 Dark",
+    themeSystem = "🖥️ System", themeLight = "☀️ Light", themeDark = "🌙 Dark", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Search",
     selectTranslationTitle = "Select Translation", selectLocationTitle = "Select Location", selectLanguageTitle = "Select Language",
@@ -445,7 +446,7 @@ private val arabic = Strings(
     supportUsTitle = "ادعمنا", adFreeActiveMessage = "عضويتك بدون إعلانات مفعّلة، شكرًا لك! 💚",
     supportUsMessage = "ساعدنا في تطوير التطبيق", smallDonationButton = "☕ تبرع صغير",
     mediumDonationButton = "🎁 تبرع متوسط", sixMonthAdFreeButton = "✨ عضوية بدون إعلانات لمدة 6 أشهر",
-    themeSystem = "🖥️ النظام", themeLight = "☀️ فاتح", themeDark = "🌙 داكن",
+    themeSystem = "🖥️ النظام", themeLight = "☀️ فاتح", themeDark = "🌙 داكن", themeSakura = "🌸 ساكورا",
 
     editionSearchPlaceholder = "بحث",
     selectTranslationTitle = "اختر الترجمة", selectLocationTitle = "اختر الموقع", selectLanguageTitle = "اختر اللغة",
@@ -547,7 +548,7 @@ private val german = Strings(
     supportUsTitle = "Unterstützen Sie uns", adFreeActiveMessage = "Ihre werbefreie Mitgliedschaft ist aktiv, vielen Dank! 💚",
     supportUsMessage = "Helfen Sie uns, die App weiter zu verbessern", smallDonationButton = "☕ Kleine Spende",
     mediumDonationButton = "🎁 Mittlere Spende", sixMonthAdFreeButton = "✨ 6 Monate werbefreie Mitgliedschaft",
-    themeSystem = "🖥️ System", themeLight = "☀️ Hell", themeDark = "🌙 Dunkel",
+    themeSystem = "🖥️ System", themeLight = "☀️ Hell", themeDark = "🌙 Dunkel", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Suchen",
     selectTranslationTitle = "Übersetzung wählen", selectLocationTitle = "Standort wählen", selectLanguageTitle = "Sprache wählen",
@@ -649,7 +650,7 @@ private val french = Strings(
     supportUsTitle = "Soutenez-nous", adFreeActiveMessage = "Votre abonnement sans publicité est actif, merci ! 💚",
     supportUsMessage = "Aidez-nous à améliorer l'application", smallDonationButton = "☕ Petit don",
     mediumDonationButton = "🎁 Don moyen", sixMonthAdFreeButton = "✨ Abonnement sans pub 6 mois",
-    themeSystem = "🖥️ Système", themeLight = "☀️ Clair", themeDark = "🌙 Sombre",
+    themeSystem = "🖥️ Système", themeLight = "☀️ Clair", themeDark = "🌙 Sombre", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Rechercher",
     selectTranslationTitle = "Choisir la traduction", selectLocationTitle = "Choisir l'emplacement", selectLanguageTitle = "Choisir la langue",
@@ -751,7 +752,7 @@ private val uzbek = Strings(
     supportUsTitle = "Bizni qo'llab-quvvatlang", adFreeActiveMessage = "Reklamasiz a'zoligingiz faol, rahmat! 💚",
     supportUsMessage = "Ilovani rivojlantirishga yordam bering", smallDonationButton = "☕ Kichik hadya",
     mediumDonationButton = "🎁 O'rta hadya", sixMonthAdFreeButton = "✨ 6 oylik reklamasiz a'zolik",
-    themeSystem = "🖥️ Tizim", themeLight = "☀️ Yorug'", themeDark = "🌙 Tungi",
+    themeSystem = "🖥️ Tizim", themeLight = "☀️ Yorug'", themeDark = "🌙 Tungi", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Qidirish",
     selectTranslationTitle = "Tarjima tanlang", selectLocationTitle = "Manzil tanlang", selectLanguageTitle = "Til tanlang",
@@ -853,7 +854,7 @@ private val kyrgyz = Strings(
     supportUsTitle = "Бизди колдоңуз", adFreeActiveMessage = "Жарнаксыз мүчөлүгүңүз активдүү, рахмат! 💚",
     supportUsMessage = "Колдонмону өнүктүрүүгө жардам бериңиз", smallDonationButton = "☕ Кичине белек",
     mediumDonationButton = "🎁 Орто белек", sixMonthAdFreeButton = "✨ 6 айлык жарнаксыз мүчөлүк",
-    themeSystem = "🖥️ Система", themeLight = "☀️ Жарык", themeDark = "🌙 Караңгы",
+    themeSystem = "🖥️ Система", themeLight = "☀️ Жарык", themeDark = "🌙 Караңгы", themeSakura = "🌸 Сакура",
 
     editionSearchPlaceholder = "Издөө",
     selectTranslationTitle = "Котормону тандаңыз", selectLocationTitle = "Жайгашкан жерди тандаңыз", selectLanguageTitle = "Тилди тандаңыз",
@@ -955,7 +956,7 @@ private val turkmen = Strings(
     supportUsTitle = "Bize goldaw beriň", adFreeActiveMessage = "Mahabatsyz agzalygyňyz işjeň, sag boluň! 💚",
     supportUsMessage = "Programmany ösdürmäge kömek ediň", smallDonationButton = "☕ Kiçi sowgat",
     mediumDonationButton = "🎁 Orta sowgat", sixMonthAdFreeButton = "✨ 6 aýlyk mahabatsyz agzalyk",
-    themeSystem = "🖥️ Ulgam", themeLight = "☀️ Açyk", themeDark = "🌙 Garaňky",
+    themeSystem = "🖥️ Ulgam", themeLight = "☀️ Açyk", themeDark = "🌙 Garaňky", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Gözle",
     selectTranslationTitle = "Terjimäni saýlaň", selectLocationTitle = "Ýerleşişi saýlaň", selectLanguageTitle = "Dili saýlaň",

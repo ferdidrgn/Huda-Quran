@@ -36,6 +36,27 @@ private val DarkColors = darkColorScheme(
     onError = Color(0xFF2B0507),
 )
 
+private val SakuraColors = darkColorScheme(
+    primary = SakuraBlossom,
+    onPrimary = SakuraWine,
+    primaryContainer = SakuraPlum,
+    onPrimaryContainer = SakuraBlossom,
+    secondary = SakuraMauve,
+    onSecondary = SakuraInk,
+    secondaryContainer = SakuraWine,
+    onSecondaryContainer = SakuraBlossom,
+    background = SakuraInk,
+    onBackground = SakuraBlossom,
+    surface = SakuraSurface,
+    onSurface = SakuraBlossom,
+    surfaceVariant = SakuraWine,
+    onSurfaceVariant = SakuraMauve,
+    outline = SakuraMauve,
+    outlineVariant = SakuraPlum,
+    error = Rose,
+    onError = Color(0xFF2B0507),
+)
+
 private val LightColors = lightColorScheme(
     primary = Color(0xFF8A6B22),
     onPrimary = Color(0xFFFFFFFF),
@@ -76,12 +97,12 @@ private val HudaShapes = Shapes(
 
 @Composable
 fun HudaQuranTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
-    val darkTheme = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
+    val colors = when (themeMode) {
+        ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) DarkColors else LightColors
+        ThemeMode.LIGHT -> LightColors
+        ThemeMode.DARK -> DarkColors
+        ThemeMode.SAKURA -> SakuraColors
     }
-    val colors = if (darkTheme) DarkColors else LightColors
     MaterialTheme(
         colorScheme = colors,
         typography = HudaTypography,

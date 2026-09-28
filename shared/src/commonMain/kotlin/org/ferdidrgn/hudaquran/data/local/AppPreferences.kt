@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.Clock
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
+enum class ThemeMode { SYSTEM, LIGHT, DARK, SAKURA }
 
 /** A global text-size multiplier for readers who need larger type — elderly users especially. */
 enum class TextSizeOption(val scale: Float) {

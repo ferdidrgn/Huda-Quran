@@ -248,32 +248,40 @@ private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> 
         ThemeMode.SYSTEM to strings.themeSystem,
         ThemeMode.LIGHT to strings.themeLight,
         ThemeMode.DARK to strings.themeDark,
+        ThemeMode.SAKURA to strings.themeSakura,
     )
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        options.forEach { (mode, label) ->
-            val isSelected = selected == mode
+        options.chunked(2).forEach { rowOptions ->
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onSelect(mode) }
-                    .padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    label,
-                    fontSize = 12.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                rowOptions.forEach { (mode, label) ->
+                    val isSelected = selected == mode
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .clickable { onSelect(mode) }
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            label,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
