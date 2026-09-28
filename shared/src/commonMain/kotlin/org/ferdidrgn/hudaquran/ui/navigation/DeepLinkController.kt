@@ -13,8 +13,18 @@ object DeepLinkController {
     private val _pending = MutableStateFlow<Screen?>(null)
     val pending: StateFlow<Screen?> = _pending.asStateFlow()
 
+    // Separate from [pending]: a browser back/forward press already changed the address bar to
+    // its target, so the app must jump straight to that screen (replacing the stack) rather than
+    // pushing a new entry on top the way an incoming deep link does.
+    private val _popped = MutableStateFlow<Screen?>(null)
+    val popped: StateFlow<Screen?> = _popped.asStateFlow()
+
     fun handle(url: String) {
         DeepLink.parse(url)?.let { _pending.value = it }
+    }
+
+    fun handlePopState(url: String) {
+        DeepLink.parse(url)?.let { _popped.value = it }
     }
 
     fun consumePending(): Screen? {
@@ -25,5 +35,9 @@ object DeepLinkController {
 
     fun consume() {
         _pending.value = null
+    }
+
+    fun consumePopped() {
+        _popped.value = null
     }
 }

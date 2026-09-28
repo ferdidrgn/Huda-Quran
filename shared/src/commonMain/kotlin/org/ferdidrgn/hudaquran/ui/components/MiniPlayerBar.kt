@@ -47,7 +47,7 @@ fun MiniPlayerBar(
     GlassSurface(
         modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
         shape = MaterialTheme.shapes.large,
-        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        containerColor = MaterialTheme.colorScheme.surface,
         contentPadding = PaddingValues(0.dp),
         onClick = onOpen,
     ) {

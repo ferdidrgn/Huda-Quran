@@ -33,7 +33,8 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -103,7 +104,6 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                 itemsIndexed(entries, key = { _, entry -> "${entry.surahNumber}:${entry.numberInSurah}" }) { itemIndex, entry ->
                     val surahDetail = detailsCache[entry.surahNumber]
                     val ayah = surahDetail?.ayahs?.firstOrNull { it.numberInSurah == entry.numberInSurah }
-                    if (showAds && itemIndex == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
                     GlassSurface(
                         onClick = { onOpenSurah(entry.surahNumber, entry.numberInSurah) },
                         modifier = Modifier.fillMaxWidth(),
@@ -165,8 +165,8 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                                 CircularProgressIndicator(modifier = Modifier.padding(top = 8.dp))
                             }
                     }
+                    if (showAds && showListAdAfter(itemIndex, entries.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
-                    if (showAds) item { AdBannerCard() }
                 }
             }
         }

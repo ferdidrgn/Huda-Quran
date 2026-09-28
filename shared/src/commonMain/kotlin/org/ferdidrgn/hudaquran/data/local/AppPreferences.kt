@@ -35,7 +35,6 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
         private const val KEY_LAST_MUSHAF_PAGE = "last_mushaf_page"
-        private const val KEY_MUSHAF_LANDSCAPE_HINT_SEEN = "mushaf_landscape_hint_seen"
         private const val KEY_KHATM_FURTHEST_PAGE = "khatm_furthest_page"
         private const val KEY_KHATM_COMPLETED_COUNT = "khatm_completed_count"
         private const val KEY_TEXT_SIZE = "text_size_option"
@@ -167,10 +166,6 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         settings.putInt(KEY_LAST_MUSHAF_PAGE, page)
         _lastMushafPage.value = page
     }
-
-    var mushafLandscapeHintSeen: Boolean
-        get() = settings.getBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, false)
-        set(value) = settings.putBoolean(KEY_MUSHAF_LANDSCAPE_HINT_SEEN, value)
 
     private val _khatmFurthestPage = MutableStateFlow(settings.getInt(KEY_KHATM_FURTHEST_PAGE, 0))
     val khatmFurthestPage: StateFlow<Int> = _khatmFurthestPage.asStateFlow()

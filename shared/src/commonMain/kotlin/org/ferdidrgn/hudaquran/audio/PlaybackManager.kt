@@ -125,6 +125,16 @@ class PlaybackManager(private val player: AudioPlayer) {
         }
     }
 
+    // Explicit (non-toggling) variants for system media controls: a headset/Bluetooth "pause"
+    // must never resume audio just because the app's state was already paused.
+    fun pause() {
+        if (playerState.value.status == PlaybackStatus.PLAYING) player.pause()
+    }
+
+    fun resume() {
+        if (playerState.value.status == PlaybackStatus.PAUSED) player.resume()
+    }
+
     fun stop() {
         player.stop()
         _nowPlaying.value = null

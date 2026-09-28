@@ -19,6 +19,11 @@ class AppNavigator(start: Screen = Screen.Splash) {
         backStack.add(screen)
     }
 
+    /** Swaps the current screen in place, keeping everything beneath it so "back" still works. */
+    fun replaceTop(screen: Screen) {
+        if (backStack.last() != screen) backStack[backStack.lastIndex] = screen
+    }
+
     fun back(): Boolean {
         if (!canGoBack()) return false
         backStack.removeAt(backStack.lastIndex)

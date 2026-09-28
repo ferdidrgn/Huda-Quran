@@ -1,28 +1,20 @@
 package org.ferdidrgn.hudaquran.ui.mushaf
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,10 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -41,18 +31,22 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,22 +54,23 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -83,43 +78,336 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
-import org.ferdidrgn.hudaquran.platform.OrientationController
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.BackButton
-import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
-private val SPREAD_MIN_WIDTH = 700.dp
 private val PAGE_SHAPE = RoundedCornerShape(18.dp)
 
+/** Keeps the page a readable book width on tablets and desktop browsers instead of stretching edge to edge. */
+private val PAGE_MAX_WIDTH = 720.dp
+
 // A fixed warm paper tone, independent of the app's accent theme — the same way a physical
-// mushaf's page color doesn't change with the cover. Text ink shifts to a light cream on the
-// dark-mode paper so it still reads as "ink on paper" rather than "app text on a random surface".
+// mushaf's page color doesn't change with the cover.
 private val PaperLight = Color(0xFFF7EEDA)
 private val PaperDark = Color(0xFF2B2620)
 private val InkLight = Color(0xFF2A2015)
 private val InkDark = Color(0xFFEFE4CB)
-
-// A muted gilt tone for the page's ornamental border and ayah-end markers — the same accent a
-// real illuminated manuscript uses for decoration, kept separate from the app's own theme color.
 private val GiltLight = Color(0xFF9C7A2E)
 private val GiltDark = Color(0xFFC9A857)
 
 private val arabicIndicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
 
-/** Renders a verse number using Arabic-Indic digits, matching the Arabic ayah text beside it. */
 private fun toArabicIndicNumerals(number: Int): String = number.toString().map { arabicIndicDigits[it - '0'] }.joinToString("")
 
 @Composable
-private fun paperColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) PaperDark else PaperLight
+private fun isDarkCanvas(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
 @Composable
-private fun inkColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) InkDark else InkLight
+private fun paperColor(): Color = if (isDarkCanvas()) PaperDark else PaperLight
 
 @Composable
-private fun giltColor(): Color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) GiltDark else GiltLight
+private fun inkColor(): Color = if (isDarkCanvas()) InkDark else InkLight
+
+@Composable
+private fun giltColor(): Color = if (isDarkCanvas()) GiltDark else GiltLight
+
+/**
+ * Book ("mushaf") reading mode: one paper page at a time, turned by swiping or with the arrows,
+ * across all [TOTAL_MUSHAF_PAGES] pages. Pages turn in the direction of an Arabic book (the next
+ * page comes in from the left) whatever the app's UI language.
+ *
+ * [pageNumber] is the page to show; when the reader settles on a different page, [onPageSettled]
+ * reports it so the caller can keep the address bar / back stack in sync.
+ */
+@Composable
+fun MushafPageScreen(
+    pageNumber: Int,
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
+    onPageSettled: (Int) -> Unit,
+) {
+    val preferences = AppContainer.preferences
+    val playback = AppContainer.playbackManager
+    val strings = LocalStrings.current
+    val appLanguage by preferences.appLanguage.collectAsState()
+    val appDirection = LocalLayoutDirection.current
+    val scope = rememberCoroutineScope()
+
+    val startIndex = (pageNumber.coerceIn(1, TOTAL_MUSHAF_PAGES)) - 1
+    val pagerState = rememberPagerState(initialPage = startIndex) { TOTAL_MUSHAF_PAGES }
+    val currentPage = pagerState.currentPage + 1
+
+    var showTranslation by remember { mutableStateOf(false) }
+    var showJumpDialog by remember { mutableStateOf(false) }
+    // Loaded pages are cached here so the top bar (surah / juz / play) knows the current page's
+    // content, and flipping back to a page doesn't refetch it.
+    val loadedPages = remember { mutableStateMapOf<Int, QuranSectionDetail>() }
+
+    val nowPlaying by playback.nowPlaying.collectAsState()
+    val playerState by playback.playerState.collectAsState()
+
+    // External page changes (the jump dialog, a browser back/forward, a deep link) move the pager.
+    LaunchedEffect(pageNumber) {
+        val target = pageNumber.coerceIn(1, TOTAL_MUSHAF_PAGES) - 1
+        if (pagerState.settledPage != target) pagerState.scrollToPage(target)
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }
+            .distinctUntilChanged()
+            .collect { index ->
+                val page = index + 1
+                preferences.saveLastMushafPage(page)
+                preferences.advanceKhatmProgress(page, TOTAL_MUSHAF_PAGES)
+                onPageSettled(page)
+            }
+    }
+
+    val currentDetail = loadedPages[currentPage]
+    val isPageQueued = currentDetail != null && nowPlaying?.mode == PlaybackMode.AYAH_QUEUE && nowPlaying?.queue == currentDetail.ayahs
+    val currentAyah = nowPlaying?.takeIf { it.mode == PlaybackMode.AYAH_QUEUE }?.let { it.queue.getOrNull(it.currentIndex) }
+    val isPagePlaying = isPageQueued && playerState.status == PlaybackStatus.PLAYING
+
+    fun goTo(page: Int) {
+        scope.launch { pagerState.animateScrollToPage(page.coerceIn(1, TOTAL_MUSHAF_PAGES) - 1) }
+    }
+
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BackButton(onBack = onBack)
+            Column(modifier = Modifier.weight(1f).clickable { showJumpDialog = true }.padding(horizontal = 4.dp)) {
+                Text(
+                    "${strings.sectionSingular(SectionKind.PAGE)} $currentPage",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                val firstAyah = currentDetail?.ayahs?.firstOrNull()
+                if (firstAyah != null) {
+                    Text(
+                        "${localizedSurahName(firstAyah.surahNumber, firstAyah.surahName, appLanguage)} · " +
+                            "${strings.sectionSingular(SectionKind.JUZ)} ${firstAyah.juz}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            IconButton(onClick = { showTranslation = !showTranslation }) {
+                Icon(
+                    Icons.Filled.Translate,
+                    contentDescription = strings.toggleTranslationLabel,
+                    tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(
+                enabled = currentDetail != null,
+                onClick = {
+                    val detail = currentDetail ?: return@IconButton
+                    if (isPageQueued) {
+                        playback.togglePlayPause()
+                    } else {
+                        detail.ayahs.firstOrNull()?.let { first ->
+                            playback.playQueue(detail.ayahs, 0, first.surahNumber, first.surahName, preferences.selectedReciter)
+                        }
+                    }
+                },
+            ) {
+                Icon(
+                    if (isPagePlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (isPagePlaying) strings.cdPause else strings.cdPlay,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        LinearProgressIndicator(
+            progress = { currentPage / TOTAL_MUSHAF_PAGES.toFloat() },
+            modifier = Modifier.fillMaxWidth().height(3.dp),
+            color = giltColor(),
+            trackColor = giltColor().copy(alpha = 0.15f),
+        )
+
+        // The pager itself always lays out right-to-left, like a real mushaf; each page then
+        // restores the app's own direction so the translation text reads normally.
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                beyondViewportPageCount = 1,
+                key = { it },
+            ) { index ->
+                CompositionLocalProvider(LocalLayoutDirection provides appDirection) {
+                    MushafPage(
+                        page = index + 1,
+                        showTranslation = showTranslation,
+                        currentAyah = currentAyah,
+                        strings = strings,
+                        cached = loadedPages[index + 1],
+                        onLoaded = { loadedPages[index + 1] = it },
+                    )
+                }
+            }
+        }
+
+        MushafPageFooter(
+            page = currentPage,
+            onPrevious = { goTo(currentPage - 1) },
+            onNext = { goTo(currentPage + 1) },
+            onCenterClick = { showJumpDialog = true },
+        )
+    }
+
+    if (showJumpDialog) {
+        MushafPageJumpDialog(
+            initialPage = currentPage,
+            strings = strings,
+            onDismiss = { showJumpDialog = false },
+            onJump = { target ->
+                showJumpDialog = false
+                scope.launch { pagerState.scrollToPage(target.coerceIn(1, TOTAL_MUSHAF_PAGES) - 1) }
+            },
+        )
+    }
+}
+
+@Composable
+private fun MushafPage(
+    page: Int,
+    showTranslation: Boolean,
+    currentAyah: Ayah?,
+    strings: Strings,
+    cached: QuranSectionDetail?,
+    onLoaded: (QuranSectionDetail) -> Unit,
+) {
+    val repository = AppContainer.repository
+    val preferences = AppContainer.preferences
+    var isLoading by remember(page) { mutableStateOf(cached == null) }
+    var loadError by remember(page) { mutableStateOf(false) }
+    var reloadKey by remember(page) { mutableStateOf(0) }
+
+    LaunchedEffect(page, reloadKey) {
+        if (cached != null && reloadKey == 0) return@LaunchedEffect
+        isLoading = true
+        loadError = false
+        runCatching {
+            repository.getSectionDetail(SectionKind.PAGE, page, preferences.selectedTranslation, preferences.selectedReciter)
+        }.onSuccess(onLoaded).onFailure { loadError = true }
+        isLoading = false
+    }
+
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = PAGE_MAX_WIDTH)
+                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .shadow(
+                    elevation = 14.dp,
+                    shape = PAGE_SHAPE,
+                    ambientColor = Color.Black.copy(alpha = 0.35f),
+                    spotColor = Color.Black.copy(alpha = 0.35f),
+                )
+                .clip(PAGE_SHAPE)
+                .background(paperColor()),
+        ) {
+            when {
+                cached != null -> MushafPageText(cached, page, showTranslation, currentAyah)
+                isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = giltColor()) }
+                else -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            strings.sectionLoadErrorTemplate.replace("{title}", strings.sectionSingular(SectionKind.PAGE)),
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        Button(onClick = { reloadKey++ }) { Text(strings.retry) }
+                    }
+                }
+            }
+            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
+        }
+    }
+}
+
+/** The Arabic text as one continuous justified paragraph, with gilt ayah-end markers — how a printed page reads. */
+@Composable
+private fun MushafPageText(detail: QuranSectionDetail, page: Int, showTranslation: Boolean, currentAyah: Ayah?) {
+    val ink = inkColor()
+    val gilt = giltColor()
+    val highlight = gilt.copy(alpha = 0.28f)
+    val pageText = remember(detail, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink, gilt) {
+        buildAnnotatedString {
+            detail.ayahs.forEach { ayah ->
+                val isCurrent = currentAyah?.surahNumber == ayah.surahNumber && currentAyah.numberInSurah == ayah.numberInSurah
+                if (isCurrent) {
+                    withStyle(SpanStyle(background = highlight)) { append(ayah.arabicText) }
+                } else {
+                    append(ayah.arabicText)
+                }
+                append(" ")
+                withStyle(SpanStyle(color = gilt, fontWeight = FontWeight.Bold)) {
+                    append("﴿${toArabicIndicNumerals(ayah.numberInSurah)}﴾")
+                }
+                append(" ")
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 30.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Text(
+                pageText,
+                color = ink,
+                style = MaterialTheme.typography.headlineSmall,
+                fontFamily = LocalArabicFontFamily.current,
+                textAlign = TextAlign.Justify,
+                lineHeight = 46.sp,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (showTranslation) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
+            detail.ayahs.forEach { ayah ->
+                if (ayah.translationText.isNotBlank()) {
+                    val isCurrent = currentAyah?.surahNumber == ayah.surahNumber && currentAyah.numberInSurah == ayah.numberInSurah
+                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                        Text(
+                            "${ayah.numberInSurah}. ",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = gilt,
+                        )
+                        Text(
+                            ayah.translationText,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isCurrent) ink else ink.copy(alpha = 0.75f),
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            toArabicIndicNumerals(page),
+            color = gilt,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
 
 /** A double-ruled ornamental frame with small diamond corner accents, echoing an illuminated mushaf page border. */
 @Composable
@@ -162,480 +450,36 @@ private fun MushafPageOrnamentBorder(modifier: Modifier = Modifier, color: Color
 }
 
 /**
- * A "mushaf" (book-style) reading mode: ayahs flow as one continuous justified paragraph on a
- * paper-toned, shadowed page — the way a printed Qur'an page actually looks and reads — instead
- * of the ayah-by-ayah card list [org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen] uses.
- * Reuses the exact same [QuranSectionDetail] data and
- * [org.ferdidrgn.hudaquran.audio.PlaybackManager] queue that screen already relies on — only the
- * visual presentation and page-flipping controls are new.
- *
- * In a wide-enough landscape window it opens as a real two-page spread (right = odd page, left =
- * even page, matching how a physical mushaf actually pairs pages), with a gutter shadow between
- * the pages suggesting the book's binding, instead of one scrolling page.
+ * Previous/next arrows around a tappable page counter. Laid out right-to-left like the pager, so
+ * the "next page" arrow sits on the left — the side the next page comes in from.
  */
 @Composable
-fun MushafPageScreen(
-    pageNumber: Int,
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit,
-    onChangePage: (Int) -> Unit,
-) {
-    DisposableEffect(Unit) {
-        OrientationController.unlock()
-        onDispose { OrientationController.lockPortrait() }
-    }
-
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val isSpread = maxWidth > maxHeight && maxWidth > SPREAD_MIN_WIDTH
-        if (isSpread) {
-            val rightPageNumber = if (pageNumber % 2 == 1) pageNumber else (pageNumber - 1).coerceAtLeast(1)
-            MushafSpreadScreen(
-                rightPageNumber = rightPageNumber,
-                onBack = onBack,
-                onChangeSpread = { newRight -> onChangePage(newRight.coerceAtLeast(1)) },
-            )
-        } else {
-            MushafSinglePageScreen(
-                pageNumber = pageNumber,
-                isLandscape = maxWidth > maxHeight,
-                onBack = onBack,
-                onChangePage = onChangePage,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MushafSinglePageScreen(pageNumber: Int, isLandscape: Boolean, onBack: () -> Unit, onChangePage: (Int) -> Unit) {
-    val repository = AppContainer.repository
-    val preferences = AppContainer.preferences
-    val playback = AppContainer.playbackManager
+private fun MushafPageFooter(page: Int, onPrevious: () -> Unit, onNext: () -> Unit, onCenterClick: () -> Unit) {
     val strings = LocalStrings.current
-
-    var detail by remember(pageNumber) { mutableStateOf<QuranSectionDetail?>(null) }
-    var isLoading by remember(pageNumber) { mutableStateOf(true) }
-    var loadError by remember(pageNumber) { mutableStateOf(false) }
-    var reloadKey by remember(pageNumber) { mutableStateOf(0) }
-    var showTranslation by remember { mutableStateOf(true) }
-    var showJumpDialog by remember { mutableStateOf(false) }
-    var showLandscapeHint by remember { mutableStateOf(!preferences.mushafLandscapeHintSeen) }
-
-    val nowPlaying by playback.nowPlaying.collectAsState()
-    val playerState by playback.playerState.collectAsState()
-
-    val isThisPageQueued = detail != null && nowPlaying?.mode == PlaybackMode.AYAH_QUEUE && nowPlaying?.queue == detail!!.ayahs
-    val currentAyah = if (isThisPageQueued) nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex) else null
-    val isThisPagePlaying = isThisPageQueued && playerState.status == PlaybackStatus.PLAYING
-
-    LaunchedEffect(pageNumber, reloadKey) {
-        isLoading = true
-        loadError = false
-        runCatching {
-            repository.getSectionDetail(SectionKind.PAGE, pageNumber, preferences.selectedTranslation, preferences.selectedReciter)
-        }.onSuccess {
-            detail = it
-            preferences.saveLastMushafPage(pageNumber)
-            preferences.advanceKhatmProgress(pageNumber, TOTAL_MUSHAF_PAGES)
-        }.onFailure { loadError = true }
-        isLoading = false
-    }
-
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BackButton(onBack = onBack)
-            Text(
-                "${strings.sectionSingular(SectionKind.PAGE)} $pageNumber",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).clickable { showJumpDialog = true },
-            )
-            IconButton(onClick = { showTranslation = !showTranslation }) {
-                Icon(
-                    Icons.Filled.Translate,
-                    contentDescription = strings.toggleTranslationLabel,
-                    tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            IconButton(onClick = onPrevious, enabled = page > 1) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
             }
-            val d = detail
-            if (d != null) {
-                IconButton(
-                    onClick = {
-                        if (isThisPageQueued) {
-                            playback.togglePlayPause()
-                        } else {
-                            d.ayahs.firstOrNull()?.let { first ->
-                                playback.playQueue(d.ayahs, 0, first.surahNumber, first.surahName, preferences.selectedReciter)
-                            }
-                        }
-                    },
-                ) {
-                    if (isThisPagePlaying) {
-                        Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-        HorizontalDivider()
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .shadow(
-                    elevation = 16.dp,
-                    shape = PAGE_SHAPE,
-                    ambientColor = Color.Black.copy(alpha = 0.4f),
-                    spotColor = Color.Black.copy(alpha = 0.4f),
-                )
-                .clip(PAGE_SHAPE)
-                .background(paperColor()),
-        ) {
-            MushafPageColumn(
-                detail = detail,
-                isLoading = isLoading,
-                error = loadError,
-                currentAyah = currentAyah,
-                showTranslation = showTranslation,
-                strings = strings,
-                onRetry = { reloadKey++ },
-                modifier = Modifier.fillMaxSize(),
-            )
-            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
-        }
-
-        if (showLandscapeHint) {
-            MushafLandscapeHint(
-                text = strings.mushafLandscapeHintText,
-                dismissLabel = strings.dismissLabel,
-                onDismiss = {
-                    showLandscapeHint = false
-                    preferences.mushafLandscapeHintSeen = true
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-        }
-
-        MushafPageFooter(
-            centerLabel = "$pageNumber",
-            onPrevious = { if (pageNumber > 1) onChangePage(pageNumber - 1) },
-            previousEnabled = pageNumber > 1,
-            onNext = { onChangePage(pageNumber + 1) },
-        )
-    }
-
-    if (showJumpDialog) {
-        MushafPageJumpDialog(
-            initialPage = pageNumber,
-            strings = strings,
-            onDismiss = { showJumpDialog = false },
-            onJump = { target ->
-                showJumpDialog = false
-                onChangePage(target.coerceAtLeast(1))
-            },
-        )
-    }
-}
-
-@Composable
-private fun MushafSpreadScreen(rightPageNumber: Int, onBack: () -> Unit, onChangeSpread: (Int) -> Unit) {
-    val leftPageNumber = rightPageNumber + 1
-    val repository = AppContainer.repository
-    val preferences = AppContainer.preferences
-    val playback = AppContainer.playbackManager
-    val strings = LocalStrings.current
-
-    var rightDetail by remember(rightPageNumber) { mutableStateOf<QuranSectionDetail?>(null) }
-    var leftDetail by remember(leftPageNumber) { mutableStateOf<QuranSectionDetail?>(null) }
-    var rightLoading by remember(rightPageNumber) { mutableStateOf(true) }
-    var leftLoading by remember(leftPageNumber) { mutableStateOf(true) }
-    var rightError by remember(rightPageNumber) { mutableStateOf(false) }
-    var leftError by remember(leftPageNumber) { mutableStateOf(false) }
-    var reloadKey by remember(rightPageNumber) { mutableStateOf(0) }
-    var showTranslation by remember { mutableStateOf(true) }
-    var showJumpDialog by remember { mutableStateOf(false) }
-
-    val nowPlaying by playback.nowPlaying.collectAsState()
-    val playerState by playback.playerState.collectAsState()
-
-    LaunchedEffect(rightPageNumber, reloadKey) {
-        rightLoading = true
-        rightError = false
-        runCatching {
-            repository.getSectionDetail(SectionKind.PAGE, rightPageNumber, preferences.selectedTranslation, preferences.selectedReciter)
-        }.onSuccess {
-            rightDetail = it
-            preferences.saveLastMushafPage(rightPageNumber)
-            // Both pages of the spread are visible at once, so the left (higher-numbered) page
-            // is the honest "furthest read" mark here, not just the right one.
-            preferences.advanceKhatmProgress(leftPageNumber, TOTAL_MUSHAF_PAGES)
-        }.onFailure { rightError = true }
-        rightLoading = false
-    }
-    LaunchedEffect(leftPageNumber, reloadKey) {
-        leftLoading = true
-        leftError = false
-        runCatching {
-            repository.getSectionDetail(SectionKind.PAGE, leftPageNumber, preferences.selectedTranslation, preferences.selectedReciter)
-        }.onSuccess { leftDetail = it }.onFailure { leftError = true }
-        leftLoading = false
-    }
-
-    val combinedAyahs = remember(rightDetail, leftDetail) {
-        (rightDetail?.ayahs.orEmpty()) + (leftDetail?.ayahs.orEmpty())
-    }
-    val isSpreadQueued = combinedAyahs.isNotEmpty() &&
-        nowPlaying?.mode == PlaybackMode.AYAH_QUEUE &&
-        nowPlaying?.queue == combinedAyahs
-    val currentAyah = if (isSpreadQueued) nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex) else null
-    val isSpreadPlaying = isSpreadQueued && playerState.status == PlaybackStatus.PLAYING
-
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // No page title here — landscape/book mode gives that space back to the page itself. The
-        // same page range is still readable (and tappable to jump) in the footer below.
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = { showTranslation = !showTranslation }) {
-                Icon(
-                    Icons.Filled.Translate,
-                    contentDescription = strings.toggleTranslationLabel,
-                    tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (combinedAyahs.isNotEmpty()) {
-                IconButton(
-                    onClick = {
-                        if (isSpreadQueued) {
-                            playback.togglePlayPause()
-                        } else {
-                            combinedAyahs.firstOrNull()?.let { first ->
-                                playback.playQueue(combinedAyahs, 0, first.surahNumber, first.surahName, preferences.selectedReciter)
-                            }
-                        }
-                    },
-                ) {
-                    if (isSpreadPlaying) {
-                        Icon(Icons.Filled.Pause, contentDescription = strings.cdPause, tint = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = strings.cdPlay, tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(20.dp)
-                .shadow(
-                    elevation = 22.dp,
-                    shape = PAGE_SHAPE,
-                    ambientColor = Color.Black.copy(alpha = 0.45f),
-                    spotColor = Color.Black.copy(alpha = 0.45f),
-                )
-                .clip(PAGE_SHAPE)
-                .background(paperColor()),
-        ) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                MushafPageColumn(
-                    detail = rightDetail,
-                    isLoading = rightLoading,
-                    error = rightError,
-                    currentAyah = currentAyah,
-                    showTranslation = showTranslation,
-                    strings = strings,
-                    onRetry = { reloadKey++ },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
-                MushafPageColumn(
-                    detail = leftDetail,
-                    isLoading = leftLoading,
-                    error = leftError,
-                    currentAyah = currentAyah,
-                    showTranslation = showTranslation,
-                    strings = strings,
-                    onRetry = { reloadKey++ },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
-            }
-            // The book's binding: a soft shadow gradient straddling the seam between the two
-            // pages, so the spread reads as one bound book rather than two separate cards.
             Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxHeight()
-                    .width(32.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.14f),
-                                Color.Black.copy(alpha = 0.14f),
-                                Color.Transparent,
-                            ),
-                        ),
-                    ),
-            )
-            MushafPageOrnamentBorder(modifier = Modifier.matchParentSize(), color = giltColor().copy(alpha = 0.55f))
-        }
-
-        MushafPageFooter(
-            centerLabel = "$rightPageNumber–$leftPageNumber",
-            onPrevious = { if (rightPageNumber > 1) onChangeSpread(rightPageNumber - 2) },
-            previousEnabled = rightPageNumber > 1,
-            onNext = { onChangeSpread(rightPageNumber + 2) },
-            onCenterClick = { showJumpDialog = true },
-        )
-    }
-
-    if (showJumpDialog) {
-        MushafPageJumpDialog(
-            initialPage = rightPageNumber,
-            strings = strings,
-            onDismiss = { showJumpDialog = false },
-            onJump = { target ->
-                showJumpDialog = false
-                onChangeSpread(target.coerceAtLeast(1))
-            },
-        )
-    }
-}
-
-/** The scrollable Arabic (+ optional translation) reading area shared by single-page and spread modes. */
-@Composable
-private fun MushafPageColumn(
-    detail: QuranSectionDetail?,
-    isLoading: Boolean,
-    error: Boolean,
-    currentAyah: Ayah?,
-    showTranslation: Boolean,
-    strings: Strings,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-    arabicFontSize: TextUnit = TextUnit.Unspecified,
-    arabicLineHeight: TextUnit = 44.sp,
-) {
-    val ink = inkColor()
-    when {
-        isLoading -> Box(modifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        error || detail == null -> Box(modifier.padding(24.dp), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable(onClick = onCenterClick),
+            ) {
                 Text(
-                    strings.sectionLoadErrorTemplate.replace("{title}", strings.sectionSingular(SectionKind.PAGE)),
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
+                    "$page / $TOTAL_MUSHAF_PAGES",
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                    fontWeight = FontWeight.Bold,
                 )
-                Spacer(Modifier.height(14.dp))
-                Button(onClick = onRetry) { Text(strings.retry) }
             }
-        }
-        else -> {
-            val d = detail!!
-            val highlightColor = MaterialTheme.colorScheme.primaryContainer
-            val gilt = giltColor()
-            val pageText = remember(d, currentAyah?.surahNumber, currentAyah?.numberInSurah, ink, gilt) {
-                buildAnnotatedString {
-                    fun appendAyahEndMark(numberInSurah: Int) {
-                        append(" ")
-                        withStyle(SpanStyle(color = gilt, fontWeight = FontWeight.Bold, background = gilt.copy(alpha = 0.12f))) {
-                            append(" ${toArabicIndicNumerals(numberInSurah)} ")
-                        }
-                        append(" ")
-                    }
-                    d.ayahs.forEach { ayah ->
-                        val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
-                            currentAyah.numberInSurah == ayah.numberInSurah
-                        if (isCurrent) {
-                            withStyle(SpanStyle(background = highlightColor)) {
-                                append(ayah.arabicText)
-                            }
-                        } else {
-                            append(ayah.arabicText)
-                        }
-                        appendAyahEndMark(ayah.numberInSurah)
-                    }
-                }
+            IconButton(onClick = onNext, enabled = page < TOTAL_MUSHAF_PAGES) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = strings.cdNext)
             }
-
-            Column(modifier = modifier.verticalScroll(rememberScrollState()).padding(30.dp)) {
-                Text(
-                    pageText,
-                    color = ink,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontFamily = LocalArabicFontFamily.current,
-                    fontSize = arabicFontSize,
-                    textAlign = TextAlign.Justify,
-                    lineHeight = arabicLineHeight,
-                )
-                if (showTranslation) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
-                    d.ayahs.forEach { ayah ->
-                        if (ayah.translationText.isNotBlank()) {
-                            val isCurrent = currentAyah?.surahNumber == ayah.surahNumber &&
-                                currentAyah.numberInSurah == ayah.numberInSurah
-                            Row(modifier = Modifier.padding(bottom = 10.dp)) {
-                                Text(
-                                    "${ayah.numberInSurah}. ",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Text(
-                                    ayah.translationText,
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isCurrent) ink else ink.copy(alpha = 0.72f),
-                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MushafPageFooter(
-    centerLabel: String,
-    onPrevious: () -> Unit,
-    previousEnabled: Boolean,
-    onNext: () -> Unit,
-    onCenterClick: (() -> Unit)? = null,
-) {
-    val strings = LocalStrings.current
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onPrevious, enabled = previousEnabled) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
-        }
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
-                .let { if (onCenterClick != null) it.clickable(onClick = onCenterClick) else it },
-        ) {
-            Text(
-                centerLabel,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                fontWeight = FontWeight.Bold,
-            )
-        }
-        IconButton(onClick = onNext) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = strings.cdNext)
         }
     }
 }
@@ -649,6 +493,7 @@ private fun MushafPageJumpDialog(
     onJump: (Int) -> Unit,
 ) {
     var input by remember { mutableStateOf(initialPage.toString()) }
+    val target = input.toIntOrNull()?.takeIf { it in 1..TOTAL_MUSHAF_PAGES }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -658,12 +503,14 @@ private fun MushafPageJumpDialog(
                 value = input,
                 onValueChange = { new -> input = new.filter { it.isDigit() }.take(3) },
                 placeholder = { Text(strings.mushafJumpToPageHint) },
+                supportingText = { Text("1 – $TOTAL_MUSHAF_PAGES") },
+                isError = input.isNotEmpty() && target == null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
             )
         },
         confirmButton = {
-            TextButton(onClick = { input.toIntOrNull()?.let { if (it > 0) onJump(it) } }) {
+            TextButton(onClick = { target?.let(onJump) }, enabled = target != null) {
                 Text(strings.goLabel)
             }
         },
@@ -671,50 +518,4 @@ private fun MushafPageJumpDialog(
             TextButton(onClick = onDismiss) { Text(strings.cancelLabel) }
         },
     )
-}
-
-/**
- * A small, self-dismissing "guide" banner shown the first time a reader opens Mushaf mode in
- * portrait, nudging them toward the two-page landscape spread ([MushafSpreadScreen]). The phone
- * glyph rocks between portrait and landscape to visually demonstrate the gesture being suggested,
- * rather than just describing it in text.
- */
-@Composable
-private fun MushafLandscapeHint(
-    text: String,
-    dismissLabel: String,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LaunchedEffect(Unit) {
-        delay(6000)
-        onDismiss()
-    }
-
-    val infiniteTransition = rememberInfiniteTransition(label = "mushafRotateHint")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -90f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "phoneRotation",
-    )
-
-    GlassSurface(modifier = modifier, contentPadding = PaddingValues(14.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Filled.ScreenRotation,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp).graphicsLayer { rotationZ = rotation },
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            IconButton(onClick = onDismiss) {
-                Icon(Icons.Filled.Close, contentDescription = dismissLabel)
-            }
-        }
-    }
 }

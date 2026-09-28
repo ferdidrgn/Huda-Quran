@@ -46,7 +46,8 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -156,9 +157,8 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                             }
                         },
                     )
-                    if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                    if (showAds && showListAdAfter(index, filtered.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
-                    if (showAds) item { AdBannerCard() }
                 }
             }
         }

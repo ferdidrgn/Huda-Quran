@@ -6,6 +6,7 @@
 
 html, body {
     width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -54,6 +55,10 @@ html, body {
     position: relative;
     width: 100%;
     height: calc(100vh - var(--seo-header-height));
+    /* Mobile Safari/Chrome resize the address-bar chrome in and out of `100vh`, so the canvas can
+       end up taller than the visible area and get cropped. `100dvh` tracks the actual visible
+       viewport instead — this line simply overrides the one above in browsers that support it. */
+    height: calc(100dvh - var(--seo-header-height));
     overflow: hidden;
 }
 

@@ -31,7 +31,9 @@ object DeepLink {
 
         return when (segments[0]) {
             "surah" -> {
-                val number = segments.getOrNull(1)?.toIntOrNull() ?: return null
+                // Bare "/surah" is the Surah list's own address (see toPath), so it must parse back.
+                if (segments.size == 1) return Screen.SurahList
+                val number = segments[1].toIntOrNull() ?: return null
                 val ayah = segments.getOrNull(2)?.toIntOrNull()
                 Screen.SurahDetail(number, ayah)
             }
@@ -46,6 +48,7 @@ object DeepLink {
             }
             "mushaf" -> Screen.MushafPage(segments.getOrNull(1)?.toIntOrNull() ?: 1)
             "qibla" -> Screen.Qibla
+            "esmaulhusna" -> Screen.EsmaulHusna
             else -> null
         }
     }
@@ -113,5 +116,6 @@ object DeepLink {
         is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
         is Screen.Qibla -> "/qibla"
+        is Screen.EsmaulHusna -> "/esmaulhusna"
     }
 }

@@ -37,7 +37,8 @@ import kotlinx.coroutines.delay
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -135,9 +136,8 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
                                     modifier = Modifier.padding(top = 4.dp),
                                 )
                             }
-                            if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
+                            if (showAds && showListAdAfter(index, results.size)) ListAdCard(modifier = Modifier.padding(bottom = 10.dp))
                         }
-                        if (showAds) item { AdBannerCard() }
                     }
                 }
             }

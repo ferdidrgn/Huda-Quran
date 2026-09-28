@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -122,13 +123,14 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(16.dp))
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.72f)
+                .align(Alignment.CenterHorizontally)
                 .aspectRatio(1f)
-                .padding(28.dp)
+                .padding(12.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
@@ -136,7 +138,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(36.dp)
+                    .padding(28.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center,
@@ -163,13 +165,36 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
+        val hasDuration = playerState.durationMs > 0
         val durationMs = playerState.durationMs.coerceAtLeast(1L)
         val positionFraction = if (isDragging) dragPosition else (playerState.positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
+        val shownPositionMs = if (isDragging) (dragPosition * durationMs).toLong() else playerState.positionMs
+
+        // A large "elapsed / total" readout while scrubbing, so the target minute is readable
+        // under the thumb instead of only in the small labels below the bar.
+        Box(modifier = Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.Center) {
+            if (isDragging && hasDuration) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 14.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        "${formatMillis(shownPositionMs)} / ${formatMillis(playerState.durationMs)}",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            }
+        }
 
         Slider(
             value = positionFraction,
+            enabled = hasDuration,
             onValueChange = {
                 isDragging = true
                 dragPosition = it
@@ -185,8 +210,8 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             ),
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(formatMillis(if (isDragging) (dragPosition * durationMs).toLong() else playerState.positionMs), style = MaterialTheme.typography.bodyMedium)
-            Text(formatMillis(playerState.durationMs), style = MaterialTheme.typography.bodyMedium)
+            Text(formatMillis(shownPositionMs), style = MaterialTheme.typography.bodyMedium)
+            Text(if (hasDuration) formatMillis(playerState.durationMs) else "--:--", style = MaterialTheme.typography.bodyMedium)
         }
 
         Spacer(Modifier.height(20.dp))

@@ -28,8 +28,13 @@ class DeepLinkTest {
     }
 
     @Test
-    fun surahWithoutNumberIsUnparseable() {
-        assertNull(DeepLink.parse("/surah"))
+    fun surahWithoutNumberOpensSurahList() {
+        assertEquals(Screen.SurahList, DeepLink.parse("/surah"))
+    }
+
+    @Test
+    fun surahWithNonNumericSegmentIsUnparseable() {
+        assertNull(DeepLink.parse("/surah/abc"))
     }
 
     @Test
@@ -88,6 +93,8 @@ class DeepLinkTest {
             Screen.MushafPage(42),
             Screen.SectionDetail(SectionKind.JUZ, 3),
             Screen.TajwidLessonDetail("tajwid-1"),
+            Screen.EsmaulHusna,
+            Screen.SurahList,
         )
         for (screen in screens) {
             val link = DeepLink.buildLink(screen)
