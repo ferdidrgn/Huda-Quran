@@ -1558,7 +1558,7 @@ private fun EsmaChip(esma: EsmaName, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(esma.arabic, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+            Text(esma.arabic, fontSize = 20.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
             Text(
                 esma.name,

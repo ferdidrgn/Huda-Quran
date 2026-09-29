@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Surah
@@ -42,10 +43,12 @@ import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 @Composable
 fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
@@ -144,12 +147,7 @@ private fun SurahRow(surah: Surah, appLanguage: AppLanguage, strings: Strings, o
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(surah.number.toString(), color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
+            StarNumberBadge(surah.number)
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(localizedSurahName(surah.number, surah.englishName, appLanguage), style = MaterialTheme.typography.titleMedium)
                 Text(
@@ -159,7 +157,12 @@ private fun SurahRow(surah: Surah, appLanguage: AppLanguage, strings: Strings, o
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             }
-            Text(surah.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Text(
+                surah.name,
+                fontSize = 22.sp,
+                fontFamily = LocalArabicFontFamily.current,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }

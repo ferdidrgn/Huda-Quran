@@ -34,6 +34,7 @@ import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 /**
@@ -92,7 +93,7 @@ private fun EsmaGridCard(esma: EsmaName, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(esma.arabic, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+            Text(esma.arabic, fontSize = 20.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
             Text(
                 esma.name,
