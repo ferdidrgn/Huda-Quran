@@ -51,7 +51,12 @@ import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
+import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
+import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
+import org.ferdidrgn.hudaquran.ui.dua.DuaListScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
+import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
@@ -103,7 +108,8 @@ private fun isReadingScreen(screen: Screen): Boolean = when (screen) {
     is Screen.SurahDetail, is Screen.SectionDetail, is Screen.AyahTafsir, is Screen.SajdaAyahs,
     is Screen.Settings, is Screen.ReciterPicker, is Screen.TranslationPicker, is Screen.TafsirPicker,
     is Screen.PrayerLocationPicker, is Screen.LanguagePicker, is Screen.TajwidLessonDetail,
-    is Screen.Qibla,
+    is Screen.Qibla, is Screen.EsmaulHusnaDetail, is Screen.ZakatCalculator, is Screen.DuaList,
+    is Screen.IslamicCalendar,
     -> true
     else -> false
 }
@@ -368,7 +374,11 @@ private fun AppDestinationContent(
             onOpenMushafMode = { page -> navigator.navigate(Screen.MushafPage(page)) },
             onOpenQibla = { navigator.navigate(Screen.Qibla) },
             onOpenLesson = { lessonId -> navigator.navigate(Screen.TajwidLessonDetail(lessonId)) },
-            onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusna) },
+            onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
+            onOpenEsmaulHusnaDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+            onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -388,6 +398,9 @@ private fun AppDestinationContent(
             onOpenTafsirPicker = { navigator.navigate(Screen.TafsirPicker) },
             onOpenLocationPicker = { navigator.navigate(Screen.PrayerLocationPicker) },
             onOpenLanguagePicker = { navigator.navigate(Screen.LanguagePicker) },
+            onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
+            onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
         )
 
         is Screen.ReciterPicker -> RecitersScreen(
@@ -535,12 +548,35 @@ private fun AppDestinationContent(
             onPageSettled = { page -> navigator.replaceTop(Screen.MushafPage(page)) },
         )
 
-        is Screen.EsmaulHusna -> EsmaulHusnaScreen(
+        is Screen.Qibla -> QiblaScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
         )
 
-        is Screen.Qibla -> QiblaScreen(
+        is Screen.EsmaulHusnaList -> EsmaulHusnaScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
+        )
+
+        is Screen.EsmaulHusnaDetail -> EsmaulHusnaDetailScreen(
+            index = screen.index,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onChangeIndex = { newIndex -> navigator.replaceTop(Screen.EsmaulHusnaDetail(newIndex)) },
+        )
+
+        is Screen.ZakatCalculator -> ZakatCalculatorScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.DuaList -> DuaListScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.IslamicCalendar -> IslamicCalendarScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
         )

@@ -49,8 +49,12 @@ fun IslamicMotifBackground(modifier: Modifier = Modifier, tint: Color = Color.Wh
     }
 }
 
-/** A classic eight-pointed star polygon: 16 vertices alternating between an outer and inner radius. */
-private fun eightPointStarPath(center: Offset, outerRadius: Float, innerRadius: Float, rotationDeg: Float): Path {
+/**
+ * A classic eight-pointed star polygon: 16 vertices alternating between an outer and inner radius.
+ * Internal (not private) so [org.ferdidrgn.hudaquran.ui.components.GlassSurface] can reuse the same
+ * motif as a corner flourish, keeping every card's ornament visually identical to this background.
+ */
+internal fun eightPointStarPath(center: Offset, outerRadius: Float, innerRadius: Float, rotationDeg: Float): Path {
     val path = Path()
     val totalPoints = 16
     for (i in 0 until totalPoints) {

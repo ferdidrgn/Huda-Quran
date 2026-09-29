@@ -98,7 +98,8 @@ class DeepLinkTest {
             Screen.MushafPage(42),
             Screen.SectionDetail(SectionKind.JUZ, 3),
             Screen.TajwidLessonDetail("tajwid-1"),
-            Screen.EsmaulHusna,
+            Screen.EsmaulHusnaList,
+            Screen.EsmaulHusnaDetail(7),
             Screen.SurahList,
         )
         for (screen in screens) {

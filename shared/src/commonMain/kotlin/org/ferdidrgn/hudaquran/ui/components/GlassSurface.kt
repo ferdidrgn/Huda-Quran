@@ -21,14 +21,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
+import org.ferdidrgn.hudaquran.ui.theme.Gilt
+import org.ferdidrgn.hudaquran.ui.theme.GiltBright
 
 /**
  * The app's signature card: translucent surface, hairline border, soft shadow — a deliberate
@@ -74,6 +81,29 @@ fun GlassSurface(
         .clip(shape)
         .background(containerColor)
         .border(BorderStroke(1.dp, borderColor), shape)
+        .drawWithContent {
+            drawContent()
+            // A thin gilt accent line fading in from both edges — the same ornamental language as
+            // the Mushaf page border, so every card in the app reads as part of one identity.
+            val accentHeight = 2.dp.toPx()
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    listOf(Gilt.copy(alpha = 0f), GiltBright.copy(alpha = 0.55f), Gilt.copy(alpha = 0f)),
+                ),
+                topLeft = Offset(size.width * 0.08f, 0f),
+                size = Size(size.width * 0.84f, accentHeight),
+            )
+            // A tiny eight-point star flourish in the top-right corner, echoing the ambient
+            // IslamicMotifBackground pattern at card scale.
+            val starOuter = 7.dp.toPx()
+            val starInner = starOuter * 0.42f
+            val starCenter = Offset(size.width - 14.dp.toPx(), 14.dp.toPx())
+            drawPath(
+                path = eightPointStarPath(starCenter, starOuter, starInner, 0f),
+                color = GiltBright.copy(alpha = 0.35f),
+                style = Stroke(width = 1.dp.toPx()),
+            )
+        }
     val interactive = if (onClick != null) {
         base
             .hoverable(interactionSource)

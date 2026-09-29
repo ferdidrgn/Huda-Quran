@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,6 +80,7 @@ import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import kotlinx.datetime.Clock
@@ -102,6 +105,10 @@ fun HomeScreen(
     onOpenSectionDetail: (SectionKind, Int) -> Unit,
     onOpenLesson: (String) -> Unit,
     onOpenEsmaulHusna: () -> Unit,
+    onOpenEsmaulHusnaDetail: (Int) -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -111,6 +118,7 @@ fun HomeScreen(
     val lastMushafPage by preferences.lastMushafPage.collectAsState()
     val khatmFurthestPage by preferences.khatmFurthestPage.collectAsState()
     val khatmCompletedCount by preferences.khatmCompletedCount.collectAsState()
+    val readingStreak by preferences.readingStreak.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -173,6 +181,7 @@ fun HomeScreen(
             lastRead = lastRead,
             khatmFurthestPage = khatmFurthestPage,
             khatmCompletedCount = khatmCompletedCount,
+            readingStreak = readingStreak,
             dailyAyah = dailyAyah,
             isLoadingDaily = isLoadingDaily,
             onRefreshDaily = { isLoadingDaily = true },
@@ -189,6 +198,10 @@ fun HomeScreen(
             onOpenReciters = onOpenReciters,
             onOpenSettings = onOpenSettings,
             onOpenEsmaulHusna = onOpenEsmaulHusna,
+            onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
+            onOpenDuaList = onOpenDuaList,
+            onOpenZakatCalculator = onOpenZakatCalculator,
+            onOpenIslamicCalendar = onOpenIslamicCalendar,
         )
         return
     }
@@ -217,6 +230,37 @@ fun HomeScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (readingStreak >= 2) {
+                        Text(
+                            "🔥 " + strings.streakDaysTemplate.replace("{n}", readingStreak.toString()),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(1) {
+                val uriHandler = LocalUriHandler.current
+                Column {
+                    SectionHeader(strings.quickActionsTitle)
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
+                        item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                        item {
+                            QuickAction(
+                                "🕋",
+                                strings.hacKuraLabel,
+                                onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+                            )
+                        }
+                        item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                        item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+                    }
                 }
             }
         }
@@ -385,8 +429,8 @@ fun HomeScreen(
                     SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(esmaulHusna, key = { it.name }) { esma ->
-                            EsmaChip(esma, onClick = onOpenEsmaulHusna)
+                        itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
+                            EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
                         }
                     }
                 }
@@ -561,6 +605,7 @@ private fun WebHomeContent(
     lastRead: LastRead?,
     khatmFurthestPage: Int,
     khatmCompletedCount: Int,
+    readingStreak: Int,
     dailyAyah: DailyAyah?,
     isLoadingDaily: Boolean,
     onRefreshDaily: () -> Unit,
@@ -577,6 +622,10 @@ private fun WebHomeContent(
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenEsmaulHusna: () -> Unit,
+    onOpenEsmaulHusnaDetail: (Int) -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -593,7 +642,27 @@ private fun WebHomeContent(
             onCtaClick = onOpenSurahList,
             searchPlaceholder = strings.searchAyahPlaceholder,
             onSearchClick = onOpenSearch,
+            streakText = if (readingStreak >= 2) strings.streakDaysTemplate.replace("{n}", readingStreak.toString()) else null,
         )
+
+        Column {
+            val uriHandler = LocalUriHandler.current
+            SectionHeader(strings.quickActionsTitle)
+            Spacer(Modifier.height(10.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
+                item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                item {
+                    QuickAction(
+                        "🕋",
+                        strings.hacKuraLabel,
+                        onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+                    )
+                }
+                item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+            }
+        }
 
         WebContinueSection(
             strings = strings,
@@ -617,16 +686,6 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
         )
 
-        Column {
-            SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
-            Spacer(Modifier.height(10.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(esmaulHusna, key = { it.name }) { esma ->
-                    EsmaChip(esma, onClick = onOpenEsmaulHusna)
-                }
-            }
-        }
-
         WebBrowseSection(
             strings = strings,
             surahs = surahs,
@@ -634,6 +693,16 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
             onOpenSectionDetail = onOpenSectionDetail,
         )
+
+        Column {
+            SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
+            Spacer(Modifier.height(10.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
+                    EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
+                }
+            }
+        }
 
         Column {
             SectionHeader(strings.discoverQuranTitle)
@@ -1037,6 +1106,7 @@ private fun WebHomeHero(
     onCtaClick: () -> Unit,
     searchPlaceholder: String,
     onSearchClick: () -> Unit,
+    streakText: String?,
 ) {
     Box(
         modifier = Modifier
@@ -1059,6 +1129,15 @@ private fun WebHomeHero(
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.75f),
             )
+            if (streakText != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "🔥 $streakText",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
             Spacer(Modifier.height(24.dp))
             Row(
                 modifier = Modifier
@@ -1253,29 +1332,6 @@ private fun ReadingProgressCard(
                 strings.khatmCompletedCountTemplate.replace("{n}", khatmCompletedCount.toString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SectionHeader(
-    title: String,
-    actionLabel: String? = null,
-    onAction: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        if (actionLabel != null && onAction != null) {
-            Text(
-                actionLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(onClick = onAction),
             )
         }
     }

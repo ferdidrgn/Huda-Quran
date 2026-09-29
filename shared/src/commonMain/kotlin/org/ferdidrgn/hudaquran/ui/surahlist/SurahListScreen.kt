@@ -43,6 +43,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -77,7 +78,13 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Text(
             strings.navSurahs,
             style = MaterialTheme.typography.headlineMedium,
@@ -125,6 +132,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                     }
                 }
             }
+        }
         }
     }
 }

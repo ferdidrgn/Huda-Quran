@@ -51,6 +51,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private val speedOptions = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
@@ -90,10 +91,16 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     var isDragging by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableStateOf(0f) }
 
-    Column(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()).padding(20.dp),
-    ) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState()).padding(20.dp),
+        ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Box(
                 modifier = Modifier
@@ -271,6 +278,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             AdBannerCard()
         }
+    }
     }
 }
 
