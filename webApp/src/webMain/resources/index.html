@@ -249,5 +249,43 @@
     </footer>
 
     <script type="application/javascript" src="webApp.js"></script>
+    <script>
+        // The SEO header/footer above and below #compose-target are always in the DOM (see the
+        // comment at the top of <body> for why) — but a real user should only ever see them for
+        // the instant before the app paints, not permanently. ComposeViewport injects a <canvas>
+        // into #compose-target once it successfully mounts; watch for that and only then push
+        // the fallback content off-screen (.seo-fallback--dismissed, not display:none — see the
+        // comment on that class in styles.css for why it has to stay that way for crawlers).
+        // If the canvas never appears (an unsupported browser, a load failure, ...) this simply
+        // never fires and the fallback content stays visible and readable, which is the correct
+        // behavior for that case too.
+        (function () {
+            var target = document.getElementById('compose-target');
+            if (!target) return;
+
+            function dismissFallback() {
+                var header = document.getElementById('seo-header');
+                var footer = document.getElementById('seo-footer');
+                if (header) header.classList.add('seo-fallback--dismissed');
+                if (footer) footer.classList.add('seo-fallback--dismissed');
+                // #compose-target's height reserves space for #seo-header (see styles.css); once
+                // the header is pushed off-screen, reclaim that space for the app.
+                document.documentElement.style.setProperty('--seo-header-height', '0px');
+            }
+
+            if (target.querySelector('canvas')) {
+                dismissFallback();
+                return;
+            }
+
+            var observer = new MutationObserver(function () {
+                if (target.querySelector('canvas')) {
+                    dismissFallback();
+                    observer.disconnect();
+                }
+            });
+            observer.observe(target, { childList: true });
+        })();
+    </script>
 </body>
 </html>
