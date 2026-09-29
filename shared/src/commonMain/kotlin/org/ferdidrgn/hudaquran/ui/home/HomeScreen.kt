@@ -32,6 +32,24 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.ConfirmationNumber
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.ImportContacts
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.outlined.ViewModule
+import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.border
@@ -54,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -246,17 +265,17 @@ fun HomeScreen(
                     SectionHeader(strings.quickActionsTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
-                        item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                        item { QuickAction(Icons.Outlined.Explore, strings.qiblaTitle, onClick = onOpenQibla) }
+                        item { QuickAction(Icons.Outlined.VolunteerActivism, strings.duaListTitle, onClick = onOpenDuaList) }
                         item {
                             QuickAction(
-                                "🕋",
+                                Icons.Outlined.ConfirmationNumber,
                                 strings.hacKuraLabel,
                                 onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
                             )
                         }
-                        item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
-                        item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+                        item { QuickAction(Icons.Outlined.Calculate, strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                        item { QuickAction(Icons.Outlined.Event, strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
                     }
                 }
             }
@@ -278,16 +297,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📖", strings.navSurahs, "+", onClick = onOpenSurahList)
+                            ArtisticQuickActionCard(Icons.Outlined.AutoStories, strings.navSurahs, onClick = onOpenSurahList)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🔢", strings.juz, "+", onClick = onOpenJuzList)
+                            ArtisticQuickActionCard(Icons.Outlined.ViewModule, strings.juz, onClick = onOpenJuzList)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📜", strings.mushafModeLabel, "+", onClick = { onOpenMushafMode(lastMushafPage ?: 1) })
+                            ArtisticQuickActionCard(Icons.Outlined.ImportContacts, strings.mushafModeLabel, onClick = { onOpenMushafMode(lastMushafPage ?: 1) })
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("✨", strings.esmaulHusnaTitle, "+", onClick = onOpenEsmaulHusna)
+                            ArtisticQuickActionCard(Icons.Outlined.AutoAwesome, strings.esmaulHusnaTitle, onClick = onOpenEsmaulHusna)
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -296,16 +315,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🔍", strings.search, "+", onClick = onOpenSearch)
+                            ArtisticQuickActionCard(Icons.Outlined.Search, strings.search, onClick = onOpenSearch)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🎙️", strings.reciters, "+", onClick = onOpenReciters)
+                            ArtisticQuickActionCard(Icons.Outlined.Mic, strings.reciters, onClick = onOpenReciters)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📝", strings.readingLessonsTitle, "+", onClick = onOpenArabicAlphabet)
+                            ArtisticQuickActionCard(Icons.Outlined.School, strings.readingLessonsTitle, onClick = onOpenArabicAlphabet)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("⭐", strings.navFavorites, "+", onClick = onOpenFavorites)
+                            ArtisticQuickActionCard(Icons.Outlined.FavoriteBorder, strings.navFavorites, onClick = onOpenFavorites)
                         }
                     }
                 }
@@ -319,11 +338,11 @@ fun HomeScreen(
                     SectionHeader("Kur'an Detayları & Bölümleri")
                     Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
-                        item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                        item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
-                        item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                        item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+                        item { QuickAction(Icons.Outlined.Description, strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                        item { QuickAction(Icons.Outlined.DateRange, strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                        item { QuickAction(Icons.Outlined.Book, strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                        item { QuickAction(Icons.Outlined.BookmarkBorder, strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                        item { QuickAction(Icons.Outlined.SelfImprovement, strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
                     }
                 }
             }
@@ -607,36 +626,40 @@ private fun HomeHero(
 }
 
 @Composable
-private fun ArtisticQuickActionCard(emoji: String, label: String, badge: String, onClick: () -> Unit) {
+private fun ArtisticQuickActionCard(icon: ImageVector, label: String, onClick: () -> Unit) {
     GlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 6.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(contentAlignment = Alignment.TopEnd) {
-                Text(emoji, fontSize = 24.sp)
-                Text(
-                    badge,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 14.dp)
-                )
-            }
-            Spacer(Modifier.height(4.dp))
+            ActionIconBadge(icon)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+/** The icon treatment shared by every Home shortcut: a tonal circle in the theme's secondary container. */
+@Composable
+private fun ActionIconBadge(icon: ImageVector) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -705,17 +728,17 @@ private fun WebHomeContent(
             SectionHeader(strings.quickActionsTitle)
             Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
-                item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                item { QuickAction(Icons.Outlined.Explore, strings.qiblaTitle, onClick = onOpenQibla) }
+                item { QuickAction(Icons.Outlined.VolunteerActivism, strings.duaListTitle, onClick = onOpenDuaList) }
                 item {
                     QuickAction(
-                        "🕋",
+                        Icons.Outlined.ConfirmationNumber,
                         strings.hacKuraLabel,
                         onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
                     )
                 }
-                item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
-                item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+                item { QuickAction(Icons.Outlined.Calculate, strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                item { QuickAction(Icons.Outlined.Event, strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
             }
         }
 
@@ -763,11 +786,11 @@ private fun WebHomeContent(
             SectionHeader(strings.discoverQuranTitle)
             Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
-                item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
-                item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+                item { QuickAction(Icons.Outlined.Description, strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                item { QuickAction(Icons.Outlined.DateRange, strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                item { QuickAction(Icons.Outlined.Book, strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                item { QuickAction(Icons.Outlined.BookmarkBorder, strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                item { QuickAction(Icons.Outlined.SelfImprovement, strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
             }
         }
 
@@ -1472,9 +1495,9 @@ private fun StatBento(
 }
 
 @Composable
-private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
+private fun QuickAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     GlassSurface(
-        modifier = Modifier.width(88.dp),
+        modifier = Modifier.width(92.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
@@ -1482,13 +1505,14 @@ private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 24.sp)
-            Spacer(Modifier.height(6.dp))
+            ActionIconBadge(icon)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
