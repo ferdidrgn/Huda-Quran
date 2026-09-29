@@ -1,13 +1,15 @@
+/* Sakura dusk palette — the same tokens as the app's default theme (ui/theme/Color.kt), so the
+   loading shell and the app read as one surface. The "gilt" names are kept for the accent role. */
 :root {
     --seo-header-height: 52px;
-    --canvas: #0a140f;
-    --surface: #14231c;
-    --surface-2: #1e3227;
-    --ink: #f3eedf;
-    --ink-muted: #a9b3a6;
-    --gilt: #d4b36a;
-    --gilt-bright: #e7cc8f;
-    --emerald: #1f9e6c;
+    --canvas: #1b0c1a;
+    --surface: #2d222f;
+    --surface-2: #4b2138;
+    --ink: #fadcd5;
+    --ink-muted: #c4a9b1;
+    --gilt: #d9a7b4;
+    --gilt-bright: #fadcd5;
+    --emerald: #6d3c52;
 }
 
 html, body {
@@ -34,7 +36,7 @@ html, body {
     gap: 10px;
     overflow: hidden;
     background: var(--canvas);
-    border-bottom: 1px solid rgba(212, 179, 106, 0.18);
+    border-bottom: 1px solid rgba(250, 220, 213, 0.18);
     color: var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -84,7 +86,7 @@ html, body {
 }
 
 #seo-loading-spinner circle:first-child {
-    stroke: rgba(212, 179, 106, 0.2);
+    stroke: rgba(250, 220, 213, 0.2);
 }
 
 #seo-loading-spinner circle:last-child {
@@ -155,14 +157,14 @@ html, body {
     padding: 8px 12px;
     border-radius: 10px;
     background: var(--surface);
-    border: 1px solid rgba(212, 179, 106, 0.14);
+    border: 1px solid rgba(250, 220, 213, 0.14);
     font-size: 13px;
     line-height: 1.5;
 }
 
 #seo-surah-list a:hover {
     background: var(--surface-2);
-    border-color: rgba(212, 179, 106, 0.4);
+    border-color: rgba(250, 220, 213, 0.4);
 }
 
 #seo-nav-list {
@@ -191,13 +193,13 @@ html, body {
     padding: 6px 14px;
     border-radius: 999px;
     background: var(--surface);
-    border: 1px solid rgba(212, 179, 106, 0.14);
+    border: 1px solid rgba(250, 220, 213, 0.14);
     font-size: 13px;
 }
 
 #seo-nav-list a:hover {
     background: var(--surface-2);
-    border-color: rgba(212, 179, 106, 0.4);
+    border-color: rgba(250, 220, 213, 0.4);
     border-bottom: none;
 }
 
@@ -205,7 +207,7 @@ html, body {
     max-width: 760px;
     margin: 0 auto;
     font-size: 12px;
-    color: rgba(169, 179, 166, 0.6);
+    color: rgba(196, 169, 177, 0.7);
 }
 
 @media (max-width: 640px) {

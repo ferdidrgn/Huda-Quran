@@ -8,8 +8,11 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,14 +81,28 @@ private val LightColors = lightColorScheme(
     onError = Color(0xFFFFFFFF),
 )
 
-private val HudaTypography = Typography(
-    headlineMedium = TextStyle(fontWeight = FontWeight.ExtraBold, fontSize = 30.sp, letterSpacing = (-0.4).sp),
-    titleLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 21.sp, letterSpacing = (-0.2).sp),
-    titleMedium = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 17.sp),
-    bodyLarge = TextStyle(fontSize = 16.sp),
-    bodyMedium = TextStyle(fontSize = 13.5.sp),
-    labelLarge = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
-)
+/**
+ * Headings (display/headline/titleLarge) use [display] — an inscriptional face with a single
+ * weight, so synthesis is off: a caller's `fontWeight = Bold` keeps the true letterforms instead of
+ * a smeared faux-bold. Everything read in quantity stays in the platform face.
+ */
+private fun hudaTypography(display: FontFamily): Typography {
+    val heading = TextStyle(fontFamily = display, fontSynthesis = FontSynthesis.None)
+    return Typography(
+        displaySmall = heading.copy(fontSize = 36.sp, lineHeight = 44.sp),
+        headlineLarge = heading.copy(fontSize = 32.sp, lineHeight = 40.sp),
+        headlineMedium = heading.copy(fontSize = 28.sp, lineHeight = 36.sp),
+        headlineSmall = heading.copy(fontSize = 24.sp, lineHeight = 32.sp),
+        titleLarge = heading.copy(fontSize = 22.sp, lineHeight = 28.sp),
+        titleMedium = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp, letterSpacing = 0.1.sp),
+        titleSmall = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+        bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 26.sp),
+        bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
+        bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 17.sp),
+        labelLarge = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp),
+        labelMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 16.sp),
+    )
+}
 
 private val HudaShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
@@ -96,16 +113,21 @@ private val HudaShapes = Shapes(
 )
 
 @Composable
-fun HudaQuranTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
+fun HudaQuranTheme(
+    themeMode: ThemeMode = ThemeMode.SAKURA,
+    displayFontFamily: FontFamily = FontFamily.Default,
+    content: @Composable () -> Unit,
+) {
     val colors = when (themeMode) {
         ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) DarkColors else LightColors
         ThemeMode.LIGHT -> LightColors
         ThemeMode.DARK -> DarkColors
         ThemeMode.SAKURA -> SakuraColors
     }
+    val typography = remember(displayFontFamily) { hudaTypography(displayFontFamily) }
     MaterialTheme(
         colorScheme = colors,
-        typography = HudaTypography,
+        typography = typography,
         shapes = HudaShapes,
         content = content,
     )

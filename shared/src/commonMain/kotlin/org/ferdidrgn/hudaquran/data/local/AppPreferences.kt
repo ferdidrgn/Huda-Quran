@@ -101,8 +101,8 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         set(value) = settings.putString(KEY_TAFSIR, value)
 
     private fun loadThemeMode(): ThemeMode =
-        runCatching { ThemeMode.valueOf(settings.getString(KEY_THEME, ThemeMode.SYSTEM.name)) }
-            .getOrDefault(ThemeMode.SYSTEM)
+        runCatching { ThemeMode.valueOf(settings.getString(KEY_THEME, ThemeMode.SAKURA.name)) }
+            .getOrDefault(ThemeMode.SAKURA)
 
     private val _themeMode = MutableStateFlow(loadThemeMode())
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()

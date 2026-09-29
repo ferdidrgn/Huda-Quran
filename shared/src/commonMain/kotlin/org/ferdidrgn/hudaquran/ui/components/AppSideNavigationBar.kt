@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,12 +76,12 @@ fun AppSideNavigationBar(
 
                     if (expanded) {
                         Row(modifier = itemModifier, verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier.background(Color.Transparent, CircleShape),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(tab.emoji, fontSize = 18.sp)
-                            }
+                            Icon(
+                                if (selected) tab.selectedIcon else tab.icon,
+                                contentDescription = null,
+                                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(22.dp),
+                            )
                             Text(
                                 tab.label,
                                 fontSize = 14.sp,
@@ -90,7 +92,12 @@ fun AppSideNavigationBar(
                         }
                     } else {
                         Column(modifier = itemModifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(tab.emoji, fontSize = 18.sp)
+                            Icon(
+                                if (selected) tab.selectedIcon else tab.icon,
+                                contentDescription = null,
+                                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(22.dp),
+                            )
                             Text(
                                 tab.label,
                                 fontSize = 10.sp,
