@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Dua
 import org.ferdidrgn.hudaquran.domain.model.duaList
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
@@ -43,8 +45,13 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            val showAds = !AppContainer.preferences.isAdFree()
             val grouped = duaList.groupBy { it.category }
+            val midCategory = grouped.keys.elementAtOrNull(grouped.size / 2)
             grouped.forEach { (category, duas) ->
+                if (showAds && category == midCategory && grouped.size > 1) {
+                    item(key = "ad_mid") { AdBannerCard() }
+                }
                 item(key = "header-$category") {
                     Text(
                         category,
@@ -55,6 +62,7 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
                 items(duas, key = { it.id }) { dua -> DuaCard(dua) }
             }
+            if (showAds) item(key = "ad_end") { AdBannerCard() }
         }
     }
     }

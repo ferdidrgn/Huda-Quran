@@ -85,8 +85,6 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.ferdidrgn.hudaquran.ads.BannerAdView
-import org.ferdidrgn.hudaquran.ads.NativeAdCard
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.LastRead
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
@@ -107,8 +105,10 @@ import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
@@ -469,12 +469,7 @@ fun HomeScreen(
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(7) {
-                    GlassSurface(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(8.dp)
-                    ) {
-                        NativeAdCard(modifier = Modifier.fillMaxWidth())
-                    }
+                    ListAdCard()
                 }
             }
         }
@@ -568,12 +563,7 @@ fun HomeScreen(
 
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(8.dp)
-                ) {
-                    BannerAdView(modifier = Modifier.fillMaxWidth())
-                }
+                AdBannerCard()
             }
         }
     }
