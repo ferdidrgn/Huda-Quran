@@ -24,8 +24,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,35 +48,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
-import kotlin.math.cos
-import kotlin.math.sin
+import org.ferdidrgn.hudaquran.ui.theme.SakuraBlossom
+import org.ferdidrgn.hudaquran.ui.theme.SakuraInk
+import org.ferdidrgn.hudaquran.ui.theme.SakuraMauve
+import org.ferdidrgn.hudaquran.ui.theme.SakuraPlum
+import org.ferdidrgn.hudaquran.ui.theme.SakuraWine
 
 private data class OnboardingPage(
-    val emoji: String,
+    val icon: ImageVector,
     val title: String,
     val description: String,
     val accent: Color,
 )
 
 private fun pagesFor(strings: Strings) = listOf(
-    OnboardingPage(emoji = "📖", title = strings.onboardTitle1, description = strings.onboardDesc1, accent = Color(0xFF3FBF8F)),
-    OnboardingPage(emoji = "🎧", title = strings.onboardTitle2, description = strings.onboardDesc2, accent = Color(0xFFE0A840)),
-    OnboardingPage(emoji = "🌍", title = strings.onboardTitle3, description = strings.onboardDesc3, accent = Color(0xFF5B8FE0)),
-    OnboardingPage(emoji = "⭐", title = strings.onboardTitle4, description = strings.onboardDesc4, accent = Color(0xFFD8677B)),
+    OnboardingPage(icon = Icons.Outlined.AutoStories, title = strings.onboardTitle1, description = strings.onboardDesc1, accent = SakuraPlum),
+    OnboardingPage(icon = Icons.Outlined.Headphones, title = strings.onboardTitle2, description = strings.onboardDesc2, accent = Color(0xFF9B5A74)),
+    OnboardingPage(icon = Icons.Outlined.Language, title = strings.onboardTitle3, description = strings.onboardDesc3, accent = SakuraMauve),
+    OnboardingPage(icon = Icons.Outlined.FavoriteBorder, title = strings.onboardTitle4, description = strings.onboardDesc4, accent = Color(0xFFB0707F)),
 )
 
-// A fixed dark, brand-green backdrop regardless of the user's chosen app theme — onboarding is a
-// one-time, branded first impression (same reasoning as the splash screen's fixed dark green),
-// not a place that should shift with a light/dark preference the user hasn't even set yet.
-private val HeroTop = Color(0xFF102A20)
-private val HeroBottom = Color(0xFF04100B)
-private val Gilt = Color(0xFFD4B36A)
+// A fixed Sakura dusk backdrop regardless of the user's chosen app theme — onboarding is a
+// one-time, branded first impression in the app's main palette (same as the splash screen), not a
+// place that should shift with a light/dark preference the user hasn't even set yet.
+private val HeroTop = SakuraWine
+private val HeroBottom = SakuraInk
+private val Gilt = SakuraBlossom
 
 /**
  * A full-bleed, motif-driven onboarding: a slowly-turning field of Islamic eight-point stars
@@ -117,7 +129,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                         .padding(horizontal = 14.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("🕌", fontSize = 13.sp)
+                    Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = Gilt, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(
                         "Huda Kur'an",
@@ -135,7 +147,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 val item = pages[page]
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
                     Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        OnboardingArchMedallion(emoji = item.emoji, accent = item.accent, stepLabel = "${page + 1}/${pages.size}")
+                        OnboardingArchMedallion(icon = item.icon, accent = item.accent, stepLabel = "${page + 1}/${pages.size}")
                     }
                     Spacer(Modifier.height(28.dp))
                     Text(
@@ -176,7 +188,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(58.dp),
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Gilt, contentColor = Color(0xFF1A1207)),
+                colors = ButtonDefaults.buttonColors(containerColor = Gilt, contentColor = SakuraInk),
             ) {
                 Text(
                     if (isLastPage) strings.onboardingStart else strings.onboardingNext,
@@ -191,7 +203,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 
 /** A pointed-arch (mihrab silhouette) medallion holding the page's icon, with a colored glow and a gold rim. */
 @Composable
-private fun OnboardingArchMedallion(emoji: String, accent: Color, stepLabel: String) {
+private fun OnboardingArchMedallion(icon: ImageVector, accent: Color, stepLabel: String) {
     Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f), contentAlignment = Alignment.BottomCenter) {
         Box(
             modifier = Modifier
@@ -202,7 +214,7 @@ private fun OnboardingArchMedallion(emoji: String, accent: Color, stepLabel: Str
             Canvas(modifier = Modifier.fillMaxSize()) { drawPointedArch(fillColor = Color.White.copy(alpha = 0.05f), strokeColor = Gilt.copy(alpha = 0.55f)) }
 
             Canvas(modifier = Modifier.size(240.dp)) { drawOrnamentalRosette(accent = accent) }
-            Text(emoji, fontSize = 132.sp)
+            Icon(icon, contentDescription = null, tint = Gilt, modifier = Modifier.size(104.dp))
 
             Box(
                 modifier = Modifier

@@ -30,9 +30,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Book
@@ -71,7 +75,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -374,14 +377,14 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         value = favorites.size.toString(),
                         label = strings.favoriteLabel,
-                        emoji = "⭐",
+                        icon = Icons.Filled.Favorite,
                         onClick = onOpenFavorites,
                     )
                     StatBento(
                         modifier = Modifier.weight(1f),
                         value = (meta?.juzCount ?: 30).toString(),
                         label = strings.statJuz,
-                        emoji = "🔢",
+                        icon = Icons.Outlined.ViewModule,
                         accent = true,
                         onClick = onOpenJuzList,
                     )
@@ -402,10 +405,16 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            "🔄",
-                            fontSize = 16.sp,
-                            modifier = Modifier.clickable { isLoadingDaily = true })
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .clickable { isLoadingDaily = true }
+                                .padding(12.dp),
+                        )
                     }
                     Spacer(Modifier.height(10.dp))
                     when {
@@ -600,15 +609,7 @@ private fun HomeHero(
             )
             if (streakText != null) {
                 Spacer(Modifier.height(12.dp))
-                Text(
-                    "🔥 $streakText",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.primary,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(scheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                )
+                StreakChip(streakText)
             }
             Spacer(Modifier.height(22.dp))
             Button(
@@ -828,7 +829,7 @@ private fun WebContinueSection(
                 },
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(emoji = "▶️")
+                    IconBubble(icon = Icons.Filled.PlayArrow)
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -854,7 +855,7 @@ private fun WebContinueSection(
                 onClick = { onOpenMushafMode(1) },
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(emoji = "🎯", accent = true)
+                    IconBubble(icon = Icons.Outlined.AutoStories, accent = true)
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -1205,15 +1206,7 @@ private fun WebHomeHero(
             Text(subtitle, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurface.copy(alpha = 0.78f))
             if (streakText != null) {
                 Spacer(Modifier.height(14.dp))
-                Text(
-                    "🔥 $streakText",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.primary,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(scheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                )
+                StreakChip(streakText)
             }
             Spacer(Modifier.height(28.dp))
             Row(
@@ -1326,7 +1319,7 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                         )
                     }
                 }
-                IconBubble(emoji = "🕌", accent = true)
+                IconBubble(icon = Icons.Outlined.AccessTime, accent = true)
             }
             Spacer(Modifier.height(14.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1370,7 +1363,7 @@ private fun ReadingProgressCard(
                     .clickable { onOpenSurah(lastRead.surahNumber, lastRead.numberInSurah) },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconBubble(emoji = "▶️")
+                IconBubble(icon = Icons.Filled.PlayArrow)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -1398,7 +1391,7 @@ private fun ReadingProgressCard(
             modifier = Modifier.fillMaxWidth().clickable { onOpenMushafMode(lastMushafPage ?: 1) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconBubble(emoji = "📖", accent = true)
+            IconBubble(icon = Icons.Outlined.AutoStories, accent = true)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1449,7 +1442,7 @@ private fun ReadingProgressCard(
 }
 
 @Composable
-private fun IconBubble(emoji: String, accent: Boolean = false) {
+private fun IconBubble(icon: ImageVector, accent: Boolean = false) {
     Box(
         modifier = Modifier
             .size(44.dp)
@@ -1461,7 +1454,29 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, fontSize = 20.sp)
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (accent) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+/** Reading-streak pill: a flame glyph and the "N günlük seri" text in the accent colour. */
+@Composable
+private fun StreakChip(text: String) {
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(scheme.primary.copy(alpha = 0.12f))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(text, style = MaterialTheme.typography.labelLarge, color = scheme.primary)
     }
 }
 
@@ -1469,13 +1484,13 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
 private fun StatBento(
     value: String,
     label: String,
-    emoji: String,
+    icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     accent: Boolean = false,
 ) {
     GlassSurface(modifier = modifier.fillMaxWidth(), onClick = onClick) {
-        IconBubble(emoji = emoji, accent = accent)
+        IconBubble(icon = icon, accent = accent)
         Spacer(Modifier.height(12.dp))
         Text(
             value,
