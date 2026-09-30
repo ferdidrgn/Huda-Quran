@@ -5,12 +5,14 @@ import org.ferdidrgn.hudaquran.audio.PlaybackManager
 import org.ferdidrgn.hudaquran.data.local.AppPreferences
 import org.ferdidrgn.hudaquran.data.repository.PrayerRepository
 import org.ferdidrgn.hudaquran.data.repository.QuranRepository
+import org.ferdidrgn.hudaquran.data.repository.ReligiousValuesRepository
 
 /** Small hand-rolled service locator; the app is not big enough to warrant a DI framework. */
 object AppContainer {
     val preferences: AppPreferences by lazy { AppPreferences() }
     val repository: QuranRepository by lazy { QuranRepository() }
     val prayerRepository: PrayerRepository by lazy { PrayerRepository() }
+    val religiousValues: ReligiousValuesRepository by lazy { ReligiousValuesRepository() }
     val audioPlayer: AudioPlayer by lazy { AudioPlayer() }
     val playbackManager: PlaybackManager by lazy {
         PlaybackManager(audioPlayer).apply {
