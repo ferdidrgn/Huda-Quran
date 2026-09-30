@@ -1,8 +1,7 @@
 package org.ferdidrgn.hudaquran.notifications
 
-import org.ferdidrgn.hudaquran.domain.model.PrayerTimes
-
+// The website doesn't schedule notifications.
 actual class PrayerNotificationScheduler actual constructor() {
-    actual fun scheduleToday(prayerTimes: PrayerTimes) {}
-    actual fun cancelAll() {}
+    actual fun schedule(reminders: List<Reminder>) = Unit
+    actual fun cancelAll() = Unit
 }

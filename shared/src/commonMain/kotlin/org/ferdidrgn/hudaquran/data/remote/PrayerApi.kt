@@ -12,8 +12,10 @@ class PrayerApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.
         const val BASE_URL = "https://api.aladhan.com/v1"
     }
 
-    suspend fun getTimingsByCity(city: String, country: String, method: Int = 13): PrayerDataDto {
-        val response: ApiResponseDto<PrayerDataDto> = client.get("$BASE_URL/timingsByCity") {
+    /** [date] is "DD-MM-YYYY"; null = today. */
+    suspend fun getTimingsByCity(city: String, country: String, method: Int = 13, date: String? = null): PrayerDataDto {
+        val path = if (date != null) "$BASE_URL/timingsByCity/$date" else "$BASE_URL/timingsByCity"
+        val response: ApiResponseDto<PrayerDataDto> = client.get(path) {
             parameter("city", city)
             parameter("country", country)
             parameter("method", method)

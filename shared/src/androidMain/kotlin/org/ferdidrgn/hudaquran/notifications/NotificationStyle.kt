@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 
 /** Brand accent used to tint every notification's icon and actions (the splash green). */
-internal const val NOTIFICATION_ACCENT_COLOR = 0xFF1E7145.toInt()
+internal const val NOTIFICATION_ACCENT_COLOR = 0xFF6D3C52.toInt() // Sakura plum
 
 /**
  * The app module's monochrome `ic_stat_huda` drawable. Looked up by name because this shared

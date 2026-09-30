@@ -32,6 +32,9 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_PRAYER_CITY = "prayer_city"
         private const val KEY_PRAYER_COUNTRY = "prayer_country"
         private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
+        private const val KEY_PRAYER_LEAD_MINUTES = "prayer_reminder_lead_minutes"
+        private const val KEY_PRAYER_AT_TIME = "prayer_reminder_at_time"
+        private const val KEY_OCCASION_REMINDERS = "occasion_reminders_enabled"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
         private const val KEY_LAST_MUSHAF_PAGE = "last_mushaf_page"
@@ -94,6 +97,33 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     fun setPrayerNotificationsEnabled(enabled: Boolean) {
         settings.putBoolean(KEY_PRAYER_NOTIFICATIONS, enabled)
         _prayerNotificationsEnabled.value = enabled
+    }
+
+    /** Minutes before each prayer for the gentle pre-reminder; 0 = off. */
+    private val _prayerReminderLeadMinutes = MutableStateFlow(settings.getInt(KEY_PRAYER_LEAD_MINUTES, 10))
+    val prayerReminderLeadMinutes: StateFlow<Int> = _prayerReminderLeadMinutes.asStateFlow()
+
+    fun setPrayerReminderLeadMinutes(minutes: Int) {
+        settings.putInt(KEY_PRAYER_LEAD_MINUTES, minutes)
+        _prayerReminderLeadMinutes.value = minutes
+    }
+
+    /** Also notify at the moment the prayer time begins. */
+    private val _prayerAtTimeEnabled = MutableStateFlow(settings.getBoolean(KEY_PRAYER_AT_TIME, true))
+    val prayerAtTimeEnabled: StateFlow<Boolean> = _prayerAtTimeEnabled.asStateFlow()
+
+    fun setPrayerAtTimeEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_PRAYER_AT_TIME, enabled)
+        _prayerAtTimeEnabled.value = enabled
+    }
+
+    /** Reminders two days and one day before kandils and other blessed days. */
+    private val _occasionRemindersEnabled = MutableStateFlow(settings.getBoolean(KEY_OCCASION_REMINDERS, true))
+    val occasionRemindersEnabled: StateFlow<Boolean> = _occasionRemindersEnabled.asStateFlow()
+
+    fun setOccasionRemindersEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_OCCASION_REMINDERS, enabled)
+        _occasionRemindersEnabled.value = enabled
     }
 
     var onboardingCompleted: Boolean

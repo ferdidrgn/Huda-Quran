@@ -46,7 +46,7 @@ import org.ferdidrgn.hudaquran.data.local.AppPreferences
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
-import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
@@ -494,14 +494,7 @@ private fun AppDestinationContent(
                 val (selectedCity, selectedCountry) = id.split("|", limit = 2)
                 preferences.prayerCity = selectedCity
                 preferences.prayerCountry = selectedCountry
-                if (preferences.prayerNotificationsEnabled.value) {
-                    coroutineScope.launch {
-                        val timings = runCatching {
-                            AppContainer.prayerRepository.getTodayTimings(selectedCity, selectedCountry)
-                        }.getOrNull()
-                        if (timings != null) PrayerNotificationScheduler().scheduleToday(timings)
-                    }
-                }
+                coroutineScope.launch { ReminderPlanner.reschedule() }
                 navigator.back()
             },
             onBack = { navigator.back() },

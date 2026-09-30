@@ -102,7 +102,7 @@ import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
-import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
@@ -187,9 +187,8 @@ fun HomeScreen(
         }
             .onSuccess { timings ->
                 prayerTimes = timings
-                if (preferences.prayerNotificationsEnabled.value) {
-                    PrayerNotificationScheduler().scheduleToday(timings)
-                }
+                // Re-plans today's and tomorrow's reminders every time Home opens.
+                ReminderPlanner.reschedule()
             }
     }
     LaunchedEffect(isLoadingDaily) {

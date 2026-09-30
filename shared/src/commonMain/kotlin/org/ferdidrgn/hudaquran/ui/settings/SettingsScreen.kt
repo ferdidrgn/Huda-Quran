@@ -2,6 +2,7 @@ package org.ferdidrgn.hudaquran.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,9 +56,11 @@ import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
-import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.FilterPill
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -124,15 +127,12 @@ fun SettingsScreen(
         }
     }
 
-    fun rescheduleNotifications(enabled: Boolean) {
-        if (!enabled) {
-            PrayerNotificationScheduler().cancelAll()
-            return
-        }
-        scope.launch {
-            val timings = runCatching { prayerRepository.getTodayTimings(city, country) }.getOrNull()
-            if (timings != null) PrayerNotificationScheduler().scheduleToday(timings)
-        }
+    val reminderLead by preferences.prayerReminderLeadMinutes.collectAsState()
+    val reminderAtTime by preferences.prayerAtTimeEnabled.collectAsState()
+    val occasionReminders by preferences.occasionRemindersEnabled.collectAsState()
+
+    fun rescheduleNotifications() {
+        scope.launch { ReminderPlanner.reschedule() }
     }
 
     // Capped at readable-line-width and centered so a wide desktop browser window reads like a
@@ -215,7 +215,7 @@ fun SettingsScreen(
                     checked = notificationsEnabled,
                     onCheckedChange = { enabled ->
                         preferences.setPrayerNotificationsEnabled(enabled)
-                        rescheduleNotifications(enabled)
+                        rescheduleNotifications()
                     },
                     colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                 )
@@ -226,6 +226,38 @@ fun SettingsScreen(
             NavigationRow(title = strings.locationLabel, value = locationDisplayName, onClick = onOpenLocationPicker)
 
             if (notificationsEnabled) {
+                OrnamentRule(modifier = Modifier.padding(vertical = 10.dp))
+                Text(strings.prayerReminderLeadLabel, style = MaterialTheme.typography.bodyLarge)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf(0, 5, 10, 15, 30).forEach { minutes ->
+                        FilterPill(
+                            label = if (minutes == 0) strings.reminderOffLabel else strings.minutesShortTemplate.replace("{n}", minutes.toString()),
+                            selected = reminderLead == minutes,
+                            onClick = {
+                                preferences.setPrayerReminderLeadMinutes(minutes)
+                                rescheduleNotifications()
+                            },
+                        )
+                    }
+                }
+                ReminderSwitchRow(strings.prayerAtTimeLabel, reminderAtTime) {
+                    preferences.setPrayerAtTimeEnabled(it)
+                    rescheduleNotifications()
+                }
+                ReminderSwitchRow(strings.occasionRemindersLabel, occasionReminders) {
+                    preferences.setOccasionRemindersEnabled(it)
+                    rescheduleNotifications()
+                }
+                Text(
+                    strings.notificationSoundHint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(top = 4.dp),
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     strings.locationAutoUpdateNote,
@@ -462,3 +494,17 @@ private fun formatDate(epochMillis: Long): String {
     return "${date.dayOfMonth.toString().padStart(2, '0')}.${date.monthNumber.toString().padStart(2, '0')}.${date.year}"
 }
 
+@Composable
+private fun ReminderSwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+        )
+    }
+}
