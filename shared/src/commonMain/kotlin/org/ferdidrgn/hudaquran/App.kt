@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.time.TimeSource
 import org.ferdidrgn.hudaquran.ads.AdGate
 import org.ferdidrgn.hudaquran.ads.AdManager
 import org.ferdidrgn.hudaquran.analytics.AppAnalytics
@@ -49,6 +50,7 @@ import org.ferdidrgn.hudaquran.ui.components.AppSideNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppTopNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
+import org.ferdidrgn.hudaquran.ui.components.LocalScreenEntranceStart
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
@@ -90,6 +92,7 @@ import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
 import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
 
 private const val APP_TITLE = "Huda Qur'an"
 
@@ -153,7 +156,7 @@ fun App() {
         LocalDensity provides scaledDensity,
         LocalArabicFontFamily provides arabicFontFamily,
     ) {
-    HudaQuranTheme(themeMode = themeMode) {
+    HudaQuranTheme(themeMode = themeMode, displayFontFamily = rememberDisplayFontFamily(appLanguage)) {
         val screen = navigator.current
         // Mushaf (book) mode is a full-screen, distraction-free reading surface: no nav bars or
         // mini player around the page.
@@ -333,6 +336,9 @@ private fun AppDestinationContent(
     preferences: AppPreferences,
     coroutineScope: CoroutineScope,
 ) {
+    // A fresh mark per destination: StaggeredEntrance animates only what appears right after it.
+    val entranceStart = remember(screen) { TimeSource.Monotonic.markNow() }
+    CompositionLocalProvider(LocalScreenEntranceStart provides entranceStart) {
     when (screen) {
         is Screen.Splash -> SplashScreen(
             onFinished = {
@@ -581,5 +587,6 @@ private fun AppDestinationContent(
             onBack = { navigator.back() },
         )
 
+    }
     }
 }

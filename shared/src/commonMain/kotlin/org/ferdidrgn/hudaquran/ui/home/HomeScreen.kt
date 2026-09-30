@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -27,12 +30,33 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.ConfirmationNumber
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.ImportContacts
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.outlined.ViewModule
+import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,6 +108,7 @@ import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
+import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import kotlinx.datetime.Clock
@@ -221,25 +247,14 @@ fun HomeScreen(
         // 1. Selamlama Alanı
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(0) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "${strings.homeGreeting} 👋",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Text(
-                        strings.homeSubtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (readingStreak >= 2) {
-                        Text(
-                            "🔥 " + strings.streakDaysTemplate.replace("{n}", readingStreak.toString()),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
+                val resume = lastRead
+                HomeHero(
+                    greeting = strings.homeGreeting,
+                    subtitle = strings.homeSubtitle,
+                    streakText = if (readingStreak >= 2) strings.streakDaysTemplate.replace("{n}", readingStreak.toString()) else null,
+                    ctaLabel = if (resume != null) strings.continueReading else strings.navSurahs,
+                    onCta = { if (resume != null) onOpenSurah(resume.surahNumber, resume.numberInSurah) else onOpenSurahList() },
+                )
             }
         }
 
@@ -250,17 +265,17 @@ fun HomeScreen(
                     SectionHeader(strings.quickActionsTitle)
                     Spacer(Modifier.height(10.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
-                        item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                        item { QuickAction(Icons.Outlined.Explore, strings.qiblaTitle, onClick = onOpenQibla) }
+                        item { QuickAction(Icons.Outlined.VolunteerActivism, strings.duaListTitle, onClick = onOpenDuaList) }
                         item {
                             QuickAction(
-                                "🕋",
+                                Icons.Outlined.ConfirmationNumber,
                                 strings.hacKuraLabel,
                                 onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
                             )
                         }
-                        item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
-                        item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+                        item { QuickAction(Icons.Outlined.Calculate, strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                        item { QuickAction(Icons.Outlined.Event, strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
                     }
                 }
             }
@@ -282,16 +297,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📖", strings.navSurahs, "+", onClick = onOpenSurahList)
+                            ArtisticQuickActionCard(Icons.Outlined.AutoStories, strings.navSurahs, onClick = onOpenSurahList)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🔢", strings.juz, "+", onClick = onOpenJuzList)
+                            ArtisticQuickActionCard(Icons.Outlined.ViewModule, strings.juz, onClick = onOpenJuzList)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📜", strings.mushafModeLabel, "+", onClick = { onOpenMushafMode(lastMushafPage ?: 1) })
+                            ArtisticQuickActionCard(Icons.Outlined.ImportContacts, strings.mushafModeLabel, onClick = { onOpenMushafMode(lastMushafPage ?: 1) })
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("✨", strings.esmaulHusnaTitle, "+", onClick = onOpenEsmaulHusna)
+                            ArtisticQuickActionCard(Icons.Outlined.AutoAwesome, strings.esmaulHusnaTitle, onClick = onOpenEsmaulHusna)
                         }
                     }
                     Spacer(Modifier.height(10.dp))
@@ -300,16 +315,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🔍", strings.search, "+", onClick = onOpenSearch)
+                            ArtisticQuickActionCard(Icons.Outlined.Search, strings.search, onClick = onOpenSearch)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("🎙️", strings.reciters, "+", onClick = onOpenReciters)
+                            ArtisticQuickActionCard(Icons.Outlined.Mic, strings.reciters, onClick = onOpenReciters)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("📝", strings.readingLessonsTitle, "+", onClick = onOpenArabicAlphabet)
+                            ArtisticQuickActionCard(Icons.Outlined.School, strings.readingLessonsTitle, onClick = onOpenArabicAlphabet)
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            ArtisticQuickActionCard("⭐", strings.navFavorites, "+", onClick = onOpenFavorites)
+                            ArtisticQuickActionCard(Icons.Outlined.FavoriteBorder, strings.navFavorites, onClick = onOpenFavorites)
                         }
                     }
                 }
@@ -323,11 +338,11 @@ fun HomeScreen(
                     SectionHeader("Kur'an Detayları & Bölümleri")
                     Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
-                        item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                        item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
-                        item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                        item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+                        item { QuickAction(Icons.Outlined.Description, strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                        item { QuickAction(Icons.Outlined.DateRange, strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                        item { QuickAction(Icons.Outlined.Book, strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                        item { QuickAction(Icons.Outlined.BookmarkBorder, strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                        item { QuickAction(Icons.Outlined.SelfImprovement, strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
                     }
                 }
             }
@@ -550,37 +565,101 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Home's signature: a tinted panel carrying the shamsa medallion, the greeting set in the display
+ * face, and the one primary action — continue reading — placed low, in the thumb zone.
+ */
 @Composable
-private fun ArtisticQuickActionCard(emoji: String, label: String, badge: String, onClick: () -> Unit) {
+private fun HomeHero(
+    greeting: String,
+    subtitle: String,
+    streakText: String?,
+    ctaLabel: String,
+    onCta: () -> Unit,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(Brush.linearGradient(listOf(scheme.surfaceVariant, scheme.surface)))
+            .border(1.dp, scheme.primary.copy(alpha = 0.16f), RoundedCornerShape(28.dp)),
+    ) {
+        ShamsaRosette(
+            color = scheme.primary.copy(alpha = 0.5f),
+            modifier = Modifier.align(Alignment.TopEnd).offset(x = 78.dp, y = (-36).dp).size(250.dp),
+        )
+        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 26.dp)) {
+            Text(greeting, style = MaterialTheme.typography.headlineMedium, color = scheme.onSurface)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurface.copy(alpha = 0.78f),
+                modifier = Modifier.fillMaxWidth(0.72f),
+            )
+            if (streakText != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "🔥 $streakText",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = scheme.primary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(scheme.primary.copy(alpha = 0.12f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+            }
+            Spacer(Modifier.height(22.dp))
+            Button(
+                onClick = onCta,
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = scheme.primary, contentColor = scheme.onPrimary),
+            ) {
+                Text(ctaLabel, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(6.dp))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArtisticQuickActionCard(icon: ImageVector, label: String, onClick: () -> Unit) {
     GlassSurface(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 6.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(contentAlignment = Alignment.TopEnd) {
-                Text(emoji, fontSize = 24.sp)
-                Text(
-                    badge,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 14.dp)
-                )
-            }
-            Spacer(Modifier.height(4.dp))
+            ActionIconBadge(icon)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+/** The icon treatment shared by every Home shortcut: a tonal circle in the theme's secondary container. */
+@Composable
+private fun ActionIconBadge(icon: ImageVector) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -616,13 +695,21 @@ private fun WebHomeContent(
     onOpenIslamicCalendar: () -> Unit,
     locationDisplayName: String,
 ) {
-    Column(
+    // The background spans the whole window; the content itself is a centered column aligned
+    // with the header's max width, so ultra-wide monitors get margins instead of stretched rows.
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(28.dp),
+            .verticalScroll(rememberScrollState()),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 1240.dp)
+            .padding(horizontal = 24.dp, vertical = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(36.dp),
     ) {
         WebHomeHero(
             greeting = strings.homeGreeting,
@@ -641,17 +728,17 @@ private fun WebHomeContent(
             SectionHeader(strings.quickActionsTitle)
             Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { QuickAction("🧭", strings.qiblaTitle, onClick = onOpenQibla) }
-                item { QuickAction("🤲", strings.duaListTitle, onClick = onOpenDuaList) }
+                item { QuickAction(Icons.Outlined.Explore, strings.qiblaTitle, onClick = onOpenQibla) }
+                item { QuickAction(Icons.Outlined.VolunteerActivism, strings.duaListTitle, onClick = onOpenDuaList) }
                 item {
                     QuickAction(
-                        "🕋",
+                        Icons.Outlined.ConfirmationNumber,
                         strings.hacKuraLabel,
                         onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
                     )
                 }
-                item { QuickAction("💰", strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
-                item { QuickAction("📅", strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
+                item { QuickAction(Icons.Outlined.Calculate, strings.zakatCalculatorTitle, onClick = onOpenZakatCalculator) }
+                item { QuickAction(Icons.Outlined.Event, strings.islamicCalendarTitle, onClick = onOpenIslamicCalendar) }
             }
         }
 
@@ -699,11 +786,11 @@ private fun WebHomeContent(
             SectionHeader(strings.discoverQuranTitle)
             Spacer(Modifier.height(10.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                item { QuickAction("📄", strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
-                item { QuickAction("📆", strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
-                item { QuickAction("📚", strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
-                item { QuickAction("🔖", strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
-                item { QuickAction("🕋", strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
+                item { QuickAction(Icons.Outlined.Description, strings.pagesLabel, onClick = { onOpenSection(SectionKind.PAGE) }) }
+                item { QuickAction(Icons.Outlined.DateRange, strings.manzilsLabel, onClick = { onOpenSection(SectionKind.MANZIL) }) }
+                item { QuickAction(Icons.Outlined.Book, strings.rukusLabel, onClick = { onOpenSection(SectionKind.RUKU) }) }
+                item { QuickAction(Icons.Outlined.BookmarkBorder, strings.hizbQuartersLabel, onClick = { onOpenSection(SectionKind.HIZB_QUARTER) }) }
+                item { QuickAction(Icons.Outlined.SelfImprovement, strings.sajdaVersesLabel, onClick = onOpenSajdaAyahs) }
             }
         }
 
@@ -713,6 +800,7 @@ private fun WebHomeContent(
             onOpenReciters = onOpenReciters,
             onOpenSettings = onOpenSettings,
         )
+    }
     }
 }
 
@@ -805,23 +893,18 @@ private fun WebContinueSection(
 
 @Composable
 private fun WebLessonCarousel(strings: Strings, onOpenLesson: (String) -> Unit) {
-    val gradients = listOf(
-        listOf(Color(0xFF1F3D2E), Color(0xFF0B1F17)),
-        listOf(Color(0xFF2E2A17), Color(0xFF171408)),
-        listOf(Color(0xFF1B2A3D), Color(0xFF0A121C)),
-        listOf(Color(0xFF3A1F2E), Color(0xFF190D14)),
-    )
+    val scheme = MaterialTheme.colorScheme
     Column {
         SectionHeader(strings.readingLessonsTitle)
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             items(tajwidCourse, key = { it.id }) { lesson: TajwidLesson ->
-                val colors = gradients[lesson.order % gradients.size]
                 Box(
                     modifier = Modifier
-                        .size(width = 220.dp, height = 140.dp)
+                        .size(width = 232.dp, height = 150.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Brush.linearGradient(colors))
+                        .background(Brush.linearGradient(listOf(scheme.surfaceVariant, scheme.surface)))
+                        .border(1.dp, scheme.primary.copy(alpha = 0.14f), RoundedCornerShape(20.dp))
                         .clickable { onOpenLesson(lesson.id) }
                         .padding(18.dp),
                 ) {
@@ -829,7 +912,7 @@ private fun WebLessonCarousel(strings: Strings, onOpenLesson: (String) -> Unit) 
                         Text(
                             lesson.order.toString().padStart(2, '0'),
                             style = MaterialTheme.typography.labelLarge,
-                            color = Color.White.copy(alpha = 0.55f),
+                            color = scheme.primary,
                             fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.weight(1f))
@@ -837,7 +920,7 @@ private fun WebLessonCarousel(strings: Strings, onOpenLesson: (String) -> Unit) 
                             lesson.title,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = scheme.onSurface,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -845,7 +928,7 @@ private fun WebLessonCarousel(strings: Strings, onOpenLesson: (String) -> Unit) 
                         Text(
                             lesson.summary,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = scheme.onSurface.copy(alpha = 0.7f),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -865,6 +948,7 @@ private fun WebDailyAyahSection(
     onRefresh: () -> Unit,
     onOpenSurah: (Int, Int?) -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
     Column {
         SectionHeader(strings.dailyAyahTitle)
         Spacer(Modifier.height(12.dp))
@@ -872,13 +956,14 @@ private fun WebDailyAyahSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF16352A), Color(0xFF081410))))
+                .background(Brush.linearGradient(listOf(scheme.surfaceVariant, scheme.surface)))
+                .border(1.dp, scheme.primary.copy(alpha = 0.14f), RoundedCornerShape(24.dp))
                 .padding(vertical = 40.dp, horizontal = 32.dp),
         ) {
-            IslamicMotifBackground(modifier = Modifier.matchParentSize(), tint = Color.White, alpha = 0.05f)
+            IslamicMotifBackground(modifier = Modifier.matchParentSize(), tint = scheme.primary, alpha = 0.05f)
             when {
                 isLoadingDaily -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = scheme.primary)
                 }
                 dailyAyah != null -> Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -889,31 +974,33 @@ private fun WebDailyAyahSection(
                         style = MaterialTheme.typography.headlineSmall,
                         fontFamily = LocalArabicFontFamily.current,
                         textAlign = TextAlign.Center,
-                        color = Color.White,
+                        color = scheme.onSurface,
+                        modifier = Modifier.widthIn(max = 820.dp),
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
                         dailyAyah.translationText,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
-                        color = Color.White.copy(alpha = 0.85f),
+                        color = scheme.onSurface.copy(alpha = 0.82f),
+                        modifier = Modifier.widthIn(max = 720.dp),
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
                         "${localizedSurahName(dailyAyah.surahNumber, dailyAyah.surahName, appLanguage)} ${dailyAyah.numberInSurah}",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE8C776),
-                        modifier = Modifier.clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) },
+                        color = scheme.primary,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) }
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "🔄",
-                        fontSize = 16.sp,
-                        modifier = Modifier.clickable(onClick = onRefresh),
-                    )
+                    IconButton(onClick = onRefresh) {
+                        Icon(Icons.Filled.Refresh, contentDescription = strings.retry, tint = scheme.onSurface.copy(alpha = 0.6f))
+                    }
                 }
-                else -> Text(strings.dailyAyahError, color = Color.White, modifier = Modifier.align(Alignment.Center))
+                else -> Text(strings.dailyAyahError, color = scheme.onSurface, modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -1077,76 +1164,81 @@ private fun WebHomeHero(
     locationDisplayName: String,
     onLocationClick: () -> Unit,
 ) {
-    Box(
+    val scheme = MaterialTheme.colorScheme
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF16352A), Color(0xFF081410))))
-            .padding(40.dp),
+            .clip(RoundedCornerShape(32.dp))
+            .background(Brush.linearGradient(listOf(scheme.surfaceVariant, scheme.surface)))
+            .border(1.dp, scheme.primary.copy(alpha = 0.16f), RoundedCornerShape(32.dp)),
     ) {
-        IslamicMotifBackground(modifier = Modifier.matchParentSize(), tint = Color.White, alpha = 0.06f)
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "$greeting 👋",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White.copy(alpha = 0.15f))
-                        .clickable(onClick = onLocationClick)
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Color(0xFFE8C776), modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(locationDisplayName, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.75f),
+        val showRosette = maxWidth > 720.dp
+        if (showRosette) {
+            ShamsaRosette(
+                color = scheme.primary.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 48.dp)
+                    .size(minOf(maxWidth * 0.36f, 380.dp)),
             )
+        }
+        Column(
+            modifier = Modifier
+                .padding(horizontal = if (maxWidth > 720.dp) 56.dp else 28.dp, vertical = 48.dp)
+                .fillMaxWidth(if (showRosette) 0.58f else 1f),
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(scheme.onSurface.copy(alpha = 0.07f))
+                    .clickable(onClick = onLocationClick)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.LocationOn, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(locationDisplayName, color = scheme.onSurface, style = MaterialTheme.typography.labelLarge)
+            }
+            Spacer(Modifier.height(20.dp))
+            Text(greeting, style = MaterialTheme.typography.displaySmall, color = scheme.onSurface)
+            Spacer(Modifier.height(12.dp))
+            Text(subtitle, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurface.copy(alpha = 0.78f))
             if (streakText != null) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(14.dp))
                 Text(
                     "🔥 $streakText",
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = scheme.primary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(scheme.primary.copy(alpha = 0.12f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.6f)
+                    .widthIn(max = 520.dp)
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(50))
-                    .background(Color.White.copy(alpha = 0.12f))
+                    .background(scheme.onSurface.copy(alpha = 0.07f))
+                    .border(1.dp, scheme.primary.copy(alpha = 0.18f), RoundedCornerShape(50))
                     .clickable(onClick = onSearchClick)
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.Search, contentDescription = null, tint = Color.White.copy(alpha = 0.7f))
+                Icon(Icons.Filled.Search, contentDescription = null, tint = scheme.onSurface.copy(alpha = 0.6f))
                 Spacer(Modifier.width(10.dp))
-                Text(searchPlaceholder, color = Color.White.copy(alpha = 0.7f))
+                Text(searchPlaceholder, color = scheme.onSurface.copy(alpha = 0.6f))
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
             Button(
                 onClick = onCtaClick,
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF0B1F17)),
+                contentPadding = PaddingValues(horizontal = 26.dp, vertical = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = scheme.primary, contentColor = scheme.onPrimary),
             ) {
-                Text(ctaLabel, fontWeight = FontWeight.Bold)
+                Text(ctaLabel, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.width(6.dp))
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
             }
@@ -1403,9 +1495,9 @@ private fun StatBento(
 }
 
 @Composable
-private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
+private fun QuickAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     GlassSurface(
-        modifier = Modifier.width(88.dp),
+        modifier = Modifier.width(92.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {
@@ -1413,13 +1505,14 @@ private fun QuickAction(emoji: String, label: String, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(emoji, fontSize = 24.sp)
-            Spacer(Modifier.height(6.dp))
+            ActionIconBadge(icon)
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
-                fontSize = 11.sp
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -1465,7 +1558,7 @@ private fun EsmaChip(esma: EsmaName, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(esma.arabic, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+            Text(esma.arabic, fontSize = 20.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
             Text(
                 esma.name,

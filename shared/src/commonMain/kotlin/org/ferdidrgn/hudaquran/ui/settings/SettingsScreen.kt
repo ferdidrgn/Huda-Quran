@@ -282,10 +282,10 @@ fun SettingsScreen(
 private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
     val strings = LocalStrings.current
     val options = listOf(
+        ThemeMode.SAKURA to strings.themeSakura,
         ThemeMode.SYSTEM to strings.themeSystem,
         ThemeMode.LIGHT to strings.themeLight,
         ThemeMode.DARK to strings.themeDark,
-        ThemeMode.SAKURA to strings.themeSakura,
     )
     Column(
         modifier = Modifier
