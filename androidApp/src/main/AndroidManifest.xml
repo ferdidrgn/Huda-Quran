@@ -21,10 +21,10 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
-        <!-- Google's official test AdMob App ID — replace with your real AdMob App ID before release. -->
+        <!-- Huda Qur'an AdMob App ID (account pub-5779807348211992). -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-5779807348211992~3748093722" />
 
         <!--
           AdMob (play-services-ads-lite) and Firebase Analytics (play-services-measurement-api)
