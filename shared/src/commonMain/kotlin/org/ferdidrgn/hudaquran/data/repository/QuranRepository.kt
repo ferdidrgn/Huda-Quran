@@ -1,9 +1,13 @@
 package org.ferdidrgn.hudaquran.data.repository
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.Serializable
 import org.ferdidrgn.hudaquran.data.local.QuranCache
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
-import org.ferdidrgn.hudaquran.data.remote.retryOnce
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
+import org.ferdidrgn.hudaquran.data.remote.retryOnce
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.QuranMeta
@@ -16,12 +20,16 @@ import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.Tafsir
 import org.ferdidrgn.hudaquran.domain.model.Translation
 
+@Serializable
 data class DailyAyah(
     val surahName: String,
     val surahNumber: Int,
     val numberInSurah: Int,
     val arabicText: String,
     val translationText: String,
+    /** Local calendar day (yyyy-MM-dd) this ayah belongs to, and the meal it was fetched in. */
+    val date: String = "",
+    val translationEdition: String = "",
 )
 
 class QuranRepository(
@@ -240,19 +248,35 @@ class QuranRepository(
         }
     }
 
+    /**
+     * The "ayah of the day": one ayah per local calendar day, the same on web and mobile for
+     * everyone that day, fetched once and then served from cache until midnight — opening Home
+     * again no longer re-rolls a random ayah (and hits the API) every time.
+     */
     suspend fun getDailyAyah(translationEdition: String = QuranEditions.DEFAULT_TRANSLATION): DailyAyah {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val dateKey = today.toString()
+        cache.getDailyAyah()
+            ?.takeIf { it.date == dateKey && it.translationEdition == translationEdition }
+            ?.let { return it }
+
+        val globalAyahNumber = dailyAyahNumberFor(today.toEpochDays().toLong())
         val results = retryOnce {
-            api.getRandomAyahWithEditions(listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition))
+            api.getAyahWithEditions(globalAyahNumber, listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition))
         }
         val arabic = results[0]
         val translation = results.getOrNull(1)
-        return DailyAyah(
+        val daily = DailyAyah(
             surahName = arabic.surah.englishName,
             surahNumber = arabic.surah.number,
             numberInSurah = arabic.numberInSurah,
             arabicText = arabic.text,
             translationText = translation?.text.orEmpty(),
+            date = dateKey,
+            translationEdition = translationEdition,
         )
+        cache.saveDailyAyah(daily)
+        return daily
     }
 
     private fun SurahDto.toDomain() = Surah(
@@ -263,4 +287,15 @@ class QuranRepository(
         numberOfAyahs = numberOfAyahs,
         revelationType = revelationType,
     )
+}
+
+private const val TOTAL_AYAHS = 6236
+
+/**
+ * Day → global ayah number (1..6236). Stepping by 1683 — coprime with 6236 — walks every ayah once
+ * before repeating, and consecutive days land far apart in the mushaf rather than on neighbours.
+ */
+internal fun dailyAyahNumberFor(epochDay: Long): Int {
+    val index = ((epochDay * 1683L) % TOTAL_AYAHS + TOTAL_AYAHS) % TOTAL_AYAHS
+    return index.toInt() + 1
 }

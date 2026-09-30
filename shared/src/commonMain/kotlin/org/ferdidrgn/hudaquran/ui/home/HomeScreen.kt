@@ -406,16 +406,19 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Icon(
-                            Icons.Filled.Refresh,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .clickable { isLoadingDaily = true }
-                                .padding(12.dp),
-                        )
+                        // Retry only after a failed load: the ayah is fixed for the whole day.
+                        if (!isLoadingDaily && dailyAyah == null) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = strings.retry,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .clickable { isLoadingDaily = true }
+                                    .padding(12.dp),
+                            )
+                        }
                     }
                     Spacer(Modifier.height(10.dp))
                     when {
@@ -429,9 +432,10 @@ fun HomeScreen(
                         dailyAyah != null -> {
                             Text(
                                 dailyAyah!!.arabicText,
-                                style = MaterialTheme.typography.titleLarge,
                                 fontFamily = LocalArabicFontFamily.current,
-                                textAlign = TextAlign.End,
+                                fontSize = 24.sp,
+                                lineHeight = 46.sp,
+                                textAlign = TextAlign.Right,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(8.dp))
@@ -998,11 +1002,16 @@ private fun WebDailyAyahSection(
                             .clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) }
                             .padding(horizontal = 12.dp, vertical = 12.dp),
                     )
+                }
+                else -> Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(strings.dailyAyahError, color = scheme.onSurface)
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Filled.Refresh, contentDescription = strings.retry, tint = scheme.onSurface.copy(alpha = 0.6f))
+                        Icon(Icons.Filled.Refresh, contentDescription = strings.retry, tint = scheme.primary)
                     }
                 }
-                else -> Text(strings.dailyAyahError, color = scheme.onSurface, modifier = Modifier.align(Alignment.Center))
             }
         }
     }
