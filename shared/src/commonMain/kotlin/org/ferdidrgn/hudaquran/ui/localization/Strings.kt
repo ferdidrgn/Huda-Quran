@@ -235,6 +235,13 @@ data class Strings(
     val fidyeDaysLabel: String,
     val fidyeTotalTemplate: String,
     val fitreOtherCurrencyNote: String,
+    val restorePurchasesButton: String,
+    val purchaseSuccessMessage: String,
+    val purchaseCancelledMessage: String,
+    val purchaseUnavailableMessage: String,
+    val purchaseErrorMessage: String,
+    val restoreNothingMessage: String,
+    val adFreeUntilTemplate: String,
 )
 
 private val turkish = Strings(
@@ -372,6 +379,13 @@ private val turkish = Strings(
     fidyeDaysLabel = "Tutulamayan oruç günü",
     fidyeTotalTemplate = "Toplam fidye: {amount}",
     fitreOtherCurrencyNote = "Fitre tutarı ülkeye göre değişir; yaşadığınız yerdeki dini kurumun açıkladığı tutarı esas alın. Aşağıdaki tutar Türkiye (Diyanet) içindir.",
+    restorePurchasesButton = "Satın alımları geri yükle",
+    purchaseSuccessMessage = "Teşekkürler! Satın alımınız tamamlandı.",
+    purchaseCancelledMessage = "Satın alma iptal edildi.",
+    purchaseUnavailableMessage = "Bu ürün şu anda mağazada bulunamadı. Lütfen daha sonra tekrar deneyin.",
+    purchaseErrorMessage = "Satın alma tamamlanamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
+    restoreNothingMessage = "Bu hesapta etkin bir reklamsız abonelik bulunamadı.",
+    adFreeUntilTemplate = "Reklamsız kullanım: {date} tarihine kadar",
 )
 
 private val english = Strings(
@@ -509,6 +523,13 @@ private val english = Strings(
     fidyeDaysLabel = "Missed fasting days",
     fidyeTotalTemplate = "Total fidya: {amount}",
     fitreOtherCurrencyNote = "The fitra amount differs by country; follow the amount announced by the religious authority where you live. The amount below applies to Turkey (Diyanet).",
+    restorePurchasesButton = "Restore purchases",
+    purchaseSuccessMessage = "Thank you! Your purchase is complete.",
+    purchaseCancelledMessage = "Purchase cancelled.",
+    purchaseUnavailableMessage = "This product isn't available in the store right now. Please try again later.",
+    purchaseErrorMessage = "The purchase couldn't be completed. Check your connection and try again.",
+    restoreNothingMessage = "No active ad-free subscription was found for this account.",
+    adFreeUntilTemplate = "Ad-free until {date}",
 )
 
 private val arabic = Strings(
@@ -646,6 +667,13 @@ private val arabic = Strings(
     fidyeDaysLabel = "أيام الصيام الفائتة",
     fidyeTotalTemplate = "مجموع الفدية: {amount}",
     fitreOtherCurrencyNote = "يختلف مقدار الفطرة من بلد لآخر؛ اعتمد ما تعلنه الجهة الدينية في بلدك. المبلغ أدناه خاص بتركيا (رئاسة الشؤون الدينية).",
+    restorePurchasesButton = "استعادة المشتريات",
+    purchaseSuccessMessage = "شكرًا لك! تمت عملية الشراء.",
+    purchaseCancelledMessage = "تم إلغاء الشراء.",
+    purchaseUnavailableMessage = "هذا المنتج غير متاح في المتجر حاليًا. حاول لاحقًا.",
+    purchaseErrorMessage = "تعذّر إتمام الشراء. تحقّق من الاتصال وحاول مجددًا.",
+    restoreNothingMessage = "لم يُعثر على اشتراك نشط بدون إعلانات لهذا الحساب.",
+    adFreeUntilTemplate = "بدون إعلانات حتى {date}",
 )
 
 private val german = Strings(
@@ -783,6 +811,13 @@ private val german = Strings(
     fidyeDaysLabel = "Versäumte Fastentage",
     fidyeTotalTemplate = "Fidya gesamt: {amount}",
     fitreOtherCurrencyNote = "Der Fitra-Betrag ist von Land zu Land verschieden; richten Sie sich nach der religiösen Instanz Ihres Wohnorts. Der folgende Betrag gilt für die Türkei (Diyanet).",
+    restorePurchasesButton = "Käufe wiederherstellen",
+    purchaseSuccessMessage = "Vielen Dank! Ihr Kauf ist abgeschlossen.",
+    purchaseCancelledMessage = "Kauf abgebrochen.",
+    purchaseUnavailableMessage = "Dieses Produkt ist im Store derzeit nicht verfügbar. Bitte später erneut versuchen.",
+    purchaseErrorMessage = "Der Kauf konnte nicht abgeschlossen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    restoreNothingMessage = "Für dieses Konto wurde kein aktives werbefreies Abo gefunden.",
+    adFreeUntilTemplate = "Werbefrei bis {date}",
 )
 
 private val french = Strings(
@@ -920,6 +955,13 @@ private val french = Strings(
     fidyeDaysLabel = "Jours de jeûne manqués",
     fidyeTotalTemplate = "Total de la fidya : {amount}",
     fitreOtherCurrencyNote = "Le montant de la fitra varie selon les pays ; suivez celui annoncé par l'autorité religieuse de votre lieu de résidence. Le montant ci-dessous concerne la Turquie (Diyanet).",
+    restorePurchasesButton = "Restaurer les achats",
+    purchaseSuccessMessage = "Merci ! Votre achat est terminé.",
+    purchaseCancelledMessage = "Achat annulé.",
+    purchaseUnavailableMessage = "Ce produit n'est pas disponible dans la boutique pour le moment. Réessayez plus tard.",
+    purchaseErrorMessage = "L'achat n'a pas pu être finalisé. Vérifiez votre connexion et réessayez.",
+    restoreNothingMessage = "Aucun abonnement sans publicité actif n'a été trouvé pour ce compte.",
+    adFreeUntilTemplate = "Sans publicité jusqu'au {date}",
 )
 
 private val uzbek = Strings(
@@ -1057,6 +1099,13 @@ private val uzbek = Strings(
     fidyeDaysLabel = "Tutilmagan ro'za kunlari",
     fidyeTotalTemplate = "Jami fidya: {amount}",
     fitreOtherCurrencyNote = "Fitr miqdori mamlakatga qarab farq qiladi; yashash joyingizdagi diniy idora e'lon qilgan miqdorga amal qiling. Quyidagi miqdor Turkiya (Diyanet) uchun.",
+    restorePurchasesButton = "Xaridlarni tiklash",
+    purchaseSuccessMessage = "Rahmat! Xaridingiz yakunlandi.",
+    purchaseCancelledMessage = "Xarid bekor qilindi.",
+    purchaseUnavailableMessage = "Bu mahsulot hozircha do'konda mavjud emas. Keyinroq qayta urinib ko'ring.",
+    purchaseErrorMessage = "Xaridni yakunlab bo'lmadi. Internet aloqasini tekshirib, qayta urinib ko'ring.",
+    restoreNothingMessage = "Bu hisobda faol reklamasiz obuna topilmadi.",
+    adFreeUntilTemplate = "{date} gacha reklamasiz",
 )
 
 private val kyrgyz = Strings(
@@ -1194,6 +1243,13 @@ private val kyrgyz = Strings(
     fidyeDaysLabel = "Кармалбаган орозо күндөрү",
     fidyeTotalTemplate = "Жалпы фидия: {amount}",
     fitreOtherCurrencyNote = "Пітирдин өлчөмү өлкөгө жараша айырмаланат; жашаган жериңиздеги диний мекеме жарыялаган өлчөмдү негиз кылыңыз. Төмөнкү сумма Түркия (Diyanet) үчүн.",
+    restorePurchasesButton = "Сатып алууларды калыбына келтирүү",
+    purchaseSuccessMessage = "Рахмат! Сатып алууңуз аяктады.",
+    purchaseCancelledMessage = "Сатып алуу жокко чыгарылды.",
+    purchaseUnavailableMessage = "Бул продукт азыр дүкөндө жок. Кийинчерээк кайра аракет кылыңыз.",
+    purchaseErrorMessage = "Сатып алууну аяктоо мүмкүн болгон жок. Байланышты текшерип, кайра аракет кылыңыз.",
+    restoreNothingMessage = "Бул аккаунтта активдүү жарнамасыз жазылуу табылган жок.",
+    adFreeUntilTemplate = "{date} чейин жарнамасыз",
 )
 
 private val turkmen = Strings(
@@ -1331,6 +1387,13 @@ private val turkmen = Strings(
     fidyeDaysLabel = "Tutulmadyk oraza günleri",
     fidyeTotalTemplate = "Jemi fidýa: {amount}",
     fitreOtherCurrencyNote = "Pitir mukdary ýurda görä tapawutlanýar; ýaşaýan ýeriňizdäki dini edaranyň yglan eden mukdaryny esas alyň. Aşakdaky mukdar Türkiýe (Diyanet) üçin.",
+    restorePurchasesButton = "Satyn alyşlary dikelt",
+    purchaseSuccessMessage = "Sag boluň! Satyn alşyňyz tamamlandy.",
+    purchaseCancelledMessage = "Satyn alyş ýatyryldy.",
+    purchaseUnavailableMessage = "Bu önüm häzir dükanda elýeterli däl. Soňrak gaýtadan synanyşyň.",
+    purchaseErrorMessage = "Satyn alyşy tamamlap bolmady. Aragatnaşygy barlap, gaýtadan synanyşyň.",
+    restoreNothingMessage = "Bu hasapda işjeň mahabatsyz abuna tapylmady.",
+    adFreeUntilTemplate = "{date} senesine çenli mahabatsyz",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

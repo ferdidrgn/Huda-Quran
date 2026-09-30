@@ -10,17 +10,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,11 +39,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.billing.BillingManager
 import org.ferdidrgn.hudaquran.billing.BillingProduct
+import org.ferdidrgn.hudaquran.billing.PurchaseOutcome
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.TextSizeOption
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
@@ -73,6 +82,24 @@ fun SettingsScreen(
     val notificationsEnabled by preferences.prayerNotificationsEnabled.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
+    val adFree by preferences.adFree.collectAsState()
+    val billingScope = rememberCoroutineScope()
+    var purchaseBusy by remember { mutableStateOf(false) }
+    var purchaseMessage by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) { BillingManager.refresh() }
+    fun buy(product: BillingProduct) {
+        if (purchaseBusy) return
+        purchaseBusy = true
+        billingScope.launch {
+            purchaseMessage = when (BillingManager.purchase(product)) {
+                PurchaseOutcome.SUCCESS -> strings.purchaseSuccessMessage
+                PurchaseOutcome.CANCELLED -> strings.purchaseCancelledMessage
+                PurchaseOutcome.UNAVAILABLE -> strings.purchaseUnavailableMessage
+                PurchaseOutcome.NOT_ACTIVE, PurchaseOutcome.ERROR -> strings.purchaseErrorMessage
+            }
+            purchaseBusy = false
+        }
+    }
 
     var reciterName by remember { mutableStateOf(preferences.selectedReciter) }
     var translationName by remember { mutableStateOf(preferences.selectedTranslation) }
@@ -209,28 +236,73 @@ fun SettingsScreen(
         }
 
         SectionTitle(strings.supportUsTitle)
-        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), ornament = true) {
+            val adFreeUntil = preferences.adsRemovedUntilMillis
             Text(
-                if (preferences.isAdFree()) strings.adFreeActiveMessage else strings.supportUsMessage,
+                when {
+                    !adFree -> strings.supportUsMessage
+                    adFreeUntil < AD_FREE_DATE_DISPLAY_LIMIT -> strings.adFreeUntilTemplate.replace("{date}", formatDate(adFreeUntil))
+                    else -> strings.adFreeActiveMessage
+                },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (adFree) 0.9f else 0.7f),
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(
-                    onClick = { BillingManager.purchase(BillingProduct.DONATION_SMALL) },
-                    modifier = Modifier.weight(1f),
-                ) { Text(strings.smallDonationButton) }
-                OutlinedButton(
-                    onClick = { BillingManager.purchase(BillingProduct.DONATION_MEDIUM) },
-                    modifier = Modifier.weight(1f),
-                ) { Text(strings.mediumDonationButton) }
+            if (BillingManager.isSupported) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(
+                        onClick = { buy(BillingProduct.DONATION_SMALL) },
+                        enabled = !purchaseBusy,
+                        modifier = Modifier.weight(1f),
+                    ) { Text(strings.smallDonationButton) }
+                    OutlinedButton(
+                        onClick = { buy(BillingProduct.DONATION_MEDIUM) },
+                        enabled = !purchaseBusy,
+                        modifier = Modifier.weight(1f),
+                    ) { Text(strings.mediumDonationButton) }
+                }
+                if (!adFree) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        onClick = { buy(BillingProduct.NO_ADS_6_MONTHS) },
+                        enabled = !purchaseBusy,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) {
+                        if (purchaseBusy) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(strings.sixMonthAdFreeButton)
+                        }
+                    }
+                }
+                // Required by the App Store, and how a reinstall or a new phone gets the purchase back.
+                TextButton(
+                    onClick = {
+                        if (!purchaseBusy) {
+                            purchaseBusy = true
+                            billingScope.launch {
+                                purchaseMessage = when (BillingManager.restore()) {
+                                    PurchaseOutcome.SUCCESS -> strings.purchaseSuccessMessage
+                                    PurchaseOutcome.NOT_ACTIVE -> strings.restoreNothingMessage
+                                    else -> strings.purchaseErrorMessage
+                                }
+                                purchaseBusy = false
+                            }
+                        }
+                    },
+                    enabled = !purchaseBusy,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                ) { Text(strings.restorePurchasesButton) }
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = { BillingManager.purchase(BillingProduct.NO_ADS_6_MONTHS) },
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text(strings.sixMonthAdFreeButton) }
+            purchaseMessage?.let { message ->
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
 
         SectionTitle(strings.moreTitle)
@@ -381,3 +453,12 @@ private fun NavigationRow(title: String, value: String, onClick: () -> Unit) {
         Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
 }
+
+/** Expiries beyond this (a lifetime grant) show the plain "ad-free" message instead of a date. */
+private const val AD_FREE_DATE_DISPLAY_LIMIT = 4_102_444_800_000L // 2100-01-01
+
+private fun formatDate(epochMillis: Long): String {
+    val date = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return "${date.dayOfMonth.toString().padStart(2, '0')}.${date.monthNumber.toString().padStart(2, '0')}.${date.year}"
+}
+

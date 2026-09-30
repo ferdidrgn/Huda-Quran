@@ -138,7 +138,7 @@ fun App() {
     LaunchedEffect(Unit) { observeBrowserNavigation { url -> DeepLinkController.handlePopState(url) } }
     LaunchedEffect(Unit) { nowPlayingController.start() }
     LaunchedEffect(Unit) { AdManager.initialize() }
-    LaunchedEffect(Unit) { BillingManager.initialize() }
+    LaunchedEffect(Unit) { BillingManager.refresh() }
     LaunchedEffect(Unit) { AppAnalytics.initialize() }
     LaunchedEffect(Unit) { PushNotifications.initialize() }
 

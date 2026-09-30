@@ -70,7 +70,8 @@ kotlin {
             implementation(libs.androidx.media3.common)
             implementation(libs.androidx.activity.compose)
             implementation(libs.play.services.ads)
-            implementation(libs.android.billing.ktx)
+            // RevenueCat brings its own Play Billing client.
+            implementation(libs.purchases.kmp.core)
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.analytics)
             implementation(libs.firebase.crashlytics)
@@ -102,6 +103,7 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.purchases.kmp.core)
         }
         jsMain.dependencies {
             implementation(libs.wrappers.browser)

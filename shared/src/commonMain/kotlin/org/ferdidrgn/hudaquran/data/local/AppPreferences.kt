@@ -44,7 +44,15 @@ class AppPreferences(private val settings: Settings = createSettings()) {
 
     var adsRemovedUntilMillis: Long
         get() = settings.getLong(KEY_ADS_REMOVED_UNTIL, 0L)
-        private set(value) = settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+        private set(value) {
+            settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+            _adFree.value = value > Clock.System.now().toEpochMilliseconds()
+        }
+
+    private val _adFree = MutableStateFlow(adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds())
+
+    /** Observable ad-free state, so Settings and ad slots update right after a purchase or restore. */
+    val adFree: StateFlow<Boolean> = _adFree.asStateFlow()
 
     fun isAdFree(): Boolean = adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds()
 
@@ -53,6 +61,11 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         val now = Clock.System.now().toEpochMilliseconds()
         val base = maxOf(adsRemovedUntilMillis, now)
         adsRemovedUntilMillis = base + durationMillis
+    }
+
+    /** Sets the ad-free expiry reported by the store (0 = not ad-free). */
+    fun setAdFreeUntil(epochMillis: Long) {
+        adsRemovedUntilMillis = epochMillis
     }
 
     private fun loadAppLanguage(): AppLanguage =
