@@ -55,6 +55,7 @@ import org.ferdidrgn.hudaquran.ui.components.AppSideNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppTopNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.LocalFooterNavigation
 import org.ferdidrgn.hudaquran.ui.components.LocalMotifDrawnByHost
 import org.ferdidrgn.hudaquran.ui.components.LocalScreenEntranceStart
 import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
@@ -370,7 +371,10 @@ private fun AppDestinationContent(
 ) {
     // A fresh mark per destination: StaggeredEntrance animates only what appears right after it.
     val entranceStart = remember(screen) { TimeSource.Monotonic.markNow() }
-    CompositionLocalProvider(LocalScreenEntranceStart provides entranceStart) {
+    CompositionLocalProvider(
+        LocalScreenEntranceStart provides entranceStart,
+        LocalFooterNavigation provides { target -> navigator.replaceAll(target) },
+    ) {
     when (screen) {
         is Screen.Splash -> SplashScreen(
             onFinished = {

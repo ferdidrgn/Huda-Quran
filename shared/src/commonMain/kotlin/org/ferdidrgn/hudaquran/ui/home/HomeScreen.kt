@@ -111,6 +111,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -565,6 +566,7 @@ fun HomeScreen(
                 AdBannerCard()
             }
         }
+        item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
     }
 }
 
@@ -1125,31 +1127,8 @@ private fun WebFooter(
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        Text("Huda Qur'an", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            strings.appTagline,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(18.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            listOf(
-                strings.navFavorites to onOpenFavorites,
-                strings.reciters to onOpenReciters,
-                strings.navSettings to onOpenSettings,
-            ).forEach { (label, action) ->
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = action),
-                )
-            }
-        }
-    }
+    // Same colophon as every other page; the web links come from SiteFooter itself.
+    SiteFooter()
 }
 
 @Composable

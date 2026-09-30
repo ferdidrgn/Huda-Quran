@@ -24,6 +24,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -63,6 +64,7 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 items(duas, key = { it.id }) { dua -> DuaCard(dua) }
             }
             if (showAds) item(key = "ad_end") { AdBannerCard() }
+            item(key = "site_footer") { SiteFooter() }
         }
     }
     }

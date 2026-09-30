@@ -53,6 +53,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
@@ -185,6 +186,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                                     item(span = { GridItemSpan(maxLineSpan) }, key = "ad_$chunkIndex") { ListAdCard() }
                                 }
                             }
+                            item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
                         }
                     }
                 }

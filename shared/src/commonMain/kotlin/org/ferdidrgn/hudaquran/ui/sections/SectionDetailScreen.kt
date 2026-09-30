@@ -34,6 +34,7 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
@@ -110,6 +111,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
                         if (showAds && index == midIndex) AdBannerCard()
                     }
                     if (showAds) item { AdBannerCard() }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }

@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.learn
 
-import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +41,8 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -91,6 +92,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
                 if (showAds) {
                     item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
+                item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
             }
         }
     }

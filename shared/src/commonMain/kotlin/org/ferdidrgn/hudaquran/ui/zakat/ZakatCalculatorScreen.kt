@@ -51,6 +51,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -261,7 +262,7 @@ fun ZakatCalculatorScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 )
 
                 if (showAds) AdBannerCard()
-                Spacer(Modifier.height(12.dp))
+                SiteFooter()
             }
         }
     }

@@ -40,6 +40,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -178,6 +179,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                     }
                     if (showAds && showListAdAfter(itemIndex, entries.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }

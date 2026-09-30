@@ -36,6 +36,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
@@ -99,6 +100,7 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                     }
                 }
                 if (showAds) item(key = "ad_end") { AdBannerCard() }
+                item(key = "site_footer") { SiteFooter() }
             }
         }
     }

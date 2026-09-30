@@ -33,6 +33,7 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -107,6 +108,7 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         if (showAds && index == midIndex) AdBannerCard()
                     }
                     if (showAds) item { AdBannerCard() }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }

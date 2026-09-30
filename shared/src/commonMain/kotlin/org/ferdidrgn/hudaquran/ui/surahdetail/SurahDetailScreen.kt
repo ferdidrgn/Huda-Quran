@@ -56,6 +56,7 @@ import org.ferdidrgn.hudaquran.ui.components.IlluminatedFrame
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -217,6 +218,7 @@ fun SurahDetailScreen(
                         }
                     }
                     if (showAds) item(key = "ad_end") { AdBannerCard() }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }

@@ -29,6 +29,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -91,6 +92,7 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
                 if (showAds) {
                     item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
+                item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
             }
         }
     }

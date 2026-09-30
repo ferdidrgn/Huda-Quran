@@ -62,6 +62,7 @@ import org.ferdidrgn.hudaquran.ui.components.FilterPill
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
@@ -375,6 +376,7 @@ fun SettingsScreen(
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
             modifier = Modifier.padding(16.dp),
         )
+        SiteFooter()
     }
     }
 }
