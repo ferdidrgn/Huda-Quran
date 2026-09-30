@@ -63,6 +63,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
@@ -115,7 +116,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     }
 
     Box(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().screenBackground(),
         contentAlignment = Alignment.TopCenter,
     ) {
         IslamicMotifBackground(

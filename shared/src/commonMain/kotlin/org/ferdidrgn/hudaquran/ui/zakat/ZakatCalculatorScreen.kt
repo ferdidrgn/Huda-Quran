@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.zakat
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private const val ZAKAT_RATE = 0.025
@@ -48,7 +48,7 @@ fun ZakatCalculatorScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val wealth = wealthInput.replace(",", ".").toDoubleOrNull()
     val zakatAmount = if (submitted) wealth?.let { it * ZAKAT_RATE } else null
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,

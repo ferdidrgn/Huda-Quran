@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.sections
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +34,7 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
 
@@ -67,7 +67,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
         isLoading = false
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize().screenBackground()) {
         PageHeader(title = "${strings.sectionSingular(kind)} $number", onBack = onBack)
 
         when {

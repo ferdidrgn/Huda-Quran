@@ -112,6 +112,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -242,7 +243,7 @@ fun HomeScreen(
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = if (isWeb) 240.dp else 160.dp),
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().screenBackground(),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -701,7 +702,7 @@ private fun WebHomeContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .screenBackground()
             .verticalScroll(rememberScrollState()),
         contentAlignment = Alignment.TopCenter,
     ) {

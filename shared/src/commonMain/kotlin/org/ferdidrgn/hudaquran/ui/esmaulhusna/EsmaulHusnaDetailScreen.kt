@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
@@ -42,7 +43,7 @@ fun EsmaulHusnaDetailScreen(index: Int, modifier: Modifier = Modifier, onBack: (
     val safeIndex = index.coerceIn(0, esmaulHusna.lastIndex)
     val esma = esmaulHusna[safeIndex]
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize().screenBackground()) {
         PageHeader(title = strings.esmaulHusnaTitle, subtitle = "${safeIndex + 1} / ${esmaulHusna.size}", onBack = onBack)
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {

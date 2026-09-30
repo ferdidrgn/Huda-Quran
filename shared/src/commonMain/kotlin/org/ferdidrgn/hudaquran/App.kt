@@ -1,5 +1,6 @@
 package org.ferdidrgn.hudaquran
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -11,9 +12,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,9 +30,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.time.TimeSource
 import org.ferdidrgn.hudaquran.ads.AdGate
 import org.ferdidrgn.hudaquran.ads.AdManager
 import org.ferdidrgn.hudaquran.analytics.AppAnalytics
@@ -45,24 +47,27 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
+import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
 import org.ferdidrgn.hudaquran.ui.components.AppBottomNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppSideNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppTopNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
-import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.LocalMotifDrawnByHost
 import org.ferdidrgn.hudaquran.ui.components.LocalScreenEntranceStart
+import org.ferdidrgn.hudaquran.ui.components.WindowSizeClass
 import org.ferdidrgn.hudaquran.ui.components.isBottomNavDestination
 import org.ferdidrgn.hudaquran.ui.components.windowSizeClassOf
+import org.ferdidrgn.hudaquran.ui.dua.DuaListScreen
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
-import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
-import org.ferdidrgn.hudaquran.ui.dua.DuaListScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
-import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
-import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonListScreen
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import org.ferdidrgn.hudaquran.ui.mushaf.MushafPageScreen
 import org.ferdidrgn.hudaquran.ui.navigation.AppBackHandler
 import org.ferdidrgn.hudaquran.ui.navigation.AppNavigator
@@ -79,20 +84,18 @@ import org.ferdidrgn.hudaquran.ui.sajda.SajdaAyahsScreen
 import org.ferdidrgn.hudaquran.ui.search.SearchScreen
 import org.ferdidrgn.hudaquran.ui.sections.SectionDetailScreen
 import org.ferdidrgn.hudaquran.ui.sections.SectionListScreen
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
-import org.ferdidrgn.hudaquran.ui.localization.Strings
-import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import org.ferdidrgn.hudaquran.ui.settings.EditionPickerScreen
 import org.ferdidrgn.hudaquran.ui.settings.PickerItem
 import org.ferdidrgn.hudaquran.ui.settings.SettingsScreen
 import org.ferdidrgn.hudaquran.ui.splash.SplashScreen
 import org.ferdidrgn.hudaquran.ui.surahdetail.SurahDetailScreen
-import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
 import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
+import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
 import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
+import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
 
 private const val APP_TITLE = "Huda Qur'an"
 
@@ -146,8 +149,11 @@ fun App() {
     val strings = stringsFor(appLanguage)
     val layoutDirection = if (appLanguage == AppLanguage.ARABIC) LayoutDirection.Rtl else LayoutDirection.Ltr
     val baseDensity = LocalDensity.current
+    // The website is read at arm's length on a monitor: everything (text, buttons, spacing) is
+    // drawn 10% larger there than the same dp on a phone.
+    val platformScale = if (currentPlatform == Platform.WEB) 1.1f else 1f
     val scaledDensity = remember(baseDensity, textSize) {
-        Density(density = baseDensity.density, fontScale = textSize.scale)
+        Density(density = baseDensity.density * platformScale, fontScale = textSize.scale)
     }
     val arabicFontFamily = rememberArabicFontFamily()
     CompositionLocalProvider(
@@ -197,7 +203,7 @@ fun App() {
             if (navigator.canGoBack()) navigator.back() else navigator.replaceAll(Screen.Home)
         }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             val sizeClass = windowSizeClassOf(maxWidth)
 
             when {
@@ -222,6 +228,13 @@ fun App() {
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                             contentAlignment = Alignment.TopCenter,
                         ) {
+                            // Background and motif span the whole window; only the content column
+                            // is capped, so wide screens never show bare side bands.
+                            IslamicMotifBackground(
+                                modifier = Modifier.matchParentSize(),
+                                tint = MaterialTheme.colorScheme.primary,
+                                alpha = 0.035f,
+                            )
                             val contentModifier = if (sizeClass == WindowSizeClass.COMPACT || !isReadingScreen(screen)) {
                                 Modifier.fillMaxSize()
                             } else {
@@ -233,14 +246,16 @@ fun App() {
                                 Modifier.widthIn(max = contentMaxWidth).fillMaxSize()
                             }
                             Box(modifier = contentModifier) {
-                                AppDestinationContent(
-                                    screen = screen,
-                                    navigator = navigator,
-                                    contentModifier = Modifier,
-                                    strings = strings,
-                                    preferences = preferences,
-                                    coroutineScope = coroutineScope,
-                                )
+                                CompositionLocalProvider(LocalMotifDrawnByHost provides true) {
+                                    AppDestinationContent(
+                                        screen = screen,
+                                        navigator = navigator,
+                                        contentModifier = Modifier,
+                                        strings = strings,
+                                        preferences = preferences,
+                                        coroutineScope = coroutineScope,
+                                    )
+                                }
                             }
                         }
                         if (nowPlaying != null) {
@@ -302,20 +317,27 @@ fun App() {
                                 modifier = Modifier.fillMaxSize().padding(padding),
                                 contentAlignment = Alignment.TopCenter,
                             ) {
+                                IslamicMotifBackground(
+                                    modifier = Modifier.matchParentSize(),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    alpha = 0.035f,
+                                )
                                 val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
                                     expandedContentMaxWidth
                                 } else {
                                     mediumContentMaxWidth
                                 }
                                 Box(modifier = Modifier.widthIn(max = contentMaxWidth).fillMaxSize()) {
-                                    AppDestinationContent(
-                                        screen = screen,
-                                        navigator = navigator,
-                                        contentModifier = Modifier,
-                                        strings = strings,
-                                        preferences = preferences,
-                                        coroutineScope = coroutineScope,
-                                    )
+                                    CompositionLocalProvider(LocalMotifDrawnByHost provides true) {
+                                        AppDestinationContent(
+                                            screen = screen,
+                                            navigator = navigator,
+                                            contentModifier = Modifier,
+                                            strings = strings,
+                                            preferences = preferences,
+                                            coroutineScope = coroutineScope,
+                                        )
+                                    }
                                 }
                             }
                         }

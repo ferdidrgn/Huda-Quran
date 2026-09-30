@@ -50,6 +50,7 @@ import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
@@ -111,7 +112,7 @@ fun SettingsScreen(
     // page, not the same phone column stretched full-bleed across the screen. A no-op on mobile,
     // where the available width is always under the cap.
     Box(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().screenBackground(),
         contentAlignment = Alignment.TopCenter,
     ) {
     org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground(

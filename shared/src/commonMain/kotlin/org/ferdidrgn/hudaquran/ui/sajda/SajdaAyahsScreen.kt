@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.sajda
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
@@ -65,7 +65,7 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         isLoading = false
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize().screenBackground()) {
         PageHeader(title = strings.sajdaTitle, subtitle = strings.sajdaSubtitle, onBack = onBack)
 
         when {

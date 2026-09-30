@@ -50,6 +50,7 @@ import org.ferdidrgn.hudaquran.ui.components.HudaSearchField
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
@@ -87,7 +88,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         if (query.isBlank()) reciters else reciters.filter { it.displayName.contains(query, ignoreCase = true) }
     }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,

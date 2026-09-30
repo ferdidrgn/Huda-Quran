@@ -56,6 +56,7 @@ import org.ferdidrgn.hudaquran.ui.components.IlluminatedFrame
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
@@ -117,7 +118,7 @@ fun SurahDetailScreen(
     // book page, not the same phone column stretched full-bleed across the screen. A no-op on
     // mobile, where the available width is always under the cap.
     Box(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().screenBackground(),
         contentAlignment = Alignment.TopCenter,
     ) {
     IslamicMotifBackground(

@@ -1,5 +1,6 @@
 package org.ferdidrgn.hudaquran.ui.learn
 
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,35 +30,27 @@ import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun TajwidLessonListScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenLesson: (String) -> Unit) {
     val strings = LocalStrings.current
     val showAds = !AppContainer.preferences.isAdFree()
     val midIndex = tajwidCourse.size / 2
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Column {
-                Text(strings.readingLessonsTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(
-                    strings.lessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                )
-            }
-        }
+        PageHeader(
+            title = strings.readingLessonsTitle,
+            subtitle = strings.lessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
+            onBack = onBack,
+        )
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -16,8 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -32,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
@@ -128,8 +132,13 @@ fun GlassSurface(
         base
     }
 
-    Column(
-        modifier = interactive.padding(contentPadding),
-        content = content,
-    )
+    // Text and icons inside the card follow the card's own "on" colour instead of black.
+    val contentColor = MaterialTheme.colorScheme.contentColorFor(containerColor)
+        .takeOrElse { MaterialTheme.colorScheme.onSurface }
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Column(
+            modifier = interactive.padding(contentPadding),
+            content = content,
+        )
+    }
 }
