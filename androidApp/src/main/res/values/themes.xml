@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Launch/window theme in the Sakura palette, so the first frame (and the Android 12+ system
+      splash, which takes its colours from here) matches the app instead of a white or green flash.
+      Compose repaints the bars per theme at runtime (SystemBarsEffect).
+    -->
+    <style name="Theme.HudaQuran" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/sakura_ink</item>
+        <item name="android:colorBackground">@color/sakura_ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/sakura_ink</item>
+    </style>
+</resources>

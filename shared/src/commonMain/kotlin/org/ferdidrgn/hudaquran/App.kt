@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
@@ -208,10 +210,18 @@ fun App() {
 
             when {
                 !chromeVisible -> {
+                    // Full-screen destinations have no Scaffold to pad them: keep Mushaf and the
+                    // player below the status bar and above the navigation bar. Splash and
+                    // onboarding paint edge to edge and inset their own content.
+                    val insetModifier = if (screen == Screen.Splash || screen == Screen.Onboarding) {
+                        Modifier
+                    } else {
+                        Modifier.windowInsetsPadding(WindowInsets.systemBars)
+                    }
                     AppDestinationContent(
                         screen = screen,
                         navigator = navigator,
-                        contentModifier = Modifier,
+                        contentModifier = insetModifier,
                         strings = strings,
                         preferences = preferences,
                         coroutineScope = coroutineScope,
@@ -294,7 +304,7 @@ fun App() {
                     // Tablet (MEDIUM) and desktop (EXPANDED) Android/iOS windows trade the bottom
                     // tab bar for a persistent side rail/drawer and cap content width so it stays
                     // comfortable to read.
-                    Row(modifier = Modifier.fillMaxSize()) {
+                    Row(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
                         AppSideNavigationBar(
                             navigator = navigator,
                             current = screen,
@@ -553,6 +563,7 @@ private fun AppDestinationContent(
         )
 
         is Screen.NowPlaying -> NowPlayingScreen(
+            modifier = contentModifier,
             onClose = { navigator.back() },
         )
 

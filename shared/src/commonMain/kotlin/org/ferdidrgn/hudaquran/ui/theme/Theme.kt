@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontSynthesis
@@ -135,6 +136,7 @@ fun HudaQuranTheme(
         // Material only sets LocalContentColor inside a Surface; everywhere else a Text or Icon
         // without an explicit colour fell back to black, which was unreadable on the Sakura and
         // Dark backgrounds (lesson titles, Esma names, "continue reading" rows).
+        SystemBarsEffect(isDarkTheme = colors.background.luminance() < 0.5f, barColor = colors.background)
         CompositionLocalProvider(LocalContentColor provides colors.onBackground, content = content)
     }
 }
