@@ -32,11 +32,13 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.sectionPlural
 import org.ferdidrgn.hudaquran.ui.localization.sectionSingular
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 @Composable
 private fun SectionCell(number: Int, singularLabel: String, onOpenSection: (Int) -> Unit) {
@@ -62,7 +64,13 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
         count = runCatching { repository.getMeta().countFor(kind) }.getOrNull()
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -74,7 +82,7 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
         if (total == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
-            val showAds = !preferences.isAdFree()
+            val showAds = adsSupported && !preferences.isAdFree()
             val midCount = total / 2
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 96.dp),
@@ -96,5 +104,6 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
                 }
             }
         }
+    }
     }
 }

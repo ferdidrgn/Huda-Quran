@@ -39,8 +39,11 @@ import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 
@@ -75,7 +78,13 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Text(
             strings.navSurahs,
             style = MaterialTheme.typography.headlineMedium,
@@ -102,7 +111,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                 }
             }
             else -> {
-                val showAds = !preferences.isAdFree()
+                val showAds = adsSupported && !preferences.isAdFree()
                 val isWeb = currentPlatform == Platform.WEB
                 LazyVerticalGrid(
                     // On a website, a single-file mobile list stretched across a wide window
@@ -113,17 +122,17 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    itemsIndexed(filtered, key = { _, surah -> surah.number }) { index, surah ->
-                        SurahRow(surah, appLanguage, strings) { onOpenSurah(surah.number) }
-                        if (showAds && index == 7) {
-                            AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                    filtered.chunked(LIST_AD_INTERVAL).forEachIndexed { chunkIndex, chunk ->
+                        itemsIndexed(chunk, key = { _, surah -> surah.number }) { _, surah ->
+                            SurahRow(surah, appLanguage, strings) { onOpenSurah(surah.number) }
                         }
-                    }
-                    if (showAds) {
-                        item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard() }
+                        if (showAds && (chunk.size == LIST_AD_INTERVAL || filtered.size < LIST_AD_INTERVAL)) {
+                            item(span = { GridItemSpan(maxLineSpan) }, key = "ad_$chunkIndex") { ListAdCard() }
+                        }
                     }
                 }
             }
+        }
         }
     }
 }

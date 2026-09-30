@@ -28,8 +28,13 @@ class DeepLinkTest {
     }
 
     @Test
-    fun surahWithoutNumberIsUnparseable() {
-        assertNull(DeepLink.parse("/surah"))
+    fun surahWithoutNumberOpensSurahList() {
+        assertEquals(Screen.SurahList, DeepLink.parse("/surah"))
+    }
+
+    @Test
+    fun surahWithNonNumericSegmentIsUnparseable() {
+        assertNull(DeepLink.parse("/surah/abc"))
     }
 
     @Test
@@ -58,7 +63,12 @@ class DeepLinkTest {
     fun sectionKindsListAndDetail() {
         assertEquals(Screen.SectionList(SectionKind.JUZ), DeepLink.parse("/juz"))
         assertEquals(Screen.SectionDetail(SectionKind.JUZ, 5), DeepLink.parse("/juz/5"))
-        assertEquals(Screen.SectionDetail(SectionKind.PAGE, 100), DeepLink.parse("/page/100"))
+        assertEquals(Screen.SectionList(SectionKind.PAGE), DeepLink.parse("/page"))
+    }
+
+    @Test
+    fun singlePageOpensMushafReader() {
+        assertEquals(Screen.MushafPage(100), DeepLink.parse("/page/100"))
     }
 
     @Test
@@ -88,6 +98,9 @@ class DeepLinkTest {
             Screen.MushafPage(42),
             Screen.SectionDetail(SectionKind.JUZ, 3),
             Screen.TajwidLessonDetail("tajwid-1"),
+            Screen.EsmaulHusnaList,
+            Screen.EsmaulHusnaDetail(7),
+            Screen.SurahList,
         )
         for (screen in screens) {
             val link = DeepLink.buildLink(screen)

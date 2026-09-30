@@ -6,8 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import platform.AVFoundation.AVAudioSession
-import platform.AVFoundation.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.setActive
 import platform.Foundation.NSNumber
 import platform.MediaPlayer.MPMediaItemPropertyArtist
 import platform.MediaPlayer.MPMediaItemPropertyPlaybackDuration
@@ -16,7 +17,7 @@ import platform.MediaPlayer.MPNowPlayingInfoCenter
 import platform.MediaPlayer.MPNowPlayingInfoPropertyElapsedPlaybackTime
 import platform.MediaPlayer.MPNowPlayingInfoPropertyPlaybackRate
 import platform.MediaPlayer.MPRemoteCommandCenter
-import platform.MediaPlayer.MPRemoteCommandHandlerStatus
+import platform.MediaPlayer.MPRemoteCommandHandlerStatusSuccess
 
 @OptIn(ExperimentalForeignApi::class)
 actual class NowPlayingController actual constructor(private val playbackManager: PlaybackManager) {
@@ -35,20 +36,20 @@ actual class NowPlayingController actual constructor(private val playbackManager
 
         val commandCenter = MPRemoteCommandCenter.sharedCommandCenter()
         commandCenter.playCommand.addTargetWithHandler { _ ->
-            playbackManager.togglePlayPause()
-            MPRemoteCommandHandlerStatus.MPRemoteCommandHandlerStatusSuccess
+            playbackManager.resume()
+            MPRemoteCommandHandlerStatusSuccess
         }
         commandCenter.pauseCommand.addTargetWithHandler { _ ->
-            playbackManager.togglePlayPause()
-            MPRemoteCommandHandlerStatus.MPRemoteCommandHandlerStatusSuccess
+            playbackManager.pause()
+            MPRemoteCommandHandlerStatusSuccess
         }
         commandCenter.togglePlayPauseCommand.addTargetWithHandler { _ ->
             playbackManager.togglePlayPause()
-            MPRemoteCommandHandlerStatus.MPRemoteCommandHandlerStatusSuccess
+            MPRemoteCommandHandlerStatusSuccess
         }
         commandCenter.stopCommand.addTargetWithHandler { _ ->
             playbackManager.stop()
-            MPRemoteCommandHandlerStatus.MPRemoteCommandHandlerStatusSuccess
+            MPRemoteCommandHandlerStatusSuccess
         }
 
         scope.launch {

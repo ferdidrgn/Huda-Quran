@@ -1,5 +1,9 @@
 package org.ferdidrgn.hudaquran.ui.navigation
 
-actual fun syncBrowserUrl(path: String) {
+actual fun syncBrowserUrl(path: String, replace: Boolean) {
     // No address bar on iOS.
+}
+
+actual fun observeBrowserNavigation(onUrlChanged: (String) -> Unit) {
+    // No browser back/forward history on iOS.
 }

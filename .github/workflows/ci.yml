@@ -20,6 +20,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default also installs the legacy `tools` package, which the SDK
+          # repository no longer serves ("Failed to find package 'tools'").
+          packages: platform-tools
 
       - name: Install required Android SDK platform
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
@@ -98,6 +102,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default also installs the legacy `tools` package, which the SDK
+          # repository no longer serves ("Failed to find package 'tools'").
+          packages: platform-tools
 
       - name: Install required Android SDK platform
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
@@ -127,7 +135,10 @@ jobs:
 
   build-ios:
     needs: test
-    runs-on: macos-14
+    # Compose Multiplatform 1.11 links against iOS 26 APIs (e.g. UIViewLayoutRegion), which
+    # macos-14's newest Xcode (16.x / iOS 18 SDK) doesn't have — the link step fails with
+    # "Undefined symbols ... UIViewLayoutRegion". The latest image carries an Xcode 26 toolchain.
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -141,7 +152,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # macos-14 runners ship several Xcode versions side by side under /Applications, with the
+      # macOS runners ship several Xcode versions side by side under /Applications, with the
       # "default" one often older than the project file's format needs. Rather than pinning a
       # specific version here (which drifts as the runner image updates), always pick whichever
       # Xcode is newest on the runner.

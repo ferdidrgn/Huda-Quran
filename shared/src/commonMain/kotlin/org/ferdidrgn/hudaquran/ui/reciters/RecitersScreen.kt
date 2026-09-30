@@ -46,11 +46,13 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private const val PREVIEW_SURAH_NUMBER = 1
 private const val PREVIEW_SURAH_NAME = "Al-Faatiha"
@@ -85,7 +87,13 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         if (query.isBlank()) reciters else reciters.filter { it.displayName.contains(query, ignoreCase = true) }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -156,12 +164,12 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                             }
                         },
                     )
-                    if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(top = 10.dp))
+                    if (showAds && showListAdAfter(index, filtered.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
-                    if (showAds) item { AdBannerCard() }
                 }
             }
         }
+    }
     }
 }
 

@@ -26,12 +26,19 @@ object DeepLink {
         val sectionKind = SectionKind.entries.firstOrNull { it.apiPath == segments[0] }
         if (sectionKind != null) {
             val number = segments.getOrNull(1)?.toIntOrNull()
-            return if (number != null) Screen.SectionDetail(sectionKind, number) else Screen.SectionList(sectionKind)
+            return when {
+                number == null -> Screen.SectionList(sectionKind)
+                // A single page opens in the book reader, matching in-app taps (old /page/N links too).
+                sectionKind == SectionKind.PAGE -> Screen.MushafPage(number)
+                else -> Screen.SectionDetail(sectionKind, number)
+            }
         }
 
         return when (segments[0]) {
             "surah" -> {
-                val number = segments.getOrNull(1)?.toIntOrNull() ?: return null
+                // Bare "/surah" is the Surah list's own address (see toPath), so it must parse back.
+                if (segments.size == 1) return Screen.SurahList
+                val number = segments[1].toIntOrNull() ?: return null
                 val ayah = segments.getOrNull(2)?.toIntOrNull()
                 Screen.SurahDetail(number, ayah)
             }
@@ -46,6 +53,13 @@ object DeepLink {
             }
             "mushaf" -> Screen.MushafPage(segments.getOrNull(1)?.toIntOrNull() ?: 1)
             "qibla" -> Screen.Qibla
+            "esma-ul-husna" -> {
+                val index = segments.getOrNull(1)?.toIntOrNull()
+                if (index != null) Screen.EsmaulHusnaDetail(index) else Screen.EsmaulHusnaList
+            }
+            "zakat" -> Screen.ZakatCalculator
+            "dua" -> Screen.DuaList
+            "islamic-calendar" -> Screen.IslamicCalendar
             else -> null
         }
     }
@@ -113,5 +127,10 @@ object DeepLink {
         is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
         is Screen.Qibla -> "/qibla"
+        is Screen.EsmaulHusnaList -> "/esma-ul-husna"
+        is Screen.EsmaulHusnaDetail -> "/esma-ul-husna/${screen.index}"
+        is Screen.ZakatCalculator -> "/zakat"
+        is Screen.DuaList -> "/dua"
+        is Screen.IslamicCalendar -> "/islamic-calendar"
     }
 }

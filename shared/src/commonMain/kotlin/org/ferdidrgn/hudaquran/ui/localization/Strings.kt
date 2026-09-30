@@ -35,6 +35,7 @@ data class Strings(
     val dailyAyahError: String,
     val readingLessonsTitle: String,
     val readingLessonsSubtitleTemplate: String,
+    val quickActionsTitle: String,
     val esmaulHusnaTitle: String,
     val discoverQuranTitle: String,
     val mushafModeLabel: String,
@@ -90,6 +91,7 @@ data class Strings(
     val themeSystem: String,
     val themeLight: String,
     val themeDark: String,
+    val themeSakura: String,
 
     // EditionPicker
     val editionSearchPlaceholder: String,
@@ -158,10 +160,8 @@ data class Strings(
     // Mushaf mode extras
     val cancelLabel: String,
     val goLabel: String,
-    val dismissLabel: String,
     val mushafJumpToPageTitle: String,
     val mushafJumpToPageHint: String,
-    val mushafLandscapeHintText: String,
     val mushafResumeSubtitleTemplate: String,
     val mushafStartSubtitle: String,
 
@@ -198,6 +198,20 @@ data class Strings(
     val textSizeNormal: String,
     val textSizeLarge: String,
     val textSizeExtraLarge: String,
+
+    // New feature additions (zakat/dua/calendar/streak/share/hajj)
+    val zakatCalculatorTitle: String,
+    val zakatWealthLabel: String,
+    val zakatCalculateButton: String,
+    val zakatResultTemplate: String,
+    val zakatNisabInfo: String,
+    val duaListTitle: String,
+    val islamicCalendarTitle: String,
+    val islamicDaysRemainingTemplate: String,
+    val streakDaysTemplate: String,
+    val cdShare: String,
+    val hacKuraLabel: String,
+    val moreTitle: String,
 )
 
 private val turkish = Strings(
@@ -214,6 +228,7 @@ private val turkish = Strings(
     dailyAyahTitle = "Günün Ayeti", dailyAyahError = "Ayet yüklenemedi, tekrar deneyin.",
     readingLessonsTitle = "Kur'an Okuma Dersleri",
     readingLessonsSubtitleTemplate = "Elif-Ba'dan tecvide, sesli telaffuzlu {n} sıralı ders",
+    quickActionsTitle = "Hızlı Erişim",
     esmaulHusnaTitle = "Esma-ül Hüsna", discoverQuranTitle = "Kur'an'ı Keşfet",
     mushafModeLabel = "Kitap Okuma Modu", toggleTranslationLabel = "Meali Göster/Gizle",
     pagesLabel = "Sayfalar", manzilsLabel = "Menziller", rukusLabel = "Rükûlar",
@@ -241,7 +256,7 @@ private val turkish = Strings(
     supportUsTitle = "Destek Ol", adFreeActiveMessage = "Reklamsız üyeliğiniz aktif, teşekkürler! 💚",
     supportUsMessage = "Uygulamayı geliştirmemize destek olun", smallDonationButton = "☕ Küçük Bağış",
     mediumDonationButton = "🎁 Orta Bağış", sixMonthAdFreeButton = "✨ 6 Aylık Reklamsız Üyelik",
-    themeSystem = "🖥️ Sistem", themeLight = "☀️ Açık", themeDark = "🌙 Koyu",
+    themeSystem = "🖥️ Sistem", themeLight = "☀️ Açık", themeDark = "🌙 Koyu", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Ara",
     selectTranslationTitle = "Meal Seçin", selectLocationTitle = "Konum Seçin", selectLanguageTitle = "Dil Seçin",
@@ -281,9 +296,8 @@ private val turkish = Strings(
     lessonsSubtitleTemplate = "Elif-Ba'dan tecvide, sıralı {n} ders", lessonNotFound = "Ders bulunamadı",
     lessonFallback = "Ders", pronounceContentDescription = "Telaffuzu dinle",
 
-    cancelLabel = "İptal", goLabel = "Git", dismissLabel = "Kapat",
+    cancelLabel = "İptal", goLabel = "Git",
     mushafJumpToPageTitle = "Sayfaya Git", mushafJumpToPageHint = "Sayfa numarası (1-604)",
-    mushafLandscapeHintText = "Telefonunuzu yan çevirin, gerçek bir kitap gibi çift sayfa okuyun",
     mushafResumeSubtitleTemplate = "Sayfa {n}'de kaldınız, devam edin",
     mushafStartSubtitle = "Kitap gibi okuyun, sayfa sayfa çevirin",
 
@@ -300,6 +314,18 @@ private val turkish = Strings(
     qiblaLiveInstructions = "Telefonu düz tutun ve ok, dairenin üstündeki üçgene gelene kadar yavaşça çevirin.",
     tafsirVsMealHint = "Meal, ayetin çevirisidir. Tefsir ise ayetin bağlamını ve anlamını ayrıntılı açıklayan yorumdur.",
     textSizeLabel = "Yazı Boyutu", textSizeHint = "Görmekte zorlanıyorsanız yazıları büyütün.", textSizeNormal = "Normal", textSizeLarge = "Büyük", textSizeExtraLarge = "Çok Büyük",
+    zakatCalculatorTitle = "Zekât Hesaplayıcı",
+    zakatWealthLabel = "Toplam Varlığınız (nakit, altın, gümüş vb.)",
+    zakatCalculateButton = "Hesapla",
+    zakatResultTemplate = "Zekâtınız: {amount}",
+    zakatNisabInfo = "Zekât, nisap miktarına (yaklaşık 85 gr altın değeri) ulaşan ve üzerinden bir yıl geçen varlığın %2,5'idir. Bu hesaplama genel bir rehberdir, dini danışmanlık yerine geçmez.",
+    duaListTitle = "Dualar",
+    islamicCalendarTitle = "İslami Takvim",
+    islamicDaysRemainingTemplate = "{n} gün kaldı",
+    streakDaysTemplate = "{n} günlük okuma serisi",
+    cdShare = "Paylaş",
+    hacKuraLabel = "Hac Kur'ası Sonuç Sorgulama",
+    moreTitle = "Diğer",
 )
 
 private val english = Strings(
@@ -316,6 +342,7 @@ private val english = Strings(
     dailyAyahTitle = "Verse of the Day", dailyAyahError = "Couldn't load the verse, try again.",
     readingLessonsTitle = "Quran Reading Lessons",
     readingLessonsSubtitleTemplate = "From Elif-Ba to Tajwid, {n} guided lessons with audio",
+    quickActionsTitle = "Quick Actions",
     esmaulHusnaTitle = "The 99 Names of Allah", discoverQuranTitle = "Explore the Quran",
     mushafModeLabel = "Mushaf Mode", toggleTranslationLabel = "Show/Hide Translation",
     pagesLabel = "Pages", manzilsLabel = "Manzils", rukusLabel = "Rukus",
@@ -343,7 +370,7 @@ private val english = Strings(
     supportUsTitle = "Support Us", adFreeActiveMessage = "Your ad-free membership is active, thank you! 💚",
     supportUsMessage = "Help us keep improving the app", smallDonationButton = "☕ Small Donation",
     mediumDonationButton = "🎁 Medium Donation", sixMonthAdFreeButton = "✨ 6-Month Ad-Free Membership",
-    themeSystem = "🖥️ System", themeLight = "☀️ Light", themeDark = "🌙 Dark",
+    themeSystem = "🖥️ System", themeLight = "☀️ Light", themeDark = "🌙 Dark", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Search",
     selectTranslationTitle = "Select Translation", selectLocationTitle = "Select Location", selectLanguageTitle = "Select Language",
@@ -383,9 +410,8 @@ private val english = Strings(
     lessonsSubtitleTemplate = "From Elif-Ba to Tajwid, {n} guided lessons", lessonNotFound = "Lesson not found",
     lessonFallback = "Lesson", pronounceContentDescription = "Listen to pronunciation",
 
-    cancelLabel = "Cancel", goLabel = "Go", dismissLabel = "Dismiss",
+    cancelLabel = "Cancel", goLabel = "Go",
     mushafJumpToPageTitle = "Go to Page", mushafJumpToPageHint = "Page number (1-604)",
-    mushafLandscapeHintText = "Rotate your phone sideways to read two pages at once, just like a real book",
     mushafResumeSubtitleTemplate = "You left off on page {n} — continue reading",
     mushafStartSubtitle = "Read like a real book, page by page",
 
@@ -402,6 +428,18 @@ private val english = Strings(
     qiblaLiveInstructions = "Hold your phone flat and slowly turn until the arrow lines up with the triangle above the circle.",
     tafsirVsMealHint = "Translation renders the ayah's meaning in your language. Tafsir is a longer scholarly explanation of its context and meaning.",
     textSizeLabel = "Text Size", textSizeHint = "Make text bigger if you have trouble reading it.", textSizeNormal = "Normal", textSizeLarge = "Large", textSizeExtraLarge = "Extra Large",
+    zakatCalculatorTitle = "Zakat Calculator",
+    zakatWealthLabel = "Your Total Wealth (cash, gold, silver, etc.)",
+    zakatCalculateButton = "Calculate",
+    zakatResultTemplate = "Your Zakat: {amount}",
+    zakatNisabInfo = "Zakat is 2.5% of wealth that has reached the nisab threshold (about 85g of gold in value) and been held for a full year. This is a general guide, not religious advice.",
+    duaListTitle = "Supplications",
+    islamicCalendarTitle = "Islamic Calendar",
+    islamicDaysRemainingTemplate = "{n} days left",
+    streakDaysTemplate = "{n}-day reading streak",
+    cdShare = "Share",
+    hacKuraLabel = "Hajj Lottery Result Lookup",
+    moreTitle = "More",
 )
 
 private val arabic = Strings(
@@ -418,6 +456,7 @@ private val arabic = Strings(
     dailyAyahTitle = "آية اليوم", dailyAyahError = "تعذر تحميل الآية، حاول مرة أخرى.",
     readingLessonsTitle = "دروس تعلم القراءة",
     readingLessonsSubtitleTemplate = "من الألف باء إلى التجويد، {n} دروس مرتبة بالصوت",
+    quickActionsTitle = "الوصول السريع",
     esmaulHusnaTitle = "أسماء الله الحسنى", discoverQuranTitle = "استكشف القرآن",
     mushafModeLabel = "وضع المصحف", toggleTranslationLabel = "إظهار/إخفاء الترجمة",
     pagesLabel = "الصفحات", manzilsLabel = "المنازل", rukusLabel = "الركوعات",
@@ -445,7 +484,7 @@ private val arabic = Strings(
     supportUsTitle = "ادعمنا", adFreeActiveMessage = "عضويتك بدون إعلانات مفعّلة، شكرًا لك! 💚",
     supportUsMessage = "ساعدنا في تطوير التطبيق", smallDonationButton = "☕ تبرع صغير",
     mediumDonationButton = "🎁 تبرع متوسط", sixMonthAdFreeButton = "✨ عضوية بدون إعلانات لمدة 6 أشهر",
-    themeSystem = "🖥️ النظام", themeLight = "☀️ فاتح", themeDark = "🌙 داكن",
+    themeSystem = "🖥️ النظام", themeLight = "☀️ فاتح", themeDark = "🌙 داكن", themeSakura = "🌸 ساكورا",
 
     editionSearchPlaceholder = "بحث",
     selectTranslationTitle = "اختر الترجمة", selectLocationTitle = "اختر الموقع", selectLanguageTitle = "اختر اللغة",
@@ -485,9 +524,8 @@ private val arabic = Strings(
     lessonsSubtitleTemplate = "من الألف باء إلى التجويد، {n} دروس مرتبة", lessonNotFound = "الدرس غير موجود",
     lessonFallback = "درس", pronounceContentDescription = "استمع إلى النطق",
 
-    cancelLabel = "إلغاء", goLabel = "اذهب", dismissLabel = "إغلاق",
+    cancelLabel = "إلغاء", goLabel = "اذهب",
     mushafJumpToPageTitle = "الانتقال إلى صفحة", mushafJumpToPageHint = "رقم الصفحة (1-604)",
-    mushafLandscapeHintText = "أدر هاتفك أفقيًا لقراءة صفحتين في آنٍ واحد، كما في المصحف الحقيقي",
     mushafResumeSubtitleTemplate = "توقفت عند الصفحة {n}، تابع القراءة",
     mushafStartSubtitle = "اقرأ كأنه كتاب حقيقي، صفحة بصفحة",
 
@@ -504,6 +542,18 @@ private val arabic = Strings(
     qiblaLiveInstructions = "أمسك هاتفك أفقيًا وأدره ببطء حتى يتوافق السهم مع المثلث أعلى الدائرة.",
     tafsirVsMealHint = "الترجمة (المعنى) هي نقل معنى الآية. أما التفسير فهو شرح تفصيلي لسياق الآية ومعناها.",
     textSizeLabel = "حجم النص", textSizeHint = "كبّر النص إذا كنت تواجه صعوبة في القراءة.", textSizeNormal = "عادي", textSizeLarge = "كبير", textSizeExtraLarge = "كبير جدًا",
+    zakatCalculatorTitle = "حاسبة الزكاة",
+    zakatWealthLabel = "إجمالي ثروتك (نقد، ذهب، فضة، إلخ)",
+    zakatCalculateButton = "احسب",
+    zakatResultTemplate = "زكاتك: {amount}",
+    zakatNisabInfo = "الزكاة هي 2.5% من المال الذي بلغ النصاب (حوالي 85 جرامًا من الذهب) وحال عليه الحول. هذا دليل عام وليس فتوى دينية.",
+    duaListTitle = "الأدعية",
+    islamicCalendarTitle = "التقويم الإسلامي",
+    islamicDaysRemainingTemplate = "باقي {n} يومًا",
+    streakDaysTemplate = "سلسلة قراءة لمدة {n} يومًا",
+    cdShare = "مشاركة",
+    hacKuraLabel = "الاستعلام عن نتيجة قرعة الحج",
+    moreTitle = "المزيد",
 )
 
 private val german = Strings(
@@ -520,6 +570,7 @@ private val german = Strings(
     dailyAyahTitle = "Vers des Tages", dailyAyahError = "Vers konnte nicht geladen werden, erneut versuchen.",
     readingLessonsTitle = "Koran-Leselektionen",
     readingLessonsSubtitleTemplate = "Von Elif-Ba bis Tadschwid, {n} geführte Lektionen mit Audio",
+    quickActionsTitle = "Schnellzugriff",
     esmaulHusnaTitle = "Die 99 Namen Allahs", discoverQuranTitle = "Koran entdecken",
     mushafModeLabel = "Mushaf-Modus", toggleTranslationLabel = "Übersetzung ein-/ausblenden",
     pagesLabel = "Seiten", manzilsLabel = "Manzil", rukusLabel = "Ruku",
@@ -547,7 +598,7 @@ private val german = Strings(
     supportUsTitle = "Unterstützen Sie uns", adFreeActiveMessage = "Ihre werbefreie Mitgliedschaft ist aktiv, vielen Dank! 💚",
     supportUsMessage = "Helfen Sie uns, die App weiter zu verbessern", smallDonationButton = "☕ Kleine Spende",
     mediumDonationButton = "🎁 Mittlere Spende", sixMonthAdFreeButton = "✨ 6 Monate werbefreie Mitgliedschaft",
-    themeSystem = "🖥️ System", themeLight = "☀️ Hell", themeDark = "🌙 Dunkel",
+    themeSystem = "🖥️ System", themeLight = "☀️ Hell", themeDark = "🌙 Dunkel", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Suchen",
     selectTranslationTitle = "Übersetzung wählen", selectLocationTitle = "Standort wählen", selectLanguageTitle = "Sprache wählen",
@@ -587,9 +638,8 @@ private val german = Strings(
     lessonsSubtitleTemplate = "Von Elif-Ba bis Tadschwid, {n} geführte Lektionen", lessonNotFound = "Lektion nicht gefunden",
     lessonFallback = "Lektion", pronounceContentDescription = "Aussprache anhören",
 
-    cancelLabel = "Abbrechen", goLabel = "Los", dismissLabel = "Schließen",
+    cancelLabel = "Abbrechen", goLabel = "Los",
     mushafJumpToPageTitle = "Zu Seite springen", mushafJumpToPageHint = "Seitenzahl (1-604)",
-    mushafLandscapeHintText = "Drehen Sie Ihr Telefon quer, um wie in einem echten Buch zwei Seiten gleichzeitig zu lesen",
     mushafResumeSubtitleTemplate = "Sie waren auf Seite {n} — weiterlesen",
     mushafStartSubtitle = "Lesen Sie wie in einem echten Buch, Seite für Seite",
 
@@ -606,6 +656,18 @@ private val german = Strings(
     qiblaLiveInstructions = "Halte dein Telefon flach und drehe dich langsam, bis der Pfeil mit dem Dreieck über dem Kreis übereinstimmt.",
     tafsirVsMealHint = "Die Übersetzung überträgt die Bedeutung des Verses. Der Tafsir ist eine ausführliche Erklärung seines Kontexts und seiner Bedeutung.",
     textSizeLabel = "Textgröße", textSizeHint = "Vergrößern Sie den Text, wenn Sie Schwierigkeiten beim Lesen haben.", textSizeNormal = "Normal", textSizeLarge = "Groß", textSizeExtraLarge = "Sehr groß",
+    zakatCalculatorTitle = "Zakat-Rechner",
+    zakatWealthLabel = "Ihr Gesamtvermögen (Bargeld, Gold, Silber usw.)",
+    zakatCalculateButton = "Berechnen",
+    zakatResultTemplate = "Ihre Zakat: {amount}",
+    zakatNisabInfo = "Die Zakat beträgt 2,5 % des Vermögens, das die Nisab-Grenze (etwa 85 g Gold) erreicht und ein volles Jahr gehalten wurde. Dies ist eine allgemeine Orientierung, keine religiöse Rechtsauskunft.",
+    duaListTitle = "Bittgebete",
+    islamicCalendarTitle = "Islamischer Kalender",
+    islamicDaysRemainingTemplate = "Noch {n} Tage",
+    streakDaysTemplate = "{n}-Tage-Leseserie",
+    cdShare = "Teilen",
+    hacKuraLabel = "Haddsch-Losergebnis abfragen",
+    moreTitle = "Weiteres",
 )
 
 private val french = Strings(
@@ -622,6 +684,7 @@ private val french = Strings(
     dailyAyahTitle = "Verset du jour", dailyAyahError = "Impossible de charger le verset, réessayez.",
     readingLessonsTitle = "Leçons de lecture du Coran",
     readingLessonsSubtitleTemplate = "De l'Elif-Ba au tajwid, {n} leçons guidées avec audio",
+    quickActionsTitle = "Accès rapide",
     esmaulHusnaTitle = "Les 99 noms d'Allah", discoverQuranTitle = "Explorer le Coran",
     mushafModeLabel = "Mode Mushaf", toggleTranslationLabel = "Afficher/Masquer la traduction",
     pagesLabel = "Pages", manzilsLabel = "Manzils", rukusLabel = "Rukus",
@@ -649,7 +712,7 @@ private val french = Strings(
     supportUsTitle = "Soutenez-nous", adFreeActiveMessage = "Votre abonnement sans publicité est actif, merci ! 💚",
     supportUsMessage = "Aidez-nous à améliorer l'application", smallDonationButton = "☕ Petit don",
     mediumDonationButton = "🎁 Don moyen", sixMonthAdFreeButton = "✨ Abonnement sans pub 6 mois",
-    themeSystem = "🖥️ Système", themeLight = "☀️ Clair", themeDark = "🌙 Sombre",
+    themeSystem = "🖥️ Système", themeLight = "☀️ Clair", themeDark = "🌙 Sombre", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Rechercher",
     selectTranslationTitle = "Choisir la traduction", selectLocationTitle = "Choisir l'emplacement", selectLanguageTitle = "Choisir la langue",
@@ -689,9 +752,8 @@ private val french = Strings(
     lessonsSubtitleTemplate = "De l'Elif-Ba au tajwid, {n} leçons guidées", lessonNotFound = "Leçon introuvable",
     lessonFallback = "Leçon", pronounceContentDescription = "Écouter la prononciation",
 
-    cancelLabel = "Annuler", goLabel = "Aller", dismissLabel = "Fermer",
+    cancelLabel = "Annuler", goLabel = "Aller",
     mushafJumpToPageTitle = "Aller à la page", mushafJumpToPageHint = "Numéro de page (1-604)",
-    mushafLandscapeHintText = "Tournez votre téléphone à l'horizontale pour lire deux pages à la fois, comme un vrai livre",
     mushafResumeSubtitleTemplate = "Vous étiez à la page {n} — continuer la lecture",
     mushafStartSubtitle = "Lisez comme un vrai livre, page par page",
 
@@ -708,6 +770,18 @@ private val french = Strings(
     qiblaLiveInstructions = "Tenez votre téléphone à plat et tournez lentement jusqu'à ce que la flèche s'aligne avec le triangle au-dessus du cercle.",
     tafsirVsMealHint = "La traduction rend le sens du verset. Le tafsir est une explication savante plus détaillée de son contexte et de sa signification.",
     textSizeLabel = "Taille du texte", textSizeHint = "Agrandissez le texte si vous avez du mal à le lire.", textSizeNormal = "Normal", textSizeLarge = "Grand", textSizeExtraLarge = "Très grand",
+    zakatCalculatorTitle = "Calculateur de zakat",
+    zakatWealthLabel = "Votre patrimoine total (espèces, or, argent, etc.)",
+    zakatCalculateButton = "Calculer",
+    zakatResultTemplate = "Votre zakat : {amount}",
+    zakatNisabInfo = "La zakat est de 2,5 % du patrimoine ayant atteint le seuil du nisab (environ 85 g d'or) et conservé pendant une année complète. Ceci est un guide général, pas un avis religieux.",
+    duaListTitle = "Invocations",
+    islamicCalendarTitle = "Calendrier islamique",
+    islamicDaysRemainingTemplate = "{n} jours restants",
+    streakDaysTemplate = "Série de lecture de {n} jours",
+    cdShare = "Partager",
+    hacKuraLabel = "Consulter le résultat du tirage au sort du Hajj",
+    moreTitle = "Plus",
 )
 
 private val uzbek = Strings(
@@ -724,6 +798,7 @@ private val uzbek = Strings(
     dailyAyahTitle = "Kunning oyati", dailyAyahError = "Oyat yuklanmadi, qayta urinib ko'ring.",
     readingLessonsTitle = "Qur'on o'qish darslari",
     readingLessonsSubtitleTemplate = "Elif-Bodan tajvidgacha, ovozli {n} ketma-ket dars",
+    quickActionsTitle = "Tezkor havolalar",
     esmaulHusnaTitle = "Allohning 99 go'zal ismi", discoverQuranTitle = "Qur'onni kashf eting",
     mushafModeLabel = "Mushaf Rejimi", toggleTranslationLabel = "Tarjimani Ko'rsatish/Yashirish",
     pagesLabel = "Sahifalar", manzilsLabel = "Manzillar", rukusLabel = "Ruku'lar",
@@ -751,7 +826,7 @@ private val uzbek = Strings(
     supportUsTitle = "Bizni qo'llab-quvvatlang", adFreeActiveMessage = "Reklamasiz a'zoligingiz faol, rahmat! 💚",
     supportUsMessage = "Ilovani rivojlantirishga yordam bering", smallDonationButton = "☕ Kichik hadya",
     mediumDonationButton = "🎁 O'rta hadya", sixMonthAdFreeButton = "✨ 6 oylik reklamasiz a'zolik",
-    themeSystem = "🖥️ Tizim", themeLight = "☀️ Yorug'", themeDark = "🌙 Tungi",
+    themeSystem = "🖥️ Tizim", themeLight = "☀️ Yorug'", themeDark = "🌙 Tungi", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Qidirish",
     selectTranslationTitle = "Tarjima tanlang", selectLocationTitle = "Manzil tanlang", selectLanguageTitle = "Til tanlang",
@@ -791,9 +866,8 @@ private val uzbek = Strings(
     lessonsSubtitleTemplate = "Elif-Bodan tajvidgacha, ketma-ket {n} dars", lessonNotFound = "Dars topilmadi",
     lessonFallback = "Dars", pronounceContentDescription = "Talaffuzni tinglash",
 
-    cancelLabel = "Bekor qilish", goLabel = "O'tish", dismissLabel = "Yopish",
+    cancelLabel = "Bekor qilish", goLabel = "O'tish",
     mushafJumpToPageTitle = "Sahifaga o'tish", mushafJumpToPageHint = "Sahifa raqami (1-604)",
-    mushafLandscapeHintText = "Haqiqiy kitobdek ikki sahifani birga o'qish uchun telefoningizni yonboshlab tuting",
     mushafResumeSubtitleTemplate = "{n}-sahifada to'xtagansiz, davom eting",
     mushafStartSubtitle = "Haqiqiy kitobdek, sahifama-sahifa o'qing",
 
@@ -810,6 +884,18 @@ private val uzbek = Strings(
     qiblaLiveInstructions = "Telefoningizni tekis tuting va o'q doira ustidagi uchburchak bilan tekislanguncha asta aylantiring.",
     tafsirVsMealHint = "Tarjima oyatning ma'nosini beradi. Tafsir esa uning konteksti va ma'nosining batafsil izohidir.",
     textSizeLabel = "Matn o'lchami", textSizeHint = "O'qishda qiynalsangiz, matnni kattalashtiring.", textSizeNormal = "Oddiy", textSizeLarge = "Katta", textSizeExtraLarge = "Juda katta",
+    zakatCalculatorTitle = "Zakot kalkulyatori",
+    zakatWealthLabel = "Umumiy boyligingiz (naqd pul, oltin, kumush va h.k.)",
+    zakatCalculateButton = "Hisoblash",
+    zakatResultTemplate = "Zakotingiz: {amount}",
+    zakatNisabInfo = "Zakot — nisob miqdoriga (taxminan 85 gramm oltin qiymati) yetgan va bir yil saqlangan mol-mulkning 2,5 foizi. Bu umumiy qo'llanma, diniy fatvo emas.",
+    duaListTitle = "Dualar",
+    islamicCalendarTitle = "Islom taqvimi",
+    islamicDaysRemainingTemplate = "{n} kun qoldi",
+    streakDaysTemplate = "{n} kunlik o'qish seriyasi",
+    cdShare = "Ulashish",
+    hacKuraLabel = "Haj qur'asi natijasini so'rash",
+    moreTitle = "Boshqa",
 )
 
 private val kyrgyz = Strings(
@@ -826,6 +912,7 @@ private val kyrgyz = Strings(
     dailyAyahTitle = "Күндүн аяты", dailyAyahError = "Аят жүктөлбөдү, кайра аракет кылыңыз.",
     readingLessonsTitle = "Кураан окуу сабактары",
     readingLessonsSubtitleTemplate = "Элип-Байдан тажвидге чейин, үн менен {n} ырааттуу сабак",
+    quickActionsTitle = "Тез кирүү",
     esmaulHusnaTitle = "Аллахтын 99 сулуу ысымы", discoverQuranTitle = "Кураанды изилдеңиз",
     mushafModeLabel = "Мусхаф режими", toggleTranslationLabel = "Котормону көрсөтүү/жашыруу",
     pagesLabel = "Барактар", manzilsLabel = "Манзилдер", rukusLabel = "Рукулар",
@@ -853,7 +940,7 @@ private val kyrgyz = Strings(
     supportUsTitle = "Бизди колдоңуз", adFreeActiveMessage = "Жарнаксыз мүчөлүгүңүз активдүү, рахмат! 💚",
     supportUsMessage = "Колдонмону өнүктүрүүгө жардам бериңиз", smallDonationButton = "☕ Кичине белек",
     mediumDonationButton = "🎁 Орто белек", sixMonthAdFreeButton = "✨ 6 айлык жарнаксыз мүчөлүк",
-    themeSystem = "🖥️ Система", themeLight = "☀️ Жарык", themeDark = "🌙 Караңгы",
+    themeSystem = "🖥️ Система", themeLight = "☀️ Жарык", themeDark = "🌙 Караңгы", themeSakura = "🌸 Сакура",
 
     editionSearchPlaceholder = "Издөө",
     selectTranslationTitle = "Котормону тандаңыз", selectLocationTitle = "Жайгашкан жерди тандаңыз", selectLanguageTitle = "Тилди тандаңыз",
@@ -893,9 +980,8 @@ private val kyrgyz = Strings(
     lessonsSubtitleTemplate = "Элип-Байдан тажвидге чейин, ырааттуу {n} сабак", lessonNotFound = "Сабак табылган жок",
     lessonFallback = "Сабак", pronounceContentDescription = "Айтылышын угуу",
 
-    cancelLabel = "Жокко чыгаруу", goLabel = "Өтүү", dismissLabel = "Жабуу",
+    cancelLabel = "Жокко чыгаруу", goLabel = "Өтүү",
     mushafJumpToPageTitle = "Баракка өтүү", mushafJumpToPageHint = "Барак номери (1-604)",
-    mushafLandscapeHintText = "Чыныгы китептей эки баракты бирге окуу үчүн телефонуңузду жанбаштата буруңуз",
     mushafResumeSubtitleTemplate = "{n}-барактан токтогонсуз, улантыңыз",
     mushafStartSubtitle = "Чыныгы китептей, барактап окуңуз",
 
@@ -912,6 +998,18 @@ private val kyrgyz = Strings(
     qiblaLiveInstructions = "Телефонуңузду түз кармап, жебе тегеректин үстүндөгү үч бурчтук менен дал келгенче жай бурулуңуз.",
     tafsirVsMealHint = "Котормо аяттын маанисин берет. Тафсир болсо анын мазмунун жана маанисин кеңири түшүндүрөт.",
     textSizeLabel = "Тексттин өлчөмү", textSizeHint = "Окууга кыйналсаңыз, текстти чоңойтуңуз.", textSizeNormal = "Кадимки", textSizeLarge = "Чоң", textSizeExtraLarge = "Өтө чоң",
+    zakatCalculatorTitle = "Зекет эсептегич",
+    zakatWealthLabel = "Жалпы байлыгыңыз (накталай акча, алтын, күмүш ж.б.)",
+    zakatCalculateButton = "Эсептөө",
+    zakatResultTemplate = "Зекетиңиз: {amount}",
+    zakatNisabInfo = "Зекет — нисап өлчөмүнө (болжол менен 85 грамм алтын баасына) жеткен жана бир жыл сакталган мал-мүлктүн 2,5 пайызы. Бул жалпы көрсөтмө, диний фетва эмес.",
+    duaListTitle = "Дубалар",
+    islamicCalendarTitle = "Ислам календары",
+    islamicDaysRemainingTemplate = "{n} күн калды",
+    streakDaysTemplate = "{n} күндүк окуу сериясы",
+    cdShare = "Бөлүшүү",
+    hacKuraLabel = "Хаж кура жыйынтыгын текшерүү",
+    moreTitle = "Дагы",
 )
 
 private val turkmen = Strings(
@@ -928,6 +1026,7 @@ private val turkmen = Strings(
     dailyAyahTitle = "Günüň aýaty", dailyAyahError = "Aýat ýüklenmedi, gaýtadan synanyşyň.",
     readingLessonsTitle = "Kuran okaýyş sapaklary",
     readingLessonsSubtitleTemplate = "Elif-Baýdan tejwide çenli, sesli {n} yzygiderli sapak",
+    quickActionsTitle = "Çalt giriş",
     esmaulHusnaTitle = "Allanyň 99 owadan ady", discoverQuranTitle = "Kurany öwreniň",
     mushafModeLabel = "Mushaf Režimi", toggleTranslationLabel = "Terjimäni Görkez/Gizle",
     pagesLabel = "Sahypalar", manzilsLabel = "Manzillar", rukusLabel = "Rukular",
@@ -955,7 +1054,7 @@ private val turkmen = Strings(
     supportUsTitle = "Bize goldaw beriň", adFreeActiveMessage = "Mahabatsyz agzalygyňyz işjeň, sag boluň! 💚",
     supportUsMessage = "Programmany ösdürmäge kömek ediň", smallDonationButton = "☕ Kiçi sowgat",
     mediumDonationButton = "🎁 Orta sowgat", sixMonthAdFreeButton = "✨ 6 aýlyk mahabatsyz agzalyk",
-    themeSystem = "🖥️ Ulgam", themeLight = "☀️ Açyk", themeDark = "🌙 Garaňky",
+    themeSystem = "🖥️ Ulgam", themeLight = "☀️ Açyk", themeDark = "🌙 Garaňky", themeSakura = "🌸 Sakura",
 
     editionSearchPlaceholder = "Gözle",
     selectTranslationTitle = "Terjimäni saýlaň", selectLocationTitle = "Ýerleşişi saýlaň", selectLanguageTitle = "Dili saýlaň",
@@ -995,9 +1094,8 @@ private val turkmen = Strings(
     lessonsSubtitleTemplate = "Elif-Baýdan tejwide çenli, yzygiderli {n} sapak", lessonNotFound = "Sapak tapylmady",
     lessonFallback = "Sapak", pronounceContentDescription = "Aýdylyşyny diňle",
 
-    cancelLabel = "Ýatyr", goLabel = "Git", dismissLabel = "Ýap",
+    cancelLabel = "Ýatyr", goLabel = "Git",
     mushafJumpToPageTitle = "Sahypa git", mushafJumpToPageHint = "Sahypa belgisi (1-604)",
-    mushafLandscapeHintText = "Hakyky kitap ýaly iki sahypany bilelikde okamak üçin telefonyňyzy ýan tarap öwrüň",
     mushafResumeSubtitleTemplate = "{n}-sahypada galdyňyz, dowam ediň",
     mushafStartSubtitle = "Hakyky kitap ýaly, sahypama-sahypa okaň",
 
@@ -1014,6 +1112,18 @@ private val turkmen = Strings(
     qiblaLiveInstructions = "Telefonyňyzy tekiz saklaň we ok, tegeleg üstündäki üçburçluk bilen deňeşýänçä ýuwaş öwrüň.",
     tafsirVsMealHint = "Terjime aýatyň manysyny berýär. Tefsir bolsa onuň manysynyň we mazmunynyň jikme-jik düşündirişidir.",
     textSizeLabel = "Ýazy ölçegi", textSizeHint = "Okamakda kynçylyk çekseňiz, ýazyny ulaldyň.", textSizeNormal = "Adaty", textSizeLarge = "Uly", textSizeExtraLarge = "Has uly",
+    zakatCalculatorTitle = "Zekat hasaplaýjy",
+    zakatWealthLabel = "Umumy baýlygyňyz (nagt pul, altyn, kümüş we ş.m.)",
+    zakatCalculateButton = "Hasapla",
+    zakatResultTemplate = "Zekatyňyz: {amount}",
+    zakatNisabInfo = "Zekat — nisap mukdaryna (takmynan 85 gram altyn bahasyna) ýeten we bir ýyl saklanan baýlygyň 2,5 göterimi. Bu umumy gollanma, dini pikir däl.",
+    duaListTitle = "Dogalar",
+    islamicCalendarTitle = "Yslam senenamasy",
+    islamicDaysRemainingTemplate = "{n} gün galdy",
+    streakDaysTemplate = "{n} günlük okaýyş seriýasy",
+    cdShare = "Paýlaş",
+    hacKuraLabel = "Hac kurasy netijesini soragy",
+    moreTitle = "Ýene",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

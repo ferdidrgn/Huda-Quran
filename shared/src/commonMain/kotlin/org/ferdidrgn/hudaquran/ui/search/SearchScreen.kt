@@ -37,10 +37,12 @@ import kotlinx.coroutines.delay
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SearchMatch
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private enum class SearchStatus { IDLE, LOADING, DONE, ERROR }
 
@@ -72,7 +74,13 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
             .onFailure { status = SearchStatus.ERROR }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        IslamicMotifBackground(
+            modifier = Modifier.matchParentSize(),
+            tint = MaterialTheme.colorScheme.primary,
+            alpha = 0.035f,
+        )
+        Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -135,12 +143,12 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
                                     modifier = Modifier.padding(top = 4.dp),
                                 )
                             }
-                            if (showAds && index == 7) AdBannerCard(modifier = Modifier.padding(bottom = 10.dp))
+                            if (showAds && showListAdAfter(index, results.size)) ListAdCard(modifier = Modifier.padding(bottom = 10.dp))
                         }
-                        if (showAds) item { AdBannerCard() }
                     }
                 }
             }
         }
+    }
     }
 }

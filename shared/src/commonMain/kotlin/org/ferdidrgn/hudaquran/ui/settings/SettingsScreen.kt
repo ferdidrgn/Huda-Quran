@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,6 +59,9 @@ fun SettingsScreen(
     onOpenTafsirPicker: () -> Unit,
     onOpenLocationPicker: () -> Unit,
     onOpenLanguagePicker: () -> Unit,
+    onOpenZakatCalculator: () -> Unit,
+    onOpenDuaList: () -> Unit,
+    onOpenIslamicCalendar: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -109,6 +113,11 @@ fun SettingsScreen(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.TopCenter,
     ) {
+    org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground(
+        modifier = Modifier.matchParentSize(),
+        tint = MaterialTheme.colorScheme.primary,
+        alpha = 0.035f,
+    )
     Column(
         modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp).verticalScroll(rememberScrollState()),
     ) {
@@ -227,6 +236,34 @@ fun SettingsScreen(
             ) { Text(strings.sixMonthAdFreeButton) }
         }
 
+        SectionTitle(strings.moreTitle)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            NavigationRow(
+                title = strings.zakatCalculatorTitle,
+                value = "",
+                onClick = onOpenZakatCalculator,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
+                title = strings.duaListTitle,
+                value = "",
+                onClick = onOpenDuaList,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
+                title = strings.islamicCalendarTitle,
+                value = "",
+                onClick = onOpenIslamicCalendar,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            val uriHandler = LocalUriHandler.current
+            NavigationRow(
+                title = strings.hacKuraLabel,
+                value = "hacumre.diyanet.gov.tr",
+                onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+            )
+        }
+
         if (!preferences.isAdFree()) {
             AdBannerCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
@@ -248,32 +285,40 @@ private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> 
         ThemeMode.SYSTEM to strings.themeSystem,
         ThemeMode.LIGHT to strings.themeLight,
         ThemeMode.DARK to strings.themeDark,
+        ThemeMode.SAKURA to strings.themeSakura,
     )
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        options.forEach { (mode, label) ->
-            val isSelected = selected == mode
+        options.chunked(2).forEach { rowOptions ->
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onSelect(mode) }
-                    .padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    label,
-                    fontSize = 12.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                rowOptions.forEach { (mode, label) ->
+                    val isSelected = selected == mode
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .clickable { onSelect(mode) }
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            label,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
@@ -319,12 +364,9 @@ private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSi
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
+    org.ferdidrgn.hudaquran.ui.components.SectionHeader(
+        title = text,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp),
     )
 }
 

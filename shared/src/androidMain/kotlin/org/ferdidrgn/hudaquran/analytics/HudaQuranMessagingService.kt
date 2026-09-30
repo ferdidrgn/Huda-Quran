@@ -7,8 +7,12 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.ferdidrgn.hudaquran.notifications.NOTIFICATION_ACCENT_COLOR
+import org.ferdidrgn.hudaquran.notifications.notificationIconRes
+import org.ferdidrgn.hudaquran.notifications.openAppPendingIntent
 
-private const val CHANNEL_ID = "huda_quran_push"
+// Versioned: Android never raises an existing channel's importance, so bumping it needs a new ID.
+private const val CHANNEL_ID = "huda_quran_push_v2"
 
 class HudaQuranMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -22,9 +26,12 @@ class HudaQuranMessagingService : FirebaseMessagingService() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(body)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setSmallIcon(notificationIconRes())
+            .setColor(NOTIFICATION_ACCENT_COLOR)
+            .setContentIntent(openAppPendingIntent())
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(System.currentTimeMillis().toInt(), notification)
@@ -35,7 +42,7 @@ class HudaQuranMessagingService : FirebaseMessagingService() {
         val manager = getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Bildirimler", NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(CHANNEL_ID, "Bildirimler", NotificationManager.IMPORTANCE_HIGH),
             )
         }
     }

@@ -105,6 +105,19 @@
                 android:resource="@xml/widget_last_read_info" />
         </receiver>
 
+        <!-- Used by FCM for pushes that arrive while the app is in the background (it builds those
+             itself). Without these it falls back to the full-color launcher icon, which the status
+             bar renders as a blank/transparent silhouette. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_huda" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="huda_quran_push_v2" />
+
         <service
             android:name="org.ferdidrgn.hudaquran.analytics.HudaQuranMessagingService"
             android:exported="false">

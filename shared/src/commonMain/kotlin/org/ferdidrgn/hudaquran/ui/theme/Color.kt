@@ -33,3 +33,12 @@ val Rose = Color(0xFFD8677B)
 val SplashGreenDark = Color(0xFF0F4A2C)
 val SplashGreen = Color(0xFF1E7145)
 val SplashGold = Color(0xFFC9A227)
+
+// Sakura — a calm dusk palette (twilight mountains, cherry blossoms over still water) offered as
+// an alternative to the standard light/dark themes for readers who want a softer, warmer canvas.
+val SakuraInk = Color(0xFF1B0C1A) // near-black plum canvas
+val SakuraSurface = Color(0xFF2D222F) // dark slate-plum surface
+val SakuraWine = Color(0xFF4B2138) // deep burgundy, surface variant
+val SakuraPlum = Color(0xFF6D3C52) // muted wine, containers
+val SakuraMauve = Color(0xFF765D67) // dusty mauve, secondary text/outline
+val SakuraBlossom = Color(0xFFFADCD5) // pale cherry-blossom pink, primary accent & text
