@@ -212,6 +212,7 @@ data class Strings(
     val cdShare: String,
     val hacKuraLabel: String,
     val moreTitle: String,
+    val filterAll: String,
 )
 
 private val turkish = Strings(
@@ -326,6 +327,7 @@ private val turkish = Strings(
     cdShare = "Paylaş",
     hacKuraLabel = "Hac Kur'ası Sonuç Sorgulama",
     moreTitle = "Diğer",
+    filterAll = "Tümü",
 )
 
 private val english = Strings(
@@ -440,6 +442,7 @@ private val english = Strings(
     cdShare = "Share",
     hacKuraLabel = "Hajj Lottery Result Lookup",
     moreTitle = "More",
+    filterAll = "All",
 )
 
 private val arabic = Strings(
@@ -554,6 +557,7 @@ private val arabic = Strings(
     cdShare = "مشاركة",
     hacKuraLabel = "الاستعلام عن نتيجة قرعة الحج",
     moreTitle = "المزيد",
+    filterAll = "الكل",
 )
 
 private val german = Strings(
@@ -668,6 +672,7 @@ private val german = Strings(
     cdShare = "Teilen",
     hacKuraLabel = "Haddsch-Losergebnis abfragen",
     moreTitle = "Weiteres",
+    filterAll = "Alle",
 )
 
 private val french = Strings(
@@ -782,6 +787,7 @@ private val french = Strings(
     cdShare = "Partager",
     hacKuraLabel = "Consulter le résultat du tirage au sort du Hajj",
     moreTitle = "Plus",
+    filterAll = "Toutes",
 )
 
 private val uzbek = Strings(
@@ -896,6 +902,7 @@ private val uzbek = Strings(
     cdShare = "Ulashish",
     hacKuraLabel = "Haj qur'asi natijasini so'rash",
     moreTitle = "Boshqa",
+    filterAll = "Barchasi",
 )
 
 private val kyrgyz = Strings(
@@ -1010,6 +1017,7 @@ private val kyrgyz = Strings(
     cdShare = "Бөлүшүү",
     hacKuraLabel = "Хаж кура жыйынтыгын текшерүү",
     moreTitle = "Дагы",
+    filterAll = "Баары",
 )
 
 private val turkmen = Strings(
@@ -1124,6 +1132,7 @@ private val turkmen = Strings(
     cdShare = "Paýlaş",
     hacKuraLabel = "Hac kurasy netijesini soragy",
     moreTitle = "Ýene",
+    filterAll = "Hemmesi",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

@@ -68,7 +68,7 @@ fun AppTopNavigationBar(
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().widthIn(max = 1240.dp).padding(horizontal = 24.dp),
+            modifier = Modifier.widthIn(max = 1240.dp).fillMaxWidth().padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

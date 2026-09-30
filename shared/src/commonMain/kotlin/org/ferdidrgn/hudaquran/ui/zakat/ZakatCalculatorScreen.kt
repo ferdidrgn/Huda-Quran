@@ -4,13 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,9 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 private const val ZAKAT_RATE = 0.025
@@ -59,16 +57,9 @@ fun ZakatCalculatorScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Spacer(Modifier.width(4.dp))
-            Text(strings.zakatCalculatorTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
+        PageHeader(title = strings.zakatCalculatorTitle, onBack = onBack)
 
-        Column(modifier = Modifier.fillMaxWidth().widthIn(max = 520.dp).padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(horizontal = 16.dp)) {
             OutlinedTextField(
                 value = wealthInput,
                 onValueChange = { new ->

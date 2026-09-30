@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,14 +25,15 @@ import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.EsmaName
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
-import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 /**
  * All 99 names in a fixed 3-per-row grid so nothing is hidden behind a horizontal scroll —
@@ -54,24 +52,21 @@ fun EsmaulHusnaScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenD
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Spacer(Modifier.width(4.dp))
-            Text(strings.esmaulHusnaTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
+        PageHeader(title = strings.esmaulHusnaTitle, subtitle = "${esmaulHusna.size}", onBack = onBack)
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            // 3 across on a phone, as many as fit on tablet/web instead of three stretched tiles.
+            columns = GridCells.Adaptive(minSize = 108.dp),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             esmaulHusna.chunked(LIST_AD_INTERVAL).forEachIndexed { chunkIndex, chunk ->
                 itemsIndexed(chunk, key = { _, esma -> esma.name }) { indexInChunk, esma ->
-                    EsmaGridCard(esma, onClick = { onOpenDetail(chunkIndex * LIST_AD_INTERVAL + indexInChunk) })
+                    val index = chunkIndex * LIST_AD_INTERVAL + indexInChunk
+                    StaggeredEntrance(index = index) {
+                        EsmaGridCard(esma, onClick = { onOpenDetail(index) })
+                    }
                 }
                 if (showAds && chunk.size == LIST_AD_INTERVAL) {
                     item(span = { GridItemSpan(maxLineSpan) }, key = "ad_$chunkIndex") { ListAdCard() }
@@ -93,8 +88,8 @@ private fun EsmaGridCard(esma: EsmaName, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(esma.arabic, fontSize = 20.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(4.dp))
+            Text(esma.arabic, fontSize = 24.sp, lineHeight = 38.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(2.dp))
             Text(
                 esma.name,
                 style = MaterialTheme.typography.labelLarge,

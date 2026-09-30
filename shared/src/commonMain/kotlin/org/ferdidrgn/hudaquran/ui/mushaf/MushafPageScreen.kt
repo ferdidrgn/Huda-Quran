@@ -305,8 +305,8 @@ private fun MushafPage(
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .widthIn(max = PAGE_MAX_WIDTH)
+                .fillMaxSize()
                 .padding(horizontal = 14.dp, vertical = 12.dp)
                 .shadow(
                     elevation = 14.dp,

@@ -33,10 +33,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.data.repository.OccasionCountdown
 import org.ferdidrgn.hudaquran.di.AppContainer
-import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -65,13 +65,7 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Text(strings.islamicCalendarTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
+        PageHeader(title = strings.islamicCalendarTitle, onBack = onBack)
 
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }

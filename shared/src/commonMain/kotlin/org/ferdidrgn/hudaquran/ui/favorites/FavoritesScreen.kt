@@ -33,13 +33,14 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.ui.components.ListAdCard
-import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -89,7 +90,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Text(strings.myFavoritesTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
+        PageHeader(title = strings.myFavoritesTitle)
 
         when {
             entries.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
