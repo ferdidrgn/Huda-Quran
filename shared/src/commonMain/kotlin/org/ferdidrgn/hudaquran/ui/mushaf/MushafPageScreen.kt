@@ -1,10 +1,17 @@
 package org.ferdidrgn.hudaquran.ui.mushaf
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -45,6 +53,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -58,14 +67,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -143,6 +157,8 @@ fun MushafPageScreen(
     val currentPage = pagerState.currentPage + 1
 
     var showTranslation by remember { mutableStateOf(false) }
+    // Tapping the middle of the page hides the bars for distraction-free reading.
+    var chromeVisible by remember { mutableStateOf(true) }
     var showJumpDialog by remember { mutableStateOf(false) }
     // Loaded pages are cached here so the top bar (surah / juz / play) knows the current page's
     // content, and flipping back to a page doesn't refetch it.
@@ -178,6 +194,8 @@ fun MushafPageScreen(
     }
 
     Column(modifier = modifier.fillMaxSize().screenBackground()) {
+        AnimatedVisibility(visible = chromeVisible, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+        Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -234,6 +252,8 @@ fun MushafPageScreen(
             color = giltColor(),
             trackColor = giltColor().copy(alpha = 0.15f),
         )
+        }
+        }
 
         // The pager itself always lays out right-to-left, like a real mushaf; each page then
         // restores the app's own direction so the translation text reads normally.
@@ -252,17 +272,28 @@ fun MushafPageScreen(
                         strings = strings,
                         cached = loadedPages[index + 1],
                         onLoaded = { loadedPages[index + 1] = it },
+                        // Like a printed book: tap the left edge for the next page, the right
+                        // edge for the previous one, the middle to show or hide the bars.
+                        onTapZone = { zone ->
+                            when (zone) {
+                                TapZone.LEFT -> goTo(currentPage + 1)
+                                TapZone.RIGHT -> goTo(currentPage - 1)
+                                TapZone.CENTER -> chromeVisible = !chromeVisible
+                            }
+                        },
                     )
                 }
             }
         }
 
-        MushafPageFooter(
-            page = currentPage,
-            onPrevious = { goTo(currentPage - 1) },
-            onNext = { goTo(currentPage + 1) },
-            onCenterClick = { showJumpDialog = true },
-        )
+        AnimatedVisibility(visible = chromeVisible, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            MushafPageFooter(
+                page = currentPage,
+                onPrevious = { goTo(currentPage - 1) },
+                onNext = { goTo(currentPage + 1) },
+                onCenterClick = { showJumpDialog = true },
+            )
+        }
     }
 
     if (showJumpDialog) {
@@ -286,7 +317,11 @@ private fun MushafPage(
     strings: Strings,
     cached: QuranSectionDetail?,
     onLoaded: (QuranSectionDetail) -> Unit,
+    onTapZone: (TapZone) -> Unit,
 ) {
+    // The gesture detector below is installed once per page; read the latest callback so a tap
+    // always turns from the page currently on screen.
+    val currentOnTapZone by rememberUpdatedState(onTapZone)
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     var isLoading by remember(page) { mutableStateOf(cached == null) }
@@ -316,7 +351,18 @@ private fun MushafPage(
                     spotColor = Color.Black.copy(alpha = 0.35f),
                 )
                 .clip(PAGE_SHAPE)
-                .background(paperColor()),
+                .background(paperColor())
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        currentOnTapZone(
+                            when {
+                                offset.x < size.width * 0.28f -> TapZone.LEFT
+                                offset.x > size.width * 0.72f -> TapZone.RIGHT
+                                else -> TapZone.CENTER
+                            },
+                        )
+                    }
+                },
         ) {
             when {
                 cached != null -> MushafPageText(cached, page, showTranslation, currentAyah)
@@ -338,7 +384,12 @@ private fun MushafPage(
     }
 }
 
-/** The Arabic text as one continuous justified paragraph, with gilt ayah-end markers — how a printed page reads. */
+/**
+ * The Arabic text as one continuous justified paragraph, with gilt ayah-end markers — how a printed
+ * page reads. Without the meal, the font size is fitted so the whole page sits inside the frame
+ * with no scrolling (large on the short opening pages, smaller on dense ones), the way a mushaf
+ * page is one glance; with the meal shown it scrolls at a comfortable fixed size.
+ */
 @Composable
 private fun MushafPageText(detail: QuranSectionDetail, page: Int, showTranslation: Boolean, currentAyah: Ayah?) {
     val ink = inkColor()
@@ -361,54 +412,93 @@ private fun MushafPageText(detail: QuranSectionDetail, page: Int, showTranslatio
             }
         }
     }
+    val arabicFont = LocalArabicFontFamily.current
+    val baseStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = arabicFont, textAlign = TextAlign.Justify)
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 30.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Text(
-                pageText,
-                color = ink,
-                style = MaterialTheme.typography.headlineSmall,
-                fontFamily = LocalArabicFontFamily.current,
-                textAlign = TextAlign.Justify,
-                lineHeight = 46.sp,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        if (showTranslation) {
-            HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
-            detail.ayahs.forEach { ayah ->
-                if (ayah.translationText.isNotBlank()) {
-                    val isCurrent = currentAyah?.surahNumber == ayah.surahNumber && currentAyah.numberInSurah == ayah.numberInSurah
-                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
-                        Text(
-                            "${ayah.numberInSurah}. ",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = gilt,
-                        )
-                        Text(
-                            ayah.translationText,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isCurrent) ink else ink.copy(alpha = 0.75f),
-                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                        )
-                    }
-                }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val horizontalPadding = 28.dp
+        val verticalPadding = 30.dp
+        val pageNumberReserve = 40.dp
+        val measurer = rememberTextMeasurer()
+        val density = LocalDensity.current
+        val textWidthPx = with(density) { (maxWidth - horizontalPadding * 2).roundToPx() }.coerceAtLeast(1)
+        val textHeightPx = with(density) { (maxHeight - verticalPadding * 2 - pageNumberReserve).roundToPx() }
+        val fittedSize = remember(pageText, textWidthPx, textHeightPx, showTranslation, arabicFont) {
+            if (showTranslation) {
+                FIXED_PAGE_FONT_SP
+            } else {
+                // Largest size (in 1sp steps) whose laid-out paragraph still fits the frame.
+                (MAX_PAGE_FONT_SP downTo MIN_PAGE_FONT_SP).firstOrNull { sp ->
+                    val result = measurer.measure(
+                        text = pageText,
+                        style = baseStyle.copy(fontSize = sp.sp, lineHeight = (sp * LINE_HEIGHT_RATIO).sp),
+                        constraints = Constraints(maxWidth = textWidthPx),
+                    )
+                    result.size.height <= textHeightPx
+                } ?: MIN_PAGE_FONT_SP
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            toArabicIndicNumerals(page),
-            color = gilt,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        val fits = !showTranslation
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (fits) Modifier else Modifier.verticalScroll(rememberScrollState()))
+                .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = if (fits) Arrangement.SpaceBetween else Arrangement.Top,
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Text(
+                    pageText,
+                    color = ink,
+                    style = baseStyle.copy(
+                        fontSize = fittedSize.sp,
+                        lineHeight = (fittedSize * LINE_HEIGHT_RATIO).sp,
+                        textDirection = TextDirection.Rtl,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (showTranslation) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = ink.copy(alpha = 0.25f))
+                detail.ayahs.forEach { ayah ->
+                    if (ayah.translationText.isNotBlank()) {
+                        val isCurrent = currentAyah?.surahNumber == ayah.surahNumber && currentAyah.numberInSurah == ayah.numberInSurah
+                        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                            Text(
+                                "${ayah.numberInSurah}. ",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = gilt,
+                            )
+                            Text(
+                                ayah.translationText,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (isCurrent) ink else ink.copy(alpha = 0.75f),
+                                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+            Text(
+                toArabicIndicNumerals(page),
+                color = gilt,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
+
+private const val MAX_PAGE_FONT_SP = 34
+private const val MIN_PAGE_FONT_SP = 17
+private const val FIXED_PAGE_FONT_SP = 24
+private const val LINE_HEIGHT_RATIO = 1.85f
+
+private enum class TapZone { LEFT, CENTER, RIGHT }
 
 /** A double-ruled ornamental frame with small diamond corner accents, echoing an illuminated mushaf page border. */
 @Composable
@@ -472,10 +562,13 @@ private fun MushafPageFooter(page: Int, onPrevious: () -> Unit, onNext: () -> Un
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onCenterClick),
             ) {
+                // The footer row is laid out RTL; forcing LTR here keeps "1 / 604" from being
+                // mirrored into "604 / 1".
                 Text(
                     "$page / $TOTAL_MUSHAF_PAGES",
                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
                     fontWeight = FontWeight.Bold,
+                    style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
                 )
             }
             IconButton(onClick = onNext, enabled = page < TOTAL_MUSHAF_PAGES) {

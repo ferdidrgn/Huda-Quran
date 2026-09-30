@@ -38,8 +38,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // The app is portrait-only everywhere except Mushaf (book) mode, which unlocks rotation
-        // itself while it's on screen and locks back to portrait when the reader leaves it.
+        // Portrait-only everywhere, Mushaf included: a landscape page on a phone is too short to
+        // read, and Mushaf fits each page to the portrait frame instead.
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         requestNotificationPermissionIfNeeded()
