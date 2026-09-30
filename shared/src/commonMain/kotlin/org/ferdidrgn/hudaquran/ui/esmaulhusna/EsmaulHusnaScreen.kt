@@ -29,6 +29,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.adsSupported
@@ -53,7 +54,7 @@ fun EsmaulHusnaScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenD
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        PageHeader(title = strings.esmaulHusnaTitle, subtitle = "${esmaulHusna.size}", onBack = onBack)
+        PageHeader(title = strings.esmaulHusnaTitle, subtitle = "${esmaulHusna.size}", onBack = onBack, motif = PageMotif.LOTUS)
 
         LazyVerticalGrid(
             // 3 across on a phone, as many as fit on tablet/web instead of three stretched tiles.

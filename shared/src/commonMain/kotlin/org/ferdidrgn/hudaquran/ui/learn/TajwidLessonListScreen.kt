@@ -31,6 +31,7 @@ import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -49,6 +50,7 @@ fun TajwidLessonListScreen(modifier: Modifier = Modifier, onBack: () -> Unit, on
         Column(modifier = Modifier.fillMaxSize()) {
         PageHeader(
             title = strings.readingLessonsTitle,
+            motif = PageMotif.GIRIH,
             subtitle = strings.lessonsSubtitleTemplate.replace("{n}", tajwidCourse.size.toString()),
             onBack = onBack,
         )

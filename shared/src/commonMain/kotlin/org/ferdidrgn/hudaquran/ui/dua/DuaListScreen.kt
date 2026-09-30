@@ -24,6 +24,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -40,7 +41,7 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        PageHeader(title = strings.duaListTitle, onBack = onBack)
+        PageHeader(title = strings.duaListTitle, onBack = onBack, motif = PageMotif.LOTUS)
 
         LazyColumn(
             contentPadding = PaddingValues(16.dp),

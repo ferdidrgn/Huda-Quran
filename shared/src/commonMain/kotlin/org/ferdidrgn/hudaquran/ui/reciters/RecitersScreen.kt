@@ -50,6 +50,7 @@ import org.ferdidrgn.hudaquran.ui.components.HudaSearchField
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
@@ -98,6 +99,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
         PageHeader(
             title = strings.reciters,
+            motif = PageMotif.SHAMSA,
             subtitle = if (!isLoading) strings.recitersCountSubtitleTemplate.replace("{n}", reciters.size.toString()) else null,
             onBack = onBack,
         )

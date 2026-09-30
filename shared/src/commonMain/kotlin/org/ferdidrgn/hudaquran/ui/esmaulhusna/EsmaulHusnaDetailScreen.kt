@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -26,7 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
+import org.ferdidrgn.hudaquran.ui.components.AnimatedMotif
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
@@ -47,6 +51,13 @@ fun EsmaulHusnaDetailScreen(index: Int, modifier: Modifier = Modifier, onBack: (
         PageHeader(title = strings.esmaulHusnaTitle, subtitle = "${safeIndex + 1} / ${esmaulHusna.size}", onBack = onBack)
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            // A large lotus turning very slowly behind the name, like a medallion on an
+            // illuminated page.
+            AnimatedMotif(
+                motif = PageMotif.LOTUS,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                modifier = Modifier.fillMaxWidth(0.95f).widthIn(max = 520.dp).aspectRatio(1f),
+            )
             Column(
                 modifier = Modifier
                     .padding(horizontal = 32.dp)

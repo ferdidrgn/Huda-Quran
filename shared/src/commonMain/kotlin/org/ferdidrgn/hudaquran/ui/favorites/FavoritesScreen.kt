@@ -39,6 +39,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
@@ -94,7 +95,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        PageHeader(title = strings.myFavoritesTitle)
+        PageHeader(title = strings.myFavoritesTitle, motif = PageMotif.SHAMSA)
 
         when {
             entries.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {

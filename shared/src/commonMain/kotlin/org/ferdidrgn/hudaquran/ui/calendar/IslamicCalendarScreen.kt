@@ -36,6 +36,7 @@ import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
@@ -69,7 +70,7 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        PageHeader(title = strings.islamicCalendarTitle, onBack = onBack)
+        PageHeader(title = strings.islamicCalendarTitle, onBack = onBack, motif = PageMotif.CRESCENT)
 
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }

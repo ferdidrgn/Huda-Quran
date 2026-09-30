@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ fun PageHeader(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     onBack: (() -> Unit)? = null,
+    motif: PageMotif? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val isWeb = currentPlatform == Platform.WEB
@@ -66,6 +68,14 @@ fun PageHeader(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+            }
+            if (motif != null) {
+                // Each section's own slowly turning ornament, echoing the home shamsa.
+                AnimatedMotif(
+                    motif = motif,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                    modifier = Modifier.padding(start = 8.dp).size(if (isWeb) 84.dp else 52.dp),
+                )
             }
             trailing?.invoke(this)
         }

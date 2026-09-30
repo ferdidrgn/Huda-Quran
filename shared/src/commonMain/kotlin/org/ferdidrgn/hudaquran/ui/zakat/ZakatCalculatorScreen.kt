@@ -50,6 +50,7 @@ import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
@@ -106,7 +107,7 @@ fun ZakatCalculatorScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            PageHeader(title = strings.zakatCalculatorTitle, onBack = onBack)
+            PageHeader(title = strings.zakatCalculatorTitle, onBack = onBack, motif = PageMotif.GIRIH)
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)

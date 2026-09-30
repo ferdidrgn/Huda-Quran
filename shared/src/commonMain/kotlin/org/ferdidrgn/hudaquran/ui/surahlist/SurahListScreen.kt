@@ -53,6 +53,7 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
 import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
@@ -120,6 +121,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
             Column(modifier = Modifier.widthIn(max = 1240.dp).fillMaxSize()) {
                 PageHeader(
                     title = strings.navSurahs,
+                    motif = PageMotif.GIRIH,
                     subtitle = if (surahs.isNotEmpty()) {
                         "${surahs.size} ${strings.statSurah} · $totalAyahs ${strings.ayahWordLower}"
                     } else null,
