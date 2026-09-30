@@ -113,6 +113,7 @@ import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.components.ThemeIntroCard
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
@@ -158,6 +159,8 @@ fun HomeScreen(
 
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
+    // Shown once, to people who installed before the theme step existed in onboarding.
+    var showThemeIntro by remember { mutableStateOf(!preferences.themeIntroSeen) }
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
@@ -236,6 +239,11 @@ fun HomeScreen(
             onOpenDuaList = onOpenDuaList,
             onOpenZakatCalculator = onOpenZakatCalculator,
             onOpenIslamicCalendar = onOpenIslamicCalendar,
+            showThemeIntro = showThemeIntro,
+            onDismissThemeIntro = {
+                preferences.themeIntroSeen = true
+                showThemeIntro = false
+            },
             locationDisplayName = locationDisplayName,
         )
         return
@@ -259,6 +267,15 @@ fun HomeScreen(
                     ctaLabel = if (resume != null) strings.continueReading else strings.navSurahs,
                     onCta = { if (resume != null) onOpenSurah(resume.surahNumber, resume.numberInSurah) else onOpenSurahList() },
                 )
+            }
+        }
+
+        if (showThemeIntro) {
+            item(span = { GridItemSpan(maxLineSpan) }, key = "theme_intro") {
+                ThemeIntroCard(onDismiss = {
+                    preferences.themeIntroSeen = true
+                    showThemeIntro = false
+                })
             }
         }
 
@@ -691,6 +708,8 @@ private fun WebHomeContent(
     onOpenZakatCalculator: () -> Unit,
     onOpenIslamicCalendar: () -> Unit,
     locationDisplayName: String,
+    showThemeIntro: Boolean,
+    onDismissThemeIntro: () -> Unit,
 ) {
     // The background spans the whole window; the content itself is a centered column aligned
     // with the header's max width, so ultra-wide monitors get margins instead of stretched rows.
@@ -719,6 +738,9 @@ private fun WebHomeContent(
             locationDisplayName = locationDisplayName,
             onLocationClick = onOpenSettings,
         )
+        if (showThemeIntro) {
+            ThemeIntroCard(onDismiss = onDismissThemeIntro)
+        }
 
         Column {
             val uriHandler = LocalUriHandler.current

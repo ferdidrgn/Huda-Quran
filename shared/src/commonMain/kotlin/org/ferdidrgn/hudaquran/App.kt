@@ -393,6 +393,8 @@ private fun AppDestinationContent(
         is Screen.Onboarding -> OnboardingScreen(
             onFinished = {
                 preferences.onboardingCompleted = true
+                // Themes were already chosen in the onboarding's last step.
+                preferences.themeIntroSeen = true
                 navigator.replaceAll(Screen.Home)
             },
         )

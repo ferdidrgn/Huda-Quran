@@ -21,6 +21,7 @@ data class LastRead(val surahNumber: Int, val numberInSurah: Int, val surahName:
 class AppPreferences(private val settings: Settings = createSettings()) {
     companion object {
         private const val KEY_ONBOARDING_DONE = "onboarding_done"
+        private const val KEY_THEME_INTRO_SEEN = "theme_intro_seen"
         private const val KEY_FAVORITES = "favorite_ayahs"
         private const val KEY_LAST_READ_SURAH = "last_read_surah"
         private const val KEY_LAST_READ_AYAH = "last_read_ayah"
@@ -129,6 +130,11 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     var onboardingCompleted: Boolean
         get() = settings.getBoolean(KEY_ONBOARDING_DONE, false)
         set(value) = settings.putBoolean(KEY_ONBOARDING_DONE, value)
+
+    /** The one-time "New: Themes" card on Home has been seen (or themes were chosen in onboarding). */
+    var themeIntroSeen: Boolean
+        get() = settings.getBoolean(KEY_THEME_INTRO_SEEN, false)
+        set(value) = settings.putBoolean(KEY_THEME_INTRO_SEEN, value)
 
     var selectedReciter: String
         get() = settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)

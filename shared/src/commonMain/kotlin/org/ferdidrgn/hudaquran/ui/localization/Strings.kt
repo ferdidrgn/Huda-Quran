@@ -256,6 +256,11 @@ data class Strings(
     val prayerAtTimeLabel: String,
     val occasionRemindersLabel: String,
     val notificationSoundHint: String,
+    val themePickerTitle: String,
+    val themePickerSubtitle: String,
+    val themeChangeLaterNote: String,
+    val themeIntroTitle: String,
+    val themeIntroBody: String,
 )
 
 private val turkish = Strings(
@@ -414,6 +419,11 @@ private val turkish = Strings(
     prayerAtTimeLabel = "Vakit girince de bildir",
     occasionRemindersLabel = "Kandil ve mübarek gün hatırlatmaları",
     notificationSoundHint = "Bildirimler yumuşak, kısa bir çan sesiyle gelir; sizi rahatsız etmez.",
+    themePickerTitle = "Temanızı seçin",
+    themePickerSubtitle = "Dokunarak deneyin; seçiminiz hemen uygulanır.",
+    themeChangeLaterNote = "İstediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
+    themeIntroTitle = "Yeni: Temalar",
+    themeIntroBody = "Uygulamanın görünümünü dilediğin gibi seç. Dokunarak dene, beğendiğinde öyle kalsın.",
 )
 
 private val english = Strings(
@@ -572,6 +582,11 @@ private val english = Strings(
     prayerAtTimeLabel = "Also notify when the time begins",
     occasionRemindersLabel = "Reminders for blessed days and nights",
     notificationSoundHint = "Notifications arrive with a soft, short chime — never a harsh alert.",
+    themePickerTitle = "Choose your theme",
+    themePickerSubtitle = "Tap to try; your choice applies right away.",
+    themeChangeLaterNote = "You can change it anytime in Settings.",
+    themeIntroTitle = "New: Themes",
+    themeIntroBody = "Pick the look you like. Tap to try — keep the one that feels right.",
 )
 
 private val arabic = Strings(
@@ -730,6 +745,11 @@ private val arabic = Strings(
     prayerAtTimeLabel = "التنبيه أيضًا عند دخول الوقت",
     occasionRemindersLabel = "تذكيرات الليالي والأيام المباركة",
     notificationSoundHint = "تصل الإشعارات بنغمة ناعمة قصيرة لا تُزعج.",
+    themePickerTitle = "اختر السمة",
+    themePickerSubtitle = "المس للتجربة؛ يُطبَّق اختيارك فورًا.",
+    themeChangeLaterNote = "يمكنك تغييرها في أي وقت من الإعدادات.",
+    themeIntroTitle = "جديد: السمات",
+    themeIntroBody = "اختر المظهر الذي يعجبك. المس للتجربة واحتفظ بما يريحك.",
 )
 
 private val german = Strings(
@@ -888,6 +908,11 @@ private val german = Strings(
     prayerAtTimeLabel = "Auch zu Beginn der Gebetszeit benachrichtigen",
     occasionRemindersLabel = "Erinnerungen an gesegnete Tage und Nächte",
     notificationSoundHint = "Benachrichtigungen kommen mit einem sanften, kurzen Klang – nie mit einem schrillen Alarm.",
+    themePickerTitle = "Wähle dein Design",
+    themePickerSubtitle = "Tippe zum Ausprobieren – die Auswahl gilt sofort.",
+    themeChangeLaterNote = "Du kannst es jederzeit in den Einstellungen ändern.",
+    themeIntroTitle = "Neu: Designs",
+    themeIntroBody = "Wähle das Aussehen, das dir gefällt. Tippe zum Ausprobieren und behalte, was sich richtig anfühlt.",
 )
 
 private val french = Strings(
@@ -1046,6 +1071,11 @@ private val french = Strings(
     prayerAtTimeLabel = "Prévenir aussi à l'entrée de l'heure",
     occasionRemindersLabel = "Rappels des jours et nuits bénis",
     notificationSoundHint = "Les notifications arrivent avec un carillon doux et bref, jamais une alarme stridente.",
+    themePickerTitle = "Choisissez votre thème",
+    themePickerSubtitle = "Touchez pour essayer ; votre choix s'applique aussitôt.",
+    themeChangeLaterNote = "Vous pouvez le changer à tout moment dans les Réglages.",
+    themeIntroTitle = "Nouveau : les thèmes",
+    themeIntroBody = "Choisissez l'apparence qui vous plaît. Touchez pour essayer et gardez celle qui vous convient.",
 )
 
 private val uzbek = Strings(
@@ -1204,6 +1234,11 @@ private val uzbek = Strings(
     prayerAtTimeLabel = "Vaqt kirganda ham xabar berish",
     occasionRemindersLabel = "Muborak kun va kechalar eslatmalari",
     notificationSoundHint = "Bildirishnomalar yumshoq, qisqa qo'ng'iroq ovozi bilan keladi, bezovta qilmaydi.",
+    themePickerTitle = "Mavzuni tanlang",
+    themePickerSubtitle = "Sinab ko'rish uchun bosing; tanlovingiz darhol qo'llanadi.",
+    themeChangeLaterNote = "Istalgan vaqtda Sozlamalardan o'zgartirishingiz mumkin.",
+    themeIntroTitle = "Yangi: Mavzular",
+    themeIntroBody = "Ilova ko'rinishini xohlaganingizcha tanlang. Bosib sinab ko'ring, yoqqanini qoldiring.",
 )
 
 private val kyrgyz = Strings(
@@ -1362,6 +1397,11 @@ private val kyrgyz = Strings(
     prayerAtTimeLabel = "Убакыт киргенде да билдирүү",
     occasionRemindersLabel = "Ыйык күндөр жана түндөр боюнча эскертүүлөр",
     notificationSoundHint = "Билдирүүлөр жумшак, кыска коңгуроо үнү менен келет, тынчыңызды албайт.",
+    themePickerTitle = "Теманы тандаңыз",
+    themePickerSubtitle = "Сынап көрүү үчүн басыңыз; тандооңуз дароо колдонулат.",
+    themeChangeLaterNote = "Каалаган убакта Жөндөөлөрдөн өзгөртө аласыз.",
+    themeIntroTitle = "Жаңы: Темалар",
+    themeIntroBody = "Колдонмонун көрүнүшүн каалаганыңыздай тандаңыз. Басып сынап көрүңүз, жаккан бойдон калсын.",
 )
 
 private val turkmen = Strings(
@@ -1520,6 +1560,11 @@ private val turkmen = Strings(
     prayerAtTimeLabel = "Wagt girende hem habar ber",
     occasionRemindersLabel = "Mübärek gün we gijeler barada ýatlatmalar",
     notificationSoundHint = "Bildirişler ýumşak, gysga jaň sesi bilen gelýär, biynjalyk etmeýär.",
+    themePickerTitle = "Temaňyzy saýlaň",
+    themePickerSubtitle = "Synap görmek üçin basyň; saýlawyňyz derrew ulanylýar.",
+    themeChangeLaterNote = "Islän wagtyňyz Sazlamalardan üýtgedip bilersiňiz.",
+    themeIntroTitle = "Täze: Temalar",
+    themeIntroBody = "Programmanyň görnüşini isleýşiňiz ýaly saýlaň. Basyp synap görüň, halanyňyzy galdyryň.",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {
