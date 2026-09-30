@@ -34,7 +34,8 @@ fun StarNumberBadge(number: Int, modifier: Modifier = Modifier, size: Dp = 44.dp
         }
         Text(
             number.toString(),
-            fontSize = if (number >= 100) 11.sp else 13.sp,
+            // Scales with the badge: 13sp at the default 44dp, larger on the player artwork.
+            fontSize = (size.value * if (number >= 100) 0.25f else 0.3f).sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
         )

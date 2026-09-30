@@ -1,21 +1,26 @@
 package org.ferdidrgn.hudaquran.ui.nowplaying
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -40,8 +45,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +61,10 @@ import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
+import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 private val speedOptions = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
 
@@ -91,14 +103,28 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
     var isDragging by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableStateOf(0f) }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    // The rosette turns slowly only while audio is actually playing and holds its angle on pause,
+    // so the artwork itself tells you whether the recitation is running.
+    val rotation = remember { Animatable(0f) }
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (true) {
+                rotation.animateTo(rotation.value + 360f, tween(durationMillis = 90_000, easing = LinearEasing))
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter,
+    ) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.widthIn(max = 560.dp).fillMaxSize()
                 .verticalScroll(rememberScrollState()).padding(20.dp),
         ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -134,24 +160,26 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
 
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.72f)
+                .widthIn(max = 400.dp)
+                .fillMaxWidth(0.8f)
                 .align(Alignment.CenterHorizontally)
                 .aspectRatio(1f)
-                .padding(12.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0f),
+                        ),
+                    ),
+                ),
             contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(28.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("🎧", fontSize = 64.sp)
-            }
+            ShamsaRosette(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxSize().padding(8.dp).graphicsLayer { rotationZ = rotation.value },
+            )
+            StarNumberBadge(number = ayah?.surahNumber ?: current.surahNumber, size = 64.dp)
         }
 
         Spacer(Modifier.height(24.dp))
@@ -171,6 +199,23 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        if (ayah != null && ayah.arabicText.isNotBlank()) {
+            Spacer(Modifier.height(16.dp))
+            GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp)) {
+                Text(
+                    ayah.arabicText,
+                    fontFamily = LocalArabicFontFamily.current,
+                    fontSize = 22.sp,
+                    lineHeight = 42.sp,
+                    textAlign = TextAlign.Right,
+                    style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Rtl),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
 
         Spacer(Modifier.height(16.dp))
 
@@ -258,7 +303,7 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
                     val selected = speed == option
                     Box(
                         modifier = Modifier
-                            .clip(MaterialTheme.shapes.small)
+                            .clip(RoundedCornerShape(50))
                             .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { playback.setSpeed(option) }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
