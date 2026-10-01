@@ -16,16 +16,21 @@ expect object AdManager {
     fun showInterstitialIfReady()
 }
 
-/** A native banner ad rendered in the current platform's UI toolkit, sized to fill [modifier]. */
+/**
+ * A standard banner rendered by the platform SDK. [onResult] reports once whether an ad was filled
+ * (true) or the request failed (false), so the caller can collapse its reserved space.
+ */
 @Composable
-expect fun BannerAdView(modifier: Modifier)
+expect fun BannerAdView(modifier: Modifier, onResult: (Boolean) -> Unit)
 
 /**
  * A "Native Advanced" ad whose assets (headline, body, icon, call-to-action) are laid out in the
- * app's own styling rather than Google's fixed banner chrome. Renders nothing until an ad loads.
+ * app's own styling rather than Google's fixed banner chrome. Ads come from a preloaded pool and
+ * stay bound to [slotKey], so scrolling a list back to a slot shows the same ad without a reload.
+ * [onResult] reports true once an ad is shown, false if none could be loaded.
  */
 @Composable
-expect fun NativeAdCard(modifier: Modifier)
+expect fun NativeAdCard(slotKey: String, modifier: Modifier, onResult: (Boolean) -> Unit)
 
 object AdUnitIds {
     // Real Huda Qur'an AdMob units (account pub-5779807348211992).

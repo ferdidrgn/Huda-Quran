@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.favorites
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,9 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,18 +31,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.ui.components.ListAdCard
-import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
 import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private data class FavoriteEntry(val surahNumber: Int, val numberInSurah: Int)
 
@@ -82,14 +88,14 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
         }
     }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Text(strings.myFavoritesTitle, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
+        PageHeader(title = strings.myFavoritesTitle, motif = PageMotif.SHAMSA)
 
         when {
             entries.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -146,7 +152,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                                     )
                                 }
                                 IconButton(onClick = { preferences.toggleFavorite(entry.surahNumber, entry.numberInSurah) }) {
-                                    Text("⭐", fontSize = 16.sp)
+                                    Icon(Icons.Filled.Favorite, contentDescription = strings.favoriteLabel, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                 }
                             }
                             if (ayah != null) {
@@ -174,6 +180,7 @@ fun FavoritesScreen(modifier: Modifier = Modifier, onOpenSurah: (Int, Int) -> Un
                     }
                     if (showAds && showListAdAfter(itemIndex, entries.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -68,7 +69,7 @@ fun MiniPlayerBar(
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("🎧", fontSize = 18.sp)
+                Icon(Icons.Outlined.Headphones, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             }
             Column(
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp),

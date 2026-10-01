@@ -7,24 +7,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,19 +40,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 import org.ferdidrgn.hudaquran.domain.model.Reciter
-import org.ferdidrgn.hudaquran.ui.components.ListAdCard
-import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
-import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.HudaSearchField
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
+import org.ferdidrgn.hudaquran.ui.components.showListAdAfter
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 private const val PREVIEW_SURAH_NUMBER = 1
 private const val PREVIEW_SURAH_NAME = "Al-Faatiha"
@@ -87,35 +90,24 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         if (query.isBlank()) reciters else reciters.filter { it.displayName.contains(query, ignoreCase = true) }
     }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Column {
-                Text(strings.reciters, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                if (!isLoading) {
-                    Text(
-                        strings.recitersCountSubtitleTemplate.replace("{n}", reciters.size.toString()),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    )
-                }
-            }
-        }
-        OutlinedTextField(
+        PageHeader(
+            title = strings.reciters,
+            motif = PageMotif.SHAMSA,
+            subtitle = if (!isLoading) strings.recitersCountSubtitleTemplate.replace("{n}", reciters.size.toString()) else null,
+            onBack = onBack,
+        )
+        HudaSearchField(
             value = query,
             onValueChange = { query = it },
-            placeholder = { Text(strings.searchReciterPlaceholder) },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            singleLine = true,
+            placeholder = strings.searchReciterPlaceholder,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp).widthIn(max = 640.dp),
         )
 
         when {
@@ -166,6 +158,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                     )
                     if (showAds && showListAdAfter(index, filtered.size)) ListAdCard(modifier = Modifier.padding(top = 10.dp))
                 }
+                    item(key = "site_footer") { SiteFooter() }
                 }
             }
         }
@@ -223,7 +216,7 @@ private fun ReciterRow(
                 )
             }
             if (isSelected) {
-                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                 Box(modifier = Modifier.size(8.dp))
             }
             Box(

@@ -1,6 +1,5 @@
 package org.ferdidrgn.hudaquran.ui.calendar
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -33,10 +32,16 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.data.repository.OccasionCountdown
 import org.ferdidrgn.hudaquran.di.AppContainer
-import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
+import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.components.StarNumberBadge
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 
 @Composable
 fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -58,20 +63,14 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         isLoading = false
     }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Text(strings.islamicCalendarTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
+        PageHeader(title = strings.islamicCalendarTitle, onBack = onBack, motif = PageMotif.CRESCENT)
 
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -90,7 +89,19 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(occasions, key = { it.occasion.id }) { countdown -> OccasionRow(countdown, strings.islamicDaysRemainingTemplate) }
+                val showAds = !AppContainer.preferences.isAdFree()
+                val midIndex = occasions.size / 2
+                itemsIndexed(occasions, key = { _, it -> it.occasion.id }) { index, countdown ->
+                    StaggeredEntrance(index) {
+                        OccasionRow(countdown, strings.islamicDaysRemainingTemplate, isNext = index == 0)
+                    }
+                    if (showAds && index == midIndex - 1 && occasions.size > 2) {
+                        Spacer(Modifier.height(10.dp))
+                        AdBannerCard()
+                    }
+                }
+                if (showAds) item(key = "ad_end") { AdBannerCard() }
+                item(key = "site_footer") { SiteFooter() }
             }
         }
     }
@@ -98,10 +109,16 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 }
 
 @Composable
-private fun OccasionRow(countdown: OccasionCountdown, daysRemainingTemplate: String) {
-    GlassSurface(modifier = Modifier.fillMaxWidth()) {
+private fun OccasionRow(countdown: OccasionCountdown, daysRemainingTemplate: String, isNext: Boolean) {
+    GlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        // The nearest blessed day gets the warmer card and the ornament.
+        containerColor = if (isNext) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+        ornament = isNext,
+    ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
+            StarNumberBadge(number = countdown.daysRemaining.coerceAtLeast(0), size = 52.dp)
+            Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(countdown.occasion.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
                     "${countdown.gregorianDate.dayOfMonth}.${countdown.gregorianDate.monthNumber}.${countdown.gregorianDate.year}",

@@ -54,6 +54,9 @@ Light/Dark (gilt + emerald) remain as options. Mushaf paper/ink/gilt are fixed a
 - Breakpoints: `ui/components/WindowSizeClass.kt` (COMPACT < 600dp ≤ MEDIUM < 1200dp ≤ EXPANDED).
 - Lists/grids: `GridCells.Adaptive(minSize = …)` so phones get 1–2 columns and web/tablet fill the width.
 - Long-form reading screens stay capped (`isReadingScreen` in `App.kt`); list/dashboard screens use full width.
+- Width caps: write `Modifier.widthIn(max = X).fillMaxWidth()`, never `fillMaxWidth().widthIn(max = X)` —
+  the second form is a silent no-op (the fixed incoming width wins), which is what stretched the web
+  pages edge to edge. Centre the capped column with the parent's `contentAlignment = TopCenter`.
 - Web is a real website: top navigation, wide hero, multi-column sections; not a stretched phone.
 - Horizontal padding 16.dp (phone) / 24–32.dp (web); section rhythm 24–28.dp.
 
@@ -61,6 +64,10 @@ Light/Dark (gilt + emerald) remain as options. Mushaf paper/ink/gilt are fixed a
 
 - `IslamicMotifBackground` — faint geometric watermark (alpha ≤ 0.04) behind screens.
 - `SectionHeader` — decorative header with ornament; use instead of ad-hoc title rows.
+- `PageHeader` — every non-home screen's title (display face + subtitle + `OrnamentRule`); pass `onBack` for pushed screens.
+- `OrnamentRule` / `IlluminatedFrame` — gilt hairline dividers and the hero frame (`Ornament.kt`).
+- `HudaSearchField` / `FilterPill` — the pill search input and filter chips; no stock OutlinedTextField for search.
+- `StarNumberBadge` — surah/ayah numbers; `ShamsaRosette` — the signature medallion (home hero, splash, player).
 - `GlassSurface` — the card. Vary shape by hierarchy (hero 28.dp, card 22.dp, chip 12.dp).
 - Spend boldness in ONE place per screen (e.g. Home hero with the next prayer countdown,
   Mushaf's gilt page frame). Everything else stays quiet.

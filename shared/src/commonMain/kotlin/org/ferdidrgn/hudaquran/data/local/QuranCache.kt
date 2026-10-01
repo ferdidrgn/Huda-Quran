@@ -4,6 +4,7 @@ import com.russhwolf.settings.Settings
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.ferdidrgn.hudaquran.data.repository.DailyAyah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.SurahDetail
@@ -21,7 +22,12 @@ class QuranCache(private val settings: Settings = createSettings()) {
         private const val KEY_SURAH_LIST = "cache_surah_list"
         private const val KEY_SURAH_DETAIL_PREFIX = "cache_surah_detail_"
         private const val KEY_SECTION_DETAIL_PREFIX = "cache_section_detail_"
+        private const val KEY_DAILY_AYAH = "cache_daily_ayah"
     }
+
+    fun getDailyAyah(): DailyAyah? = readOrNull(KEY_DAILY_AYAH)
+
+    fun saveDailyAyah(daily: DailyAyah) = write(KEY_DAILY_AYAH, daily)
 
     fun getSurahList(): List<Surah>? = readOrNull(KEY_SURAH_LIST)
 

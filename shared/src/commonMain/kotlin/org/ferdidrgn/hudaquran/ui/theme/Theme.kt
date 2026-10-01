@@ -2,14 +2,18 @@ package org.ferdidrgn.hudaquran.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontSynthesis
@@ -118,17 +122,26 @@ fun HudaQuranTheme(
     displayFontFamily: FontFamily = FontFamily.Default,
     content: @Composable () -> Unit,
 ) {
-    val colors = when (themeMode) {
-        ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) DarkColors else LightColors
-        ThemeMode.LIGHT -> LightColors
-        ThemeMode.DARK -> DarkColors
-        ThemeMode.SAKURA -> SakuraColors
-    }
+    val colors = colorSchemeFor(themeMode)
     val typography = remember(displayFontFamily) { hudaTypography(displayFontFamily) }
     MaterialTheme(
         colorScheme = colors,
         typography = typography,
         shapes = HudaShapes,
-        content = content,
-    )
+    ) {
+        // Material only sets LocalContentColor inside a Surface; everywhere else a Text or Icon
+        // without an explicit colour fell back to black, which was unreadable on the Sakura and
+        // Dark backgrounds (lesson titles, Esma names, "continue reading" rows).
+        SystemBarsEffect(isDarkTheme = colors.background.luminance() < 0.5f, barColor = colors.background)
+        CompositionLocalProvider(LocalContentColor provides colors.onBackground, content = content)
+    }
+}
+
+/** The colour scheme a [ThemeMode] resolves to right now (SYSTEM follows the device). */
+@Composable
+fun colorSchemeFor(mode: ThemeMode): ColorScheme = when (mode) {
+    ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) DarkColors else LightColors
+    ThemeMode.LIGHT -> LightColors
+    ThemeMode.DARK -> DarkColors
+    ThemeMode.SAKURA -> SakuraColors
 }

@@ -1,115 +1,83 @@
 package org.ferdidrgn.hudaquran.billing
 
-import com.android.billingclient.api.AcknowledgePurchaseParams
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.BillingClientStateListener
-import com.android.billingclient.api.BillingFlowParams
-import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ConsumeParams
-import com.android.billingclient.api.PendingPurchasesParams
-import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchasesUpdatedListener
-import com.android.billingclient.api.QueryProductDetailsParams
-import com.android.billingclient.api.queryProductDetails
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.revenuecat.purchases.kmp.LogLevel
+import com.revenuecat.purchases.kmp.Purchases
+import com.revenuecat.purchases.kmp.configure
+import com.revenuecat.purchases.kmp.ktx.awaitCustomerInfo
+import com.revenuecat.purchases.kmp.ktx.awaitGetProducts
+import com.revenuecat.purchases.kmp.ktx.awaitOfferings
+import com.revenuecat.purchases.kmp.ktx.awaitPurchase
+import com.revenuecat.purchases.kmp.ktx.awaitRestore
+import com.revenuecat.purchases.kmp.models.CustomerInfo
+import com.revenuecat.purchases.kmp.models.PurchasesTransactionException
+import kotlinx.coroutines.CancellationException
 import org.ferdidrgn.hudaquran.analytics.AppAnalytics
-import org.ferdidrgn.hudaquran.data.local.AppContextHolder
-import org.ferdidrgn.hudaquran.data.local.CurrentActivityHolder
 import org.ferdidrgn.hudaquran.di.AppContainer
 
+// Shared RevenueCat implementation (identical on Android and iOS; the KMP SDK has no web target).
 actual object BillingManager {
-    private val scope = CoroutineScope(Dispatchers.Main)
-    private val handledPurchaseTokens = mutableSetOf<String>()
-    private var isReady = false
+    actual val isSupported: Boolean get() = Purchases.isConfigured
 
-    private val purchasesUpdatedListener = PurchasesUpdatedListener { result, purchases ->
-        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-            purchases?.forEach { handlePurchase(it) }
-        }
+    actual fun configure(apiKey: String) {
+        if (apiKey.isBlank() || Purchases.isConfigured) return
+        Purchases.logLevel = LogLevel.WARN
+        Purchases.configure(apiKey = apiKey) { }
     }
 
-    private val client: BillingClient by lazy {
-        BillingClient.newBuilder(AppContextHolder.context)
-            .setListener(purchasesUpdatedListener)
-            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
-            .build()
-    }
-
-    actual fun initialize() {
-        client.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(result: BillingResult) {
-                isReady = result.responseCode == BillingClient.BillingResponseCode.OK
-            }
-
-            override fun onBillingServiceDisconnected() {
-                isReady = false
-            }
-        })
-    }
-
-    actual fun purchase(product: BillingProduct) {
-        val activity = CurrentActivityHolder.activity ?: return
-        if (!isReady) return
-        scope.launch {
-            val playType = if (product.type == BillingProductType.SUBSCRIPTION) {
-                BillingClient.ProductType.SUBS
+    actual suspend fun purchase(product: BillingProduct): PurchaseOutcome {
+        if (!Purchases.isConfigured) return PurchaseOutcome.UNAVAILABLE
+        val purchases = Purchases.sharedInstance
+        return try {
+            val result = if (product == BillingProduct.NO_ADS_6_MONTHS) {
+                val offering = purchases.awaitOfferings().current
+                val pkg = offering?.sixMonth ?: offering?.availablePackages?.firstOrNull()
+                    ?: return PurchaseOutcome.UNAVAILABLE
+                purchases.awaitPurchase(pkg)
             } else {
-                BillingClient.ProductType.INAPP
+                val storeProduct = purchases.awaitGetProducts(listOf(product.productId)).firstOrNull()
+                    ?: return PurchaseOutcome.UNAVAILABLE
+                purchases.awaitPurchase(storeProduct)
             }
-            val params = QueryProductDetailsParams.newBuilder()
-                .setProductList(
-                    listOf(
-                        QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId(product.productId)
-                            .setProductType(playType)
-                            .build(),
-                    ),
-                )
-                .build()
-            val result = runCatching { client.queryProductDetails(params) }.getOrNull() ?: return@launch
-            val details = result.productDetailsList?.firstOrNull() ?: return@launch
-            val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(details)
-            if (product.type == BillingProductType.SUBSCRIPTION) {
-                // Subscriptions need an explicit offer token identifying which base plan to buy
-                // (here, the single prepaid 6-month plan configured in Play Console).
-                val offerToken = details.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return@launch
-                productDetailsParams.setOfferToken(offerToken)
-            }
-            val flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(listOf(productDetailsParams.build()))
-                .build()
-            client.launchBillingFlow(activity, flowParams)
+            applyCustomerInfo(result.customerInfo)
+            AppAnalytics.logEvent("purchase_completed", mapOf("product_id" to product.productId))
+            PurchaseOutcome.SUCCESS
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: PurchasesTransactionException) {
+            if (e.userCancelled) PurchaseOutcome.CANCELLED else PurchaseOutcome.ERROR
+        } catch (e: Exception) {
+            PurchaseOutcome.ERROR
         }
     }
 
-    private fun handlePurchase(purchase: Purchase) {
-        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
-        if (!handledPurchaseTokens.add(purchase.purchaseToken)) return
-
-        if (purchase.products.contains(BillingProduct.NO_ADS_6_MONTHS.productId)) {
-            AppContainer.preferences.grantAdFreePeriod(NO_ADS_GRANT_MILLIS)
+    actual suspend fun restore(): PurchaseOutcome {
+        if (!Purchases.isConfigured) return PurchaseOutcome.UNAVAILABLE
+        return try {
+            val info = Purchases.sharedInstance.awaitRestore()
+            applyCustomerInfo(info)
+            if (info.entitlements[AD_FREE_ENTITLEMENT]?.isActive == true) PurchaseOutcome.SUCCESS else PurchaseOutcome.NOT_ACTIVE
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            PurchaseOutcome.ERROR
         }
+    }
 
-        purchase.products.forEach { productId ->
-            AppAnalytics.logEvent("purchase_completed", mapOf("product_id" to productId))
+    actual suspend fun refresh() {
+        if (!Purchases.isConfigured) return
+        try {
+            applyCustomerInfo(Purchases.sharedInstance.awaitCustomerInfo())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Offline: keep the last known expiry.
         }
+    }
 
-        if (!purchase.isAcknowledged) {
-            val isSubscription = purchase.products.any { id ->
-                BillingProduct.entries.any { it.productId == id && it.type == BillingProductType.SUBSCRIPTION }
-            }
-            if (isSubscription) {
-                // Subscriptions are acknowledged, never consumed — consuming would strip Play's
-                // record of the entitlement instead of just confirming receipt of it.
-                val ackParams = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
-                client.acknowledgePurchase(ackParams) { }
-            } else {
-                val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
-                client.consumeAsync(consumeParams) { _, _ -> }
-            }
-        }
+    /** Mirrors the entitlement's expiry locally so ads stay off offline until it lapses. */
+    private fun applyCustomerInfo(info: CustomerInfo) {
+        val entitlement = info.entitlements[AD_FREE_ENTITLEMENT]
+        val until = if (entitlement?.isActive == true) entitlement.expirationDateMillis ?: Long.MAX_VALUE / 2 else 0L
+        AppContainer.preferences.setAdFreeUntil(until)
     }
 }

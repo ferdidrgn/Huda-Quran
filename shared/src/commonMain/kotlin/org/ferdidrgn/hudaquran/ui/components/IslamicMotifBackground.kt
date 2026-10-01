@@ -1,7 +1,10 @@
 package org.ferdidrgn.hudaquran.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -21,8 +24,16 @@ private const val MOTIF_ROTATION_DEGREES = 0f
  * content. Used to slowly rotate continuously; now fixed, since a perpetual full-screen redraw
  * loop isn't worth the battery/CPU cost for a background texture nobody's watching move.
  */
+/**
+ * True when the app shell already paints the motif full-bleed behind a width-capped screen (web and
+ * tablet), so the screen's own copy is skipped — two offset copies of the pattern would show a seam
+ * at the cap's edges, and a screen-only copy left bare bands either side of it.
+ */
+val LocalMotifDrawnByHost = staticCompositionLocalOf { false }
+
 @Composable
 fun IslamicMotifBackground(modifier: Modifier = Modifier, tint: Color = Color.White, alpha: Float = 0.05f) {
+    if (LocalMotifDrawnByHost.current) return
     Canvas(modifier = modifier) {
         val spacing = 96.dp.toPx()
         val outerRadius = 30.dp.toPx()
@@ -68,3 +79,12 @@ internal fun eightPointStarPath(center: Offset, outerRadius: Float, innerRadius:
     path.close()
     return path
 }
+
+/**
+ * A screen's opaque page background — transparent when the app shell already paints background
+ * and motif full-bleed behind it ([LocalMotifDrawnByHost]), so that backdrop shows through
+ * instead of being covered by a same-colour but motif-less rectangle.
+ */
+@Composable
+fun Modifier.screenBackground(): Modifier =
+    if (LocalMotifDrawnByHost.current) this else this.background(MaterialTheme.colorScheme.background)

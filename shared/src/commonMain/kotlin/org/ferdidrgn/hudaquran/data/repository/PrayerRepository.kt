@@ -17,8 +17,12 @@ private val prayerLabels = listOf(
 )
 
 class PrayerRepository(private val api: PrayerApi = PrayerApi()) {
-    suspend fun getTodayTimings(city: String, country: String): PrayerTimes {
-        val dto = api.getTimingsByCity(city, country)
+    suspend fun getTodayTimings(city: String, country: String): PrayerTimes = getTimings(city, country, date = null)
+
+    /** Prayer times for [date] (null = today in the city's own time zone). */
+    suspend fun getTimings(city: String, country: String, date: LocalDate?): PrayerTimes {
+        val dateParam = date?.let { "${pad(it.dayOfMonth)}-${pad(it.monthNumber)}-${it.year}" }
+        val dto = api.getTimingsByCity(city, country, date = dateParam)
         val prayers = prayerLabels.map { (key, label) ->
             val raw = dto.timings[key].orEmpty().substringBefore(" ")
             PrayerTime(key, label, raw)

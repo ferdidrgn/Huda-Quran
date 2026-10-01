@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="notification_accent">#FF1E7145</color>
+    <color name="notification_accent">#FF6D3C52</color>
+    <color name="sakura_ink">#FF1B0C1A</color>
+    <color name="sakura_wine">#FF4B2138</color>
+    <color name="sakura_blossom">#FFFADCD5</color>
 </resources>

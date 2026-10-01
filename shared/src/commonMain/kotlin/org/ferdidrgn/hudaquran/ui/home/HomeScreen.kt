@@ -1,18 +1,19 @@
 package org.ferdidrgn.hudaquran.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,14 +25,18 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Book
@@ -52,7 +57,6 @@ import androidx.compose.material.icons.outlined.ViewModule
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -71,7 +75,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -79,10 +82,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.ferdidrgn.hudaquran.ads.BannerAdView
-import org.ferdidrgn.hudaquran.ads.NativeAdCard
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.LastRead
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
@@ -97,21 +99,25 @@ import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.domain.model.Surah
 import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
-import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
+import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
+import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
-import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.StaggeredEntrance
+import org.ferdidrgn.hudaquran.ui.components.ThemeIntroCard
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import kotlinx.datetime.Clock
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
 
@@ -153,6 +159,8 @@ fun HomeScreen(
 
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
+    // Shown once, to people who installed before the theme step existed in onboarding.
+    var showThemeIntro by remember { mutableStateOf(!preferences.themeIntroSeen) }
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
@@ -183,9 +191,8 @@ fun HomeScreen(
         }
             .onSuccess { timings ->
                 prayerTimes = timings
-                if (preferences.prayerNotificationsEnabled.value) {
-                    PrayerNotificationScheduler().scheduleToday(timings)
-                }
+                // Re-plans today's and tomorrow's reminders every time Home opens.
+                ReminderPlanner.reschedule()
             }
     }
     LaunchedEffect(isLoadingDaily) {
@@ -232,6 +239,11 @@ fun HomeScreen(
             onOpenDuaList = onOpenDuaList,
             onOpenZakatCalculator = onOpenZakatCalculator,
             onOpenIslamicCalendar = onOpenIslamicCalendar,
+            showThemeIntro = showThemeIntro,
+            onDismissThemeIntro = {
+                preferences.themeIntroSeen = true
+                showThemeIntro = false
+            },
             locationDisplayName = locationDisplayName,
         )
         return
@@ -239,7 +251,7 @@ fun HomeScreen(
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = if (isWeb) 240.dp else 160.dp),
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().screenBackground(),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -255,6 +267,15 @@ fun HomeScreen(
                     ctaLabel = if (resume != null) strings.continueReading else strings.navSurahs,
                     onCta = { if (resume != null) onOpenSurah(resume.surahNumber, resume.numberInSurah) else onOpenSurahList() },
                 )
+            }
+        }
+
+        if (showThemeIntro) {
+            item(span = { GridItemSpan(maxLineSpan) }, key = "theme_intro") {
+                ThemeIntroCard(onDismiss = {
+                    preferences.themeIntroSeen = true
+                    showThemeIntro = false
+                })
             }
         }
 
@@ -374,14 +395,14 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         value = favorites.size.toString(),
                         label = strings.favoriteLabel,
-                        emoji = "⭐",
+                        icon = Icons.Filled.Favorite,
                         onClick = onOpenFavorites,
                     )
                     StatBento(
                         modifier = Modifier.weight(1f),
                         value = (meta?.juzCount ?: 30).toString(),
                         label = strings.statJuz,
-                        emoji = "🔢",
+                        icon = Icons.Outlined.ViewModule,
                         accent = true,
                         onClick = onOpenJuzList,
                     )
@@ -402,10 +423,19 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            "🔄",
-                            fontSize = 16.sp,
-                            modifier = Modifier.clickable { isLoadingDaily = true })
+                        // Retry only after a failed load: the ayah is fixed for the whole day.
+                        if (!isLoadingDaily && dailyAyah == null) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = strings.retry,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .clickable { isLoadingDaily = true }
+                                    .padding(12.dp),
+                            )
+                        }
                     }
                     Spacer(Modifier.height(10.dp))
                     when {
@@ -419,9 +449,10 @@ fun HomeScreen(
                         dailyAyah != null -> {
                             Text(
                                 dailyAyah!!.arabicText,
-                                style = MaterialTheme.typography.titleLarge,
                                 fontFamily = LocalArabicFontFamily.current,
-                                textAlign = TextAlign.End,
+                                fontSize = 24.sp,
+                                lineHeight = 46.sp,
+                                textAlign = TextAlign.Right,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(8.dp))
@@ -455,12 +486,7 @@ fun HomeScreen(
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 StaggeredEntrance(7) {
-                    GlassSurface(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(8.dp)
-                    ) {
-                        NativeAdCard(modifier = Modifier.fillMaxWidth())
-                    }
+                    ListAdCard()
                 }
             }
         }
@@ -554,14 +580,10 @@ fun HomeScreen(
 
         if (!preferences.isAdFree()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(8.dp)
-                ) {
-                    BannerAdView(modifier = Modifier.fillMaxWidth())
-                }
+                AdBannerCard()
             }
         }
+        item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
     }
 }
 
@@ -600,15 +622,7 @@ private fun HomeHero(
             )
             if (streakText != null) {
                 Spacer(Modifier.height(12.dp))
-                Text(
-                    "🔥 $streakText",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.primary,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(scheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                )
+                StreakChip(streakText)
             }
             Spacer(Modifier.height(22.dp))
             Button(
@@ -694,20 +708,22 @@ private fun WebHomeContent(
     onOpenZakatCalculator: () -> Unit,
     onOpenIslamicCalendar: () -> Unit,
     locationDisplayName: String,
+    showThemeIntro: Boolean,
+    onDismissThemeIntro: () -> Unit,
 ) {
     // The background spans the whole window; the content itself is a centered column aligned
     // with the header's max width, so ultra-wide monitors get margins instead of stretched rows.
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .screenBackground()
             .verticalScroll(rememberScrollState()),
         contentAlignment = Alignment.TopCenter,
     ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
             .widthIn(max = 1240.dp)
+            .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 28.dp),
         verticalArrangement = Arrangement.spacedBy(36.dp),
     ) {
@@ -722,6 +738,9 @@ private fun WebHomeContent(
             locationDisplayName = locationDisplayName,
             onLocationClick = onOpenSettings,
         )
+        if (showThemeIntro) {
+            ThemeIntroCard(onDismiss = onDismissThemeIntro)
+        }
 
         Column {
             val uriHandler = LocalUriHandler.current
@@ -828,7 +847,7 @@ private fun WebContinueSection(
                 },
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(emoji = "▶️")
+                    IconBubble(icon = Icons.Filled.PlayArrow)
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -854,7 +873,7 @@ private fun WebContinueSection(
                 onClick = { onOpenMushafMode(1) },
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconBubble(emoji = "🎯", accent = true)
+                    IconBubble(icon = Icons.Outlined.AutoStories, accent = true)
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -996,11 +1015,16 @@ private fun WebDailyAyahSection(
                             .clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) }
                             .padding(horizontal = 12.dp, vertical = 12.dp),
                     )
+                }
+                else -> Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(strings.dailyAyahError, color = scheme.onSurface)
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Filled.Refresh, contentDescription = strings.retry, tint = scheme.onSurface.copy(alpha = 0.6f))
+                        Icon(Icons.Filled.Refresh, contentDescription = strings.retry, tint = scheme.primary)
                     }
                 }
-                else -> Text(strings.dailyAyahError, color = scheme.onSurface, modifier = Modifier.align(Alignment.Center))
             }
         }
     }
@@ -1125,31 +1149,8 @@ private fun WebFooter(
     onOpenReciters: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        Text("Huda Qur'an", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            strings.appTagline,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(18.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            listOf(
-                strings.navFavorites to onOpenFavorites,
-                strings.reciters to onOpenReciters,
-                strings.navSettings to onOpenSettings,
-            ).forEach { (label, action) ->
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = action),
-                )
-            }
-        }
-    }
+    // Same colophon as every other page; the web links come from SiteFooter itself.
+    SiteFooter()
 }
 
 @Composable
@@ -1205,15 +1206,7 @@ private fun WebHomeHero(
             Text(subtitle, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurface.copy(alpha = 0.78f))
             if (streakText != null) {
                 Spacer(Modifier.height(14.dp))
-                Text(
-                    "🔥 $streakText",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.primary,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(scheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                )
+                StreakChip(streakText)
             }
             Spacer(Modifier.height(28.dp))
             Row(
@@ -1326,7 +1319,7 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                         )
                     }
                 }
-                IconBubble(emoji = "🕌", accent = true)
+                IconBubble(icon = Icons.Outlined.AccessTime, accent = true)
             }
             Spacer(Modifier.height(14.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1370,7 +1363,7 @@ private fun ReadingProgressCard(
                     .clickable { onOpenSurah(lastRead.surahNumber, lastRead.numberInSurah) },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconBubble(emoji = "▶️")
+                IconBubble(icon = Icons.Filled.PlayArrow)
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -1398,7 +1391,7 @@ private fun ReadingProgressCard(
             modifier = Modifier.fillMaxWidth().clickable { onOpenMushafMode(lastMushafPage ?: 1) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconBubble(emoji = "📖", accent = true)
+            IconBubble(icon = Icons.Outlined.AutoStories, accent = true)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1449,7 +1442,7 @@ private fun ReadingProgressCard(
 }
 
 @Composable
-private fun IconBubble(emoji: String, accent: Boolean = false) {
+private fun IconBubble(icon: ImageVector, accent: Boolean = false) {
     Box(
         modifier = Modifier
             .size(44.dp)
@@ -1461,7 +1454,29 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, fontSize = 20.sp)
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (accent) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+/** Reading-streak pill: a flame glyph and the "N günlük seri" text in the accent colour. */
+@Composable
+private fun StreakChip(text: String) {
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(scheme.primary.copy(alpha = 0.12f))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(text, style = MaterialTheme.typography.labelLarge, color = scheme.primary)
     }
 }
 
@@ -1469,13 +1484,13 @@ private fun IconBubble(emoji: String, accent: Boolean = false) {
 private fun StatBento(
     value: String,
     label: String,
-    emoji: String,
+    icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     accent: Boolean = false,
 ) {
     GlassSurface(modifier = modifier.fillMaxWidth(), onClick = onClick) {
-        IconBubble(emoji = emoji, accent = accent)
+        IconBubble(icon = icon, accent = accent)
         Spacer(Modifier.height(12.dp))
         Text(
             value,

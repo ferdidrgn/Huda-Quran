@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.ads
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 
 actual object AdManager {
@@ -10,7 +11,11 @@ actual object AdManager {
 }
 
 @Composable
-actual fun BannerAdView(modifier: Modifier) {}
+actual fun BannerAdView(modifier: Modifier, onResult: (Boolean) -> Unit) {
+    LaunchedEffect(Unit) { onResult(false) }
+}
 
 @Composable
-actual fun NativeAdCard(modifier: Modifier) {}
+actual fun NativeAdCard(slotKey: String, modifier: Modifier, onResult: (Boolean) -> Unit) {
+    LaunchedEffect(Unit) { onResult(false) }
+}

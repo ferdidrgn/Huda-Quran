@@ -1,59 +1,59 @@
 package org.ferdidrgn.hudaquran.ui.dua
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Dua
 import org.ferdidrgn.hudaquran.domain.model.duaList
-import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.PageMotif
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 @Composable
 fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val strings = LocalStrings.current
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Text(strings.duaListTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        }
+        PageHeader(title = strings.duaListTitle, onBack = onBack, motif = PageMotif.LOTUS)
 
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            val showAds = !AppContainer.preferences.isAdFree()
             val grouped = duaList.groupBy { it.category }
+            val midCategory = grouped.keys.elementAtOrNull(grouped.size / 2)
             grouped.forEach { (category, duas) ->
+                if (showAds && category == midCategory && grouped.size > 1) {
+                    item(key = "ad_mid") { AdBannerCard() }
+                }
                 item(key = "header-$category") {
                     Text(
                         category,
@@ -64,6 +64,8 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
                 items(duas, key = { it.id }) { dua -> DuaCard(dua) }
             }
+            if (showAds) item(key = "ad_end") { AdBannerCard() }
+            item(key = "site_footer") { SiteFooter() }
         }
     }
     }

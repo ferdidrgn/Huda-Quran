@@ -9,24 +9,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
-import org.ferdidrgn.hudaquran.ui.theme.SplashGold
-import org.ferdidrgn.hudaquran.ui.theme.SplashGreen
-import org.ferdidrgn.hudaquran.ui.theme.SplashGreenDark
+import org.ferdidrgn.hudaquran.ui.theme.SakuraBlossom
+import org.ferdidrgn.hudaquran.ui.theme.SakuraInk
+import org.ferdidrgn.hudaquran.ui.theme.SakuraWine
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
@@ -46,36 +46,32 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SplashGreenDark),
+            .background(Brush.verticalGradient(listOf(SakuraWine, SakuraInk))),
         contentAlignment = Alignment.Center,
     ) {
         IslamicMotifBackground(
             modifier = Modifier.fillMaxSize(),
-            tint = SplashGold,
-            alpha = 0.07f,
+            tint = SakuraBlossom,
+            alpha = 0.06f,
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
+            ShamsaRosette(
+                color = SakuraBlossom,
                 modifier = Modifier
-                    .size(96.dp)
-                    .graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = alpha.value }
-                    .background(SplashGreen.copy(alpha = 0.5f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("📖", fontSize = 44.sp)
-            }
+                    .size(132.dp)
+                    .graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = alpha.value },
+            )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = "Huda Qur'an",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
+                color = SakuraBlossom,
+                style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = strings.appTagline,
-                color = SplashGold,
+                color = SakuraBlossom.copy(alpha = 0.7f),
                 fontSize = 14.sp,
                 modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
             )

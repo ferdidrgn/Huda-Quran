@@ -21,6 +21,7 @@ data class LastRead(val surahNumber: Int, val numberInSurah: Int, val surahName:
 class AppPreferences(private val settings: Settings = createSettings()) {
     companion object {
         private const val KEY_ONBOARDING_DONE = "onboarding_done"
+        private const val KEY_THEME_INTRO_SEEN = "theme_intro_seen"
         private const val KEY_FAVORITES = "favorite_ayahs"
         private const val KEY_LAST_READ_SURAH = "last_read_surah"
         private const val KEY_LAST_READ_AYAH = "last_read_ayah"
@@ -32,6 +33,9 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_PRAYER_CITY = "prayer_city"
         private const val KEY_PRAYER_COUNTRY = "prayer_country"
         private const val KEY_PRAYER_NOTIFICATIONS = "prayer_notifications_enabled"
+        private const val KEY_PRAYER_LEAD_MINUTES = "prayer_reminder_lead_minutes"
+        private const val KEY_PRAYER_AT_TIME = "prayer_reminder_at_time"
+        private const val KEY_OCCASION_REMINDERS = "occasion_reminders_enabled"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_ADS_REMOVED_UNTIL = "ads_removed_until_millis"
         private const val KEY_LAST_MUSHAF_PAGE = "last_mushaf_page"
@@ -44,7 +48,15 @@ class AppPreferences(private val settings: Settings = createSettings()) {
 
     var adsRemovedUntilMillis: Long
         get() = settings.getLong(KEY_ADS_REMOVED_UNTIL, 0L)
-        private set(value) = settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+        private set(value) {
+            settings.putLong(KEY_ADS_REMOVED_UNTIL, value)
+            _adFree.value = value > Clock.System.now().toEpochMilliseconds()
+        }
+
+    private val _adFree = MutableStateFlow(adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds())
+
+    /** Observable ad-free state, so Settings and ad slots update right after a purchase or restore. */
+    val adFree: StateFlow<Boolean> = _adFree.asStateFlow()
 
     fun isAdFree(): Boolean = adsRemovedUntilMillis > Clock.System.now().toEpochMilliseconds()
 
@@ -53,6 +65,11 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         val now = Clock.System.now().toEpochMilliseconds()
         val base = maxOf(adsRemovedUntilMillis, now)
         adsRemovedUntilMillis = base + durationMillis
+    }
+
+    /** Sets the ad-free expiry reported by the store (0 = not ad-free). */
+    fun setAdFreeUntil(epochMillis: Long) {
+        adsRemovedUntilMillis = epochMillis
     }
 
     private fun loadAppLanguage(): AppLanguage =
@@ -83,9 +100,41 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         _prayerNotificationsEnabled.value = enabled
     }
 
+    /** Minutes before each prayer for the gentle pre-reminder; 0 = off. */
+    private val _prayerReminderLeadMinutes = MutableStateFlow(settings.getInt(KEY_PRAYER_LEAD_MINUTES, 10))
+    val prayerReminderLeadMinutes: StateFlow<Int> = _prayerReminderLeadMinutes.asStateFlow()
+
+    fun setPrayerReminderLeadMinutes(minutes: Int) {
+        settings.putInt(KEY_PRAYER_LEAD_MINUTES, minutes)
+        _prayerReminderLeadMinutes.value = minutes
+    }
+
+    /** Also notify at the moment the prayer time begins. */
+    private val _prayerAtTimeEnabled = MutableStateFlow(settings.getBoolean(KEY_PRAYER_AT_TIME, true))
+    val prayerAtTimeEnabled: StateFlow<Boolean> = _prayerAtTimeEnabled.asStateFlow()
+
+    fun setPrayerAtTimeEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_PRAYER_AT_TIME, enabled)
+        _prayerAtTimeEnabled.value = enabled
+    }
+
+    /** Reminders two days and one day before kandils and other blessed days. */
+    private val _occasionRemindersEnabled = MutableStateFlow(settings.getBoolean(KEY_OCCASION_REMINDERS, true))
+    val occasionRemindersEnabled: StateFlow<Boolean> = _occasionRemindersEnabled.asStateFlow()
+
+    fun setOccasionRemindersEnabled(enabled: Boolean) {
+        settings.putBoolean(KEY_OCCASION_REMINDERS, enabled)
+        _occasionRemindersEnabled.value = enabled
+    }
+
     var onboardingCompleted: Boolean
         get() = settings.getBoolean(KEY_ONBOARDING_DONE, false)
         set(value) = settings.putBoolean(KEY_ONBOARDING_DONE, value)
+
+    /** The one-time "New: Themes" card on Home has been seen (or themes were chosen in onboarding). */
+    var themeIntroSeen: Boolean
+        get() = settings.getBoolean(KEY_THEME_INTRO_SEEN, false)
+        set(value) = settings.putBoolean(KEY_THEME_INTRO_SEEN, value)
 
     var selectedReciter: String
         get() = settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)

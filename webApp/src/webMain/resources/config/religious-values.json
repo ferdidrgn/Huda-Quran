@@ -1,0 +1,13 @@
+{
+  "updatedAt": "2026-09-30",
+  "nisabGoldGrams": 80.18,
+  "zakatRate": 0.025,
+  "fitre": [
+    {
+      "period": "2026",
+      "validFrom": "2026-02-18",
+      "amountTry": 240,
+      "source": "Diyanet İşleri Başkanlığı Din İşleri Yüksek Kurulu"
+    }
+  ]
+}

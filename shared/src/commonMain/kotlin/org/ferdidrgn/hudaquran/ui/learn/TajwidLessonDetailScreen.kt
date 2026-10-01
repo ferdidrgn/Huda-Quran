@@ -28,6 +28,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,9 +40,12 @@ import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
+import org.ferdidrgn.hudaquran.ui.components.PageHeader
+import org.ferdidrgn.hudaquran.ui.components.SiteFooter
+import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 
 @Composable
 fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
@@ -53,29 +57,14 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
         onDispose { pronouncer.release() }
     }
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = modifier.fillMaxSize().screenBackground()) {
         IslamicMotifBackground(
             modifier = Modifier.matchParentSize(),
             tint = MaterialTheme.colorScheme.primary,
             alpha = 0.035f,
         )
         Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack = onBack)
-            Column {
-                Text(lesson?.title ?: strings.lessonFallback, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                if (lesson != null) {
-                    Text(
-                        lesson.summary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    )
-                }
-            }
-        }
+        PageHeader(title = lesson?.title ?: strings.lessonFallback, subtitle = lesson?.summary, onBack = onBack)
 
         if (lesson == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -86,7 +75,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
             val examples = lesson.examples
             val midCount = examples.size / 2
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 110.dp),
+                columns = GridCells.Adaptive(minSize = 160.dp),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -103,6 +92,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
                 if (showAds) {
                     item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
+                item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
             }
         }
     }
@@ -113,7 +103,7 @@ fun TajwidLessonDetailScreen(lessonId: String, modifier: Modifier = Modifier, on
 private fun ExampleCard(example: TajwidExample, pronounceDescription: String, onPronounce: () -> Unit) {
     GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 14.dp, horizontal = 8.dp)) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(example.arabic, fontSize = 30.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
+            Text(example.arabic, fontSize = 34.sp, lineHeight = 52.sp, fontFamily = LocalArabicFontFamily.current, color = MaterialTheme.colorScheme.primary)
             Text(example.transliteration, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Text(
                 example.explanation,
@@ -125,7 +115,8 @@ private fun ExampleCard(example: TajwidExample, pronounceDescription: String, on
             Spacer(Modifier.size(6.dp))
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(44.dp)
+                    .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f), CircleShape)
                     .clickable(onClick = onPronounce),
                 contentAlignment = Alignment.Center,
@@ -134,7 +125,7 @@ private fun ExampleCard(example: TajwidExample, pronounceDescription: String, on
                     Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = pronounceDescription,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }

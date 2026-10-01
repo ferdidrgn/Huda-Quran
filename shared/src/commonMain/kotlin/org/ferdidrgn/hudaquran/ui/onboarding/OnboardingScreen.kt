@@ -13,28 +13,43 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -42,35 +57,50 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
-import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
-import org.ferdidrgn.hudaquran.ui.localization.Strings
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.data.local.TextSizeOption
+import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.ui.components.FilterPill
+import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
+import org.ferdidrgn.hudaquran.ui.components.ThemePreviewPicker
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.localization.Strings
+import org.ferdidrgn.hudaquran.ui.theme.SakuraBlossom
+import org.ferdidrgn.hudaquran.ui.theme.SakuraInk
+import org.ferdidrgn.hudaquran.ui.theme.SakuraMauve
+import org.ferdidrgn.hudaquran.ui.theme.SakuraPlum
+import org.ferdidrgn.hudaquran.ui.theme.SakuraWine
 
 private data class OnboardingPage(
-    val emoji: String,
+    val icon: ImageVector,
     val title: String,
     val description: String,
     val accent: Color,
+    /** The last step: pick a theme and text size with live previews instead of an illustration. */
+    val isThemeStep: Boolean = false,
 )
 
 private fun pagesFor(strings: Strings) = listOf(
-    OnboardingPage(emoji = "📖", title = strings.onboardTitle1, description = strings.onboardDesc1, accent = Color(0xFF3FBF8F)),
-    OnboardingPage(emoji = "🎧", title = strings.onboardTitle2, description = strings.onboardDesc2, accent = Color(0xFFE0A840)),
-    OnboardingPage(emoji = "🌍", title = strings.onboardTitle3, description = strings.onboardDesc3, accent = Color(0xFF5B8FE0)),
-    OnboardingPage(emoji = "⭐", title = strings.onboardTitle4, description = strings.onboardDesc4, accent = Color(0xFFD8677B)),
+    OnboardingPage(icon = Icons.Outlined.AutoStories, title = strings.onboardTitle1, description = strings.onboardDesc1, accent = SakuraPlum),
+    OnboardingPage(icon = Icons.Outlined.Headphones, title = strings.onboardTitle2, description = strings.onboardDesc2, accent = Color(0xFF9B5A74)),
+    OnboardingPage(icon = Icons.Outlined.Language, title = strings.onboardTitle3, description = strings.onboardDesc3, accent = SakuraMauve),
+    OnboardingPage(icon = Icons.Outlined.FavoriteBorder, title = strings.onboardTitle4, description = strings.onboardDesc4, accent = Color(0xFFB0707F)),
+    OnboardingPage(icon = Icons.Outlined.Palette, title = strings.themePickerTitle, description = strings.themePickerSubtitle, accent = SakuraPlum, isThemeStep = true),
 )
 
-// A fixed dark, brand-green backdrop regardless of the user's chosen app theme — onboarding is a
-// one-time, branded first impression (same reasoning as the splash screen's fixed dark green),
-// not a place that should shift with a light/dark preference the user hasn't even set yet.
-private val HeroTop = Color(0xFF102A20)
-private val HeroBottom = Color(0xFF04100B)
-private val Gilt = Color(0xFFD4B36A)
+// A fixed Sakura dusk backdrop regardless of the user's chosen app theme — onboarding is a
+// one-time, branded first impression in the app's main palette (same as the splash screen), not a
+// place that should shift with a light/dark preference the user hasn't even set yet.
+private val HeroTop = SakuraWine
+private val HeroBottom = SakuraInk
+private val Gilt = SakuraBlossom
 
 /**
  * A full-bleed, motif-driven onboarding: a slowly-turning field of Islamic eight-point stars
@@ -104,7 +134,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             drawOnboardingMotifField(color = Gilt.copy(alpha = 0.07f))
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,7 +147,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                         .padding(horizontal = 14.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("🕌", fontSize = 13.sp)
+                    Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = Gilt, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(
                         "Huda Kur'an",
@@ -133,9 +163,13 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 
             HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
                 val item = pages[page]
+                if (item.isThemeStep) {
+                    ThemeStep(title = item.title, subtitle = item.description)
+                    return@HorizontalPager
+                }
                 Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
                     Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        OnboardingArchMedallion(emoji = item.emoji, accent = item.accent, stepLabel = "${page + 1}/${pages.size}")
+                        OnboardingArchMedallion(icon = item.icon, accent = item.accent, stepLabel = "${page + 1}/${pages.size}")
                     }
                     Spacer(Modifier.height(28.dp))
                     Text(
@@ -176,7 +210,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(58.dp),
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Gilt, contentColor = Color(0xFF1A1207)),
+                colors = ButtonDefaults.buttonColors(containerColor = Gilt, contentColor = SakuraInk),
             ) {
                 Text(
                     if (isLastPage) strings.onboardingStart else strings.onboardingNext,
@@ -191,7 +225,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 
 /** A pointed-arch (mihrab silhouette) medallion holding the page's icon, with a colored glow and a gold rim. */
 @Composable
-private fun OnboardingArchMedallion(emoji: String, accent: Color, stepLabel: String) {
+private fun OnboardingArchMedallion(icon: ImageVector, accent: Color, stepLabel: String) {
     Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f), contentAlignment = Alignment.BottomCenter) {
         Box(
             modifier = Modifier
@@ -202,7 +236,7 @@ private fun OnboardingArchMedallion(emoji: String, accent: Color, stepLabel: Str
             Canvas(modifier = Modifier.fillMaxSize()) { drawPointedArch(fillColor = Color.White.copy(alpha = 0.05f), strokeColor = Gilt.copy(alpha = 0.55f)) }
 
             Canvas(modifier = Modifier.size(240.dp)) { drawOrnamentalRosette(accent = accent) }
-            Text(emoji, fontSize = 132.sp)
+            Icon(icon, contentDescription = null, tint = Gilt, modifier = Modifier.size(104.dp))
 
             Box(
                 modifier = Modifier
@@ -321,4 +355,65 @@ private fun eightPointStar(center: Offset, outerRadius: Float, innerRadius: Floa
     }
     path.close()
     return path
+}
+
+/**
+ * The theme step is painted in the *selected* theme, not the fixed onboarding dusk: tapping a
+ * preview recolours this whole card at once, so the reader sees the result before committing.
+ */
+@Composable
+private fun ThemeStep(title: String, subtitle: String) {
+    val preferences = AppContainer.preferences
+    val strings = LocalStrings.current
+    val themeMode by preferences.themeMode.collectAsState()
+    val textSize by preferences.textSize.collectAsState()
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(scheme.background)
+            .border(1.dp, Gilt.copy(alpha = 0.35f), RoundedCornerShape(28.dp))
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ShamsaRosette(color = scheme.primary, modifier = Modifier.size(72.dp))
+        Spacer(Modifier.height(12.dp))
+        Text(title, style = MaterialTheme.typography.headlineSmall, color = scheme.onBackground, textAlign = TextAlign.Center)
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = scheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
+        )
+        ThemePreviewPicker(selected = themeMode, onSelect = { preferences.setThemeMode(it) })
+        Spacer(Modifier.height(20.dp))
+        Text(strings.textSizeLabel, style = MaterialTheme.typography.titleMedium, color = scheme.onBackground)
+        Text(
+            strings.textSizeHint,
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onBackground.copy(alpha = 0.6f),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(
+                TextSizeOption.NORMAL to strings.textSizeNormal,
+                TextSizeOption.LARGE to strings.textSizeLarge,
+                TextSizeOption.EXTRA_LARGE to strings.textSizeExtraLarge,
+            ).forEach { (option, label) ->
+                FilterPill(label, textSize == option, { preferences.setTextSize(option) })
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            strings.themeChangeLaterNote,
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onBackground.copy(alpha = 0.55f),
+            textAlign = TextAlign.Center,
+        )
+    }
 }
