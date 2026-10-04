@@ -1,6 +1,6 @@
 ---
 name: huda-design
-description: Project design system and rules for Huda Qur'an's UI (Compose Multiplatform — Android, iOS, web canvas). Use before creating or restyling ANY screen, component, theme, animation or web page in this repo. Adapts the generic frontend-design and mobile-design skills to this codebase.
+description: Project design system and rules for Huda Qur'an's UI (Compose Multiplatform — Android, iOS, web canvas). Requires interactive UI, platform integrations and in-place actions on every screen. Use before creating or restyling ANY screen, component, theme, animation or web page in this repo. Adapts the generic frontend-design and mobile-design skills to this codebase.
 ---
 
 # Huda Qur'an design system
@@ -72,6 +72,28 @@ Light/Dark (gilt + emerald) remain as options. Mushaf paper/ink/gilt are fixed a
 - Spend boldness in ONE place per screen (e.g. Home hero with the next prayer countdown,
   Mushaf's gilt page frame). Everything else stays quiet.
 
+## Interactivity, integrations, actions
+
+Every screen must feel alive and do something, not just display. When building or restyling a
+screen, add all three layers:
+
+- **Interactive UI** — press feedback on everything tappable (scale 0.97 + ripple), animated
+  state changes (`animateContentSize`, `AnimatedVisibility`, `Crossfade`), swipe gestures where
+  natural (pager between surahs/pages, swipe-to-dismiss), long-press for secondary actions,
+  pull-to-refresh on live data, progress shown as rings/bars that animate. Web: hover states
+  (`hoverable` + elevation/tint), pointer cursor, keyboard shortcuts (Space play/pause,
+  ←/→ next/prev) via `onKeyEvent`.
+- **Integrations (eklentiler)** — use the platform: share sheet, copy to clipboard with a snackbar,
+  haptics on key actions, deep links, local notifications, home-screen widget where it fits,
+  "open in maps" for qibla/mosques. Wrap each in an `expect/actual` in `platform/`; web gets a
+  graceful fallback (Web Share API or clipboard), never a dead button.
+- **Actions (işlemler)** — every content item offers its operations in place: ayah → play, copy,
+  share (text or image card), bookmark, note, tafsir; dua/esma → copy, share, favorite; prayer
+  times → set reminder. Show results instantly (optimistic UI + snackbar with Undo), persist via
+  `AppPreferences`/repository, and remember the last state (position, filters, toggles).
+
+Each interaction needs loading/success/error feedback and must stay within the theme tokens.
+
 ## Avoid (tells of generated UI)
 
 Emoji as the only iconography on primary actions; identical cards for everything; gradient washes
@@ -86,4 +108,5 @@ with `adsSupported && !preferences.isAdFree()`. Never place ads beside playback 
 ## Checkpoint before writing UI code
 
 State: screen, platforms affected, the one signature element, which tokens/components you reuse,
-loading/error/empty states, and how it behaves at COMPACT and EXPANDED widths.
+loading/error/empty states, the interactions/integrations/actions it adds (see above), and how
+it behaves at COMPACT and EXPANDED widths.
