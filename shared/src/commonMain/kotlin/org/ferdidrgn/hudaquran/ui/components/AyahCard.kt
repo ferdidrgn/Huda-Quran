@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -66,6 +67,10 @@ fun AyahCard(
     onFavoriteToggle: () -> Unit,
     showSurahLabel: Boolean = false,
     onTafsirClick: (() -> Unit)? = null,
+    showTranslation: Boolean = true,
+    translationColor: Color? = null,
+    arabicFontSize: TextUnit = 26.sp,
+    translationFontSize: TextUnit = TextUnit.Unspecified,
 ) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -127,8 +132,8 @@ fun AyahCard(
         Text(
             ayah.arabicText,
             fontFamily = LocalArabicFontFamily.current,
-            fontSize = 26.sp,
-            lineHeight = 52.sp,
+            fontSize = arabicFontSize,
+            lineHeight = arabicFontSize * 2,
             color = colors.onSurface,
             // Absolute right, not End: End flips to the left when the paragraph resolves RTL,
             // and Arabic must always hang from the right edge whatever the UI language is.
@@ -136,13 +141,14 @@ fun AyahCard(
             style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Rtl),
             modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp),
         )
-        if (ayah.translationText.isNotBlank()) {
+        if (showTranslation && ayah.translationText.isNotBlank()) {
             OrnamentRule(modifier = Modifier.padding(vertical = 10.dp), centered = true)
             Text(
                 ayah.translationText,
                 style = MaterialTheme.typography.bodyLarge,
-                lineHeight = 26.sp,
-                color = colors.onSurface.copy(alpha = 0.82f),
+                fontSize = translationFontSize,
+                lineHeight = if (translationFontSize == TextUnit.Unspecified) 26.sp else translationFontSize * 1.6f,
+                color = translationColor ?: colors.onSurface.copy(alpha = 0.82f),
                 modifier = Modifier.padding(end = 4.dp),
             )
         }
