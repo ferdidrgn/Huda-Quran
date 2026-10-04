@@ -13,6 +13,10 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 
 private const val LOADING_TIMEOUT_MS = 20_000L
 
+/** `/quran/audio/128/ar.x/1.mp3` or `/quran/audio-surah/128/ar.x/1.mp3` on the Islamic Network CDN. */
+private val CDN_BITRATE = Regex("""(/quran/audio(?:-surah)?/)(\d+)(/)""")
+private val FALLBACK_BITRATES = listOf(128, 64, 192, 48, 40, 32)
+
 enum class PlaybackMode { AYAH_QUEUE, WHOLE_SURAH }
 
 data class NowPlaying(
@@ -50,6 +54,7 @@ class PlaybackManager(private val player: AudioPlayer) {
         scope.launch {
             playerState.collect { state ->
                 if (state.status == PlaybackStatus.COMPLETED) advance()
+                if (state.status == PlaybackStatus.ERROR) retryAtAnotherBitrate(state.currentUrl)
 
                 loadingWatchdog?.cancel()
                 loadingWatchdog = if (state.status == PlaybackStatus.LOADING) {
@@ -68,6 +73,27 @@ class PlaybackManager(private val player: AudioPlayer) {
                 }
             }
         }
+    }
+
+    /** Bitrates already tried for the track currently being opened (keyed by its bitrate-free URL). */
+    private val triedBitrates = mutableMapOf<String, MutableSet<Int>>()
+
+    /**
+     * The audio CDN stores each reciter at only some bitrates (e.g. Abdul Basit only at 64 and
+     * 192 kbps), and the API always hands out 128 kbps links — so for many reciters playback simply
+     * failed. On an error, try the same file at the next bitrate before giving up.
+     */
+    private fun retryAtAnotherBitrate(url: String?) {
+        if (url == null || _nowPlaying.value == null) return
+        val match = CDN_BITRATE.find(url) ?: return
+        val current = match.groupValues[2].toIntOrNull() ?: return
+        val key = url.replaceRange(match.groups[2]!!.range, "{b}")
+        val tried = triedBitrates.getOrPut(key) { mutableSetOf() }.apply { add(current) }
+        val next = FALLBACK_BITRATES.firstOrNull { it !in tried } ?: run {
+            triedBitrates.remove(key)
+            return
+        }
+        player.play(url.replaceRange(match.groups[2]!!.range, next.toString()))
     }
 
     fun currentAyah(): Ayah? {

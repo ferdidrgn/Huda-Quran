@@ -199,7 +199,7 @@ class QuranRepository(
             api.getEditions(format = "audio", type = "versebyverse")
                 .map { Reciter(it.identifier, it.englishName.ifBlank { it.name }) }
                 .distinctBy { it.identifier }
-                .sortedBy { it.displayName }
+                .sortedWith(compareBy({ it.identifier != QuranEditions.DEFAULT_RECITER }, { it.displayName }))
         }.getOrElse { QuranEditions.reciters }
         cachedReciters = loaded
         return loaded

@@ -87,6 +87,7 @@ data class Tafsir(val identifier: String, val language: String, val displayName:
 
 object QuranEditions {
     val reciters = listOf(
+        Reciter("ar.abdullahbasfar", "Abdullah Basfar"),
         Reciter("ar.alafasy", "Mishary Alafasy"),
         Reciter("ar.abdulbasitmurattal", "Abdul Basit (Murattal)"),
         Reciter("ar.abdurrahmaansudais", "Abdurrahmaan As-Sudais"),
@@ -103,7 +104,7 @@ object QuranEditions {
     )
 
     const val ARABIC_TEXT_EDITION = "quran-uthmani"
-    const val DEFAULT_RECITER = "ar.alafasy"
+    const val DEFAULT_RECITER = "ar.abdullahbasfar"
     const val DEFAULT_TRANSLATION = "tr.diyanet"
 
     fun surahAudioUrl(surahNumber: Int, reciter: String = DEFAULT_RECITER): String =

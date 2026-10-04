@@ -27,6 +27,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_LAST_READ_AYAH = "last_read_ayah"
         private const val KEY_LAST_READ_SURAH_NAME = "last_read_surah_name"
         private const val KEY_RECITER = "selected_reciter"
+        private const val KEY_RECITER_BASFAR_MIGRATED = "reciter_basfar_migrated"
         private const val KEY_TRANSLATION = "selected_translation"
         private const val KEY_TAFSIR = "selected_tafsir"
         private const val KEY_THEME = "theme_mode"
@@ -136,8 +137,15 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         get() = settings.getBoolean(KEY_THEME_INTRO_SEEN, false)
         set(value) = settings.putBoolean(KEY_THEME_INTRO_SEEN, value)
 
+    /** Abdullah Basfar became the default in 1.5.1; everyone starts from him once, then may change. */
     var selectedReciter: String
-        get() = settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+        get() {
+            if (!settings.getBoolean(KEY_RECITER_BASFAR_MIGRATED, false)) {
+                settings.putBoolean(KEY_RECITER_BASFAR_MIGRATED, true)
+                settings.putString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+            }
+            return settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+        }
         set(value) = settings.putString(KEY_RECITER, value)
 
     var selectedTranslation: String
