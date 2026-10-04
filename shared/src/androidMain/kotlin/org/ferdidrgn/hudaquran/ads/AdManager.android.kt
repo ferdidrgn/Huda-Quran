@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.ads
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.graphics.Color as AndroidColor
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -49,6 +50,19 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 private const val TAG = "HudaAds"
 private val mainHandler = Handler(Looper.getMainLooper())
 
+/** Debuggable builds use Google's always-filling test units; release keeps the real ones. */
+private val isDebuggableBuild: Boolean
+    get() = (AppContextHolder.context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+private fun bannerUnitId(): String =
+    if (isDebuggableBuild) AdUnitIds.TEST_ANDROID_BANNER else AdUnitIds.ANDROID_BANNER
+
+private fun nativeUnitId(): String =
+    if (isDebuggableBuild) AdUnitIds.TEST_ANDROID_NATIVE else AdUnitIds.ANDROID_NATIVE
+
+private fun interstitialUnitId(): String =
+    if (isDebuggableBuild) AdUnitIds.TEST_ANDROID_INTERSTITIAL else AdUnitIds.ANDROID_INTERSTITIAL
+
 actual object AdManager {
     private var interstitial: InterstitialAd? = null
     private var initialized = false
@@ -76,7 +90,7 @@ actual object AdManager {
     actual fun loadInterstitial() {
         InterstitialAd.load(
             AppContextHolder.context,
-            AdUnitIds.ANDROID_INTERSTITIAL,
+            interstitialUnitId(),
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
@@ -180,7 +194,7 @@ internal object NativeAdPool {
         val unstick = Runnable { loading = false }
         mainHandler.postDelayed(unstick, 30_000L)
         lateinit var loader: AdLoader
-        loader = AdLoader.Builder(AppContextHolder.context, AdUnitIds.ANDROID_NATIVE)
+        loader = AdLoader.Builder(AppContextHolder.context, nativeUnitId())
             .forNativeAd { ad ->
                 retryDelayMs = 5_000L
                 val waiter = waiters.entries.firstOrNull()
@@ -229,7 +243,7 @@ actual fun BannerAdView(modifier: Modifier, onResult: (Boolean) -> Unit) {
         factory = {
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
-                adUnitId = AdUnitIds.ANDROID_BANNER
+                adUnitId = bannerUnitId()
                 adListener = object : AdListener() {
                     override fun onAdLoaded() = currentOnResult(true)
                     override fun onAdFailedToLoad(error: LoadAdError) {

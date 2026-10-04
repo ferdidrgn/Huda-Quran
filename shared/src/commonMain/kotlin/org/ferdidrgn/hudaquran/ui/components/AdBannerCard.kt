@@ -161,3 +161,12 @@ private fun NativeAdSkeleton() {
  */
 fun showListAdAfter(index: Int, total: Int): Boolean =
     (index + 1) % LIST_AD_INTERVAL == 0 || (total < LIST_AD_INTERVAL && index == total - 1)
+
+/**
+ * For lists that also end with their own closing ad: true after every [LIST_AD_INTERVAL]th row
+ * (never after the last row, the closing ad covers that), and — for a list too short to reach one —
+ * once around the middle, so a short list still gets a mid-page ad.
+ */
+fun showFeedAdAfter(index: Int, total: Int): Boolean =
+    if (total >= LIST_AD_INTERVAL) (index + 1) % LIST_AD_INTERVAL == 0 && index < total - 1
+    else total > 2 && index == total / 2

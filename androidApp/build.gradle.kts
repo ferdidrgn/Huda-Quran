@@ -86,6 +86,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // RevenueCat Test Store key — debug builds ONLY (never shipped; release reads the real
+            // goog_… key from the environment / gradle property above).
+            buildConfigField("String", "REVENUECAT_GOOGLE_KEY", "\"test_FZbXAoHhWzdZpQKvlnraKRilWDb\"")
+        }
         release {
             // Falls back to debug-signing (installable locally, but NOT a valid Play Store
             // upload) whenever the real keystore env vars above aren't set.

@@ -39,6 +39,14 @@ object AdUnitIds {
 
     const val ANDROID_INTERSTITIAL = "ca-app-pub-5779807348211992/1397262550"
 
+    // Google's official always-fill TEST units. Android uses these in debuggable builds
+    // (the real units usually return "no fill" until the app is live in the store).
+    const val TEST_ANDROID_BANNER = "ca-app-pub-3940256099942544/9214589741"
+    const val TEST_ANDROID_NATIVE = "ca-app-pub-3940256099942544/2247696110"
+    const val TEST_ANDROID_INTERSTITIAL = "ca-app-pub-3940256099942544/1033173712"
+    const val TEST_ANDROID_REWARDED = "ca-app-pub-3940256099942544/5224354917"
+    const val TEST_ANDROID_APP_OPEN = "ca-app-pub-3940256099942544/9257395921"
+
     // iOS ads aren't wired up yet (see AdManager.ios.kt) — left as Google's test IDs.
     const val IOS_BANNER = "ca-app-pub-3940256099942544/2934735716"
     const val IOS_INTERSTITIAL = "ca-app-pub-3940256099942544/4411468910"

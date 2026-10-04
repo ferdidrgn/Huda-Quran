@@ -1,7 +1,11 @@
 package org.ferdidrgn.hudaquran.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +22,18 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,6 +53,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,6 +76,8 @@ import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
+import org.ferdidrgn.hudaquran.platform.Platform
+import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.FilterPill
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
@@ -65,6 +86,7 @@ import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.util.shareText
 
 @Composable
 fun SettingsScreen(
@@ -87,6 +109,10 @@ fun SettingsScreen(
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
     val adFree by preferences.adFree.collectAsState()
+    val uriHandler = LocalUriHandler.current
+    fun openLink(url: String) {
+        runCatching { uriHandler.openUri(url) }
+    }
     val billingScope = rememberCoroutineScope()
     var purchaseBusy by remember { mutableStateOf(false) }
     var purchaseMessage by remember { mutableStateOf<String?>(null) }
@@ -280,8 +306,32 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (adFree) 0.9f else 0.7f),
             )
+            // Always useful, with or without billing: rate, share and write to the developer.
+            Spacer(modifier = Modifier.height(8.dp))
+            if (currentPlatform != Platform.WEB) {
+                NavigationRow(
+                    title = strings.supportRateApp,
+                    value = strings.supportRateAppHint,
+                    icon = Icons.Filled.Star,
+                    onClick = { openLink(rateAppUrl()) },
+                )
+            }
+            NavigationRow(
+                title = strings.supportShareApp,
+                value = strings.supportShareAppHint,
+                icon = Icons.Outlined.Share,
+                onClick = { shareText(strings.shareAppMessage.replace("{url}", shareAppUrl())) },
+            )
+            if (FEEDBACK_EMAIL.isNotBlank()) {
+                NavigationRow(
+                    title = strings.supportFeedback,
+                    value = strings.supportFeedbackHint,
+                    icon = Icons.Outlined.Email,
+                    onClick = { openLink(feedbackMailto()) },
+                )
+            }
             if (BillingManager.isSupported) {
-                Spacer(modifier = Modifier.height(12.dp))
+                OrnamentRule(modifier = Modifier.padding(vertical = 10.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(
                         onClick = { buy(BillingProduct.DONATION_SMALL) },
@@ -341,28 +391,31 @@ fun SettingsScreen(
         SectionTitle(strings.moreTitle)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             NavigationRow(
-                title = strings.zakatCalculatorTitle,
-                value = "",
+                title = strings.fitreZakatRowTitle,
+                value = strings.fitreZakatRowHint,
+                icon = Icons.Outlined.Calculate,
                 onClick = onOpenZakatCalculator,
             )
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(
                 title = strings.duaListTitle,
                 value = "",
+                icon = Icons.Outlined.AutoStories,
                 onClick = onOpenDuaList,
             )
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(
                 title = strings.islamicCalendarTitle,
                 value = "",
+                icon = Icons.Outlined.Event,
                 onClick = onOpenIslamicCalendar,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            val uriHandler = LocalUriHandler.current
             NavigationRow(
                 title = strings.hacKuraLabel,
                 value = "hacumre.diyanet.gov.tr",
-                onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
+                icon = Icons.Outlined.Language,
+                onClick = { openLink("https://hacumre.diyanet.gov.tr/") },
             )
         }
 
@@ -473,20 +526,79 @@ private fun SectionTitle(text: String) {
     )
 }
 
+/**
+ * A tappable settings row: optional leading icon, title + optional hint, chevron. Presses sink the
+ * row slightly with a ripple; on the web it shows the hand cursor and a hover tint.
+ */
 @Composable
-private fun NavigationRow(title: String, value: String, onClick: () -> Unit) {
+private fun NavigationRow(title: String, value: String, onClick: () -> Unit, icon: ImageVector? = null) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = tween(120),
+        label = "settingsRowScale",
+    )
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(12.dp))
+            .hoverable(interactionSource)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 4.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(modifier = Modifier.size(14.dp))
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            if (value.isNotBlank()) {
+                Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            }
         }
         Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
     }
 }
+
+private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=org.ferdidrgn.hudaquran"
+private const val WEBSITE_URL = "https://hudaquran.web.app/"
+
+/** Set to the numeric App Store ID (e.g. "6478123456") once the iOS app is published. */
+private const val IOS_APP_STORE_ID = ""
+
+/** Developer inbox for the "send feedback" row; the row stays hidden while this is blank. */
+private const val FEEDBACK_EMAIL = ""
+
+private fun rateAppUrl(): String = when (currentPlatform) {
+    Platform.IOS ->
+        if (IOS_APP_STORE_ID.isBlank()) WEBSITE_URL
+        else "https://apps.apple.com/app/id$IOS_APP_STORE_ID?action=write-review"
+    Platform.ANDROID -> PLAY_STORE_URL
+    Platform.WEB -> WEBSITE_URL
+}
+
+private fun shareAppUrl(): String = when (currentPlatform) {
+    Platform.IOS ->
+        if (IOS_APP_STORE_ID.isBlank()) WEBSITE_URL else "https://apps.apple.com/app/id$IOS_APP_STORE_ID"
+    Platform.ANDROID -> PLAY_STORE_URL
+    Platform.WEB -> WEBSITE_URL
+}
+
+private fun feedbackMailto(): String =
+    "mailto:$FEEDBACK_EMAIL?subject=Huda%20Quran%20feedback%20v${appVersionName()}"
 
 /** Expiries beyond this (a lifetime grant) show the plain "ad-free" message instead of a date. */
 private const val AD_FREE_DATE_DISPLAY_LIMIT = 4_102_444_800_000L // 2100-01-01

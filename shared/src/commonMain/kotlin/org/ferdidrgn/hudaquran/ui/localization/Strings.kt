@@ -261,6 +261,15 @@ data class Strings(
     val themeChangeLaterNote: String,
     val themeIntroTitle: String,
     val themeIntroBody: String,
+    val supportRateApp: String,
+    val supportRateAppHint: String,
+    val supportShareApp: String,
+    val supportShareAppHint: String,
+    val shareAppMessage: String,
+    val supportFeedback: String,
+    val supportFeedbackHint: String,
+    val fitreZakatRowTitle: String,
+    val fitreZakatRowHint: String,
 )
 
 private val turkish = Strings(
@@ -424,6 +433,15 @@ private val turkish = Strings(
     themeChangeLaterNote = "İstediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
     themeIntroTitle = "Yeni: Temalar",
     themeIntroBody = "Uygulamanın görünümünü dilediğin gibi seç. Dokunarak dene, beğendiğinde öyle kalsın.",
+    supportRateApp = "Uygulamayı puanla",
+    supportRateAppHint = "Mağazada değerlendirerek destek olun",
+    supportShareApp = "Uygulamayı paylaş",
+    supportShareAppHint = "Yakınlarınıza önerin",
+    shareAppMessage = "Huda Kur'an: Kur'an-ı Kerim oku ve dinle, namaz vakitleri, dualar ve Esmâ-ül Hüsnâ. {url}",
+    supportFeedback = "Geri bildirim gönder",
+    supportFeedbackHint = "Öneri veya sorunlarınızı bize iletin",
+    fitreZakatRowTitle = "Fitre / Zekât hesaplama",
+    fitreZakatRowHint = "Zekât, fitre ve fidyenizi hesaplayın",
 )
 
 private val english = Strings(
@@ -587,6 +605,15 @@ private val english = Strings(
     themeChangeLaterNote = "You can change it anytime in Settings.",
     themeIntroTitle = "New: Themes",
     themeIntroBody = "Pick the look you like. Tap to try — keep the one that feels right.",
+    supportRateApp = "Rate the app",
+    supportRateAppHint = "Support us with a review in the store",
+    supportShareApp = "Share the app",
+    supportShareAppHint = "Recommend it to your loved ones",
+    shareAppMessage = "Huda Qur'an: read and listen to the Qur'an, prayer times, duas and the Names of Allah. {url}",
+    supportFeedback = "Send feedback",
+    supportFeedbackHint = "Tell us your ideas or problems",
+    fitreZakatRowTitle = "Fitr / Zakat calculator",
+    fitreZakatRowHint = "Calculate your zakat, fitra and fidya",
 )
 
 private val arabic = Strings(
@@ -750,6 +777,15 @@ private val arabic = Strings(
     themeChangeLaterNote = "يمكنك تغييرها في أي وقت من الإعدادات.",
     themeIntroTitle = "جديد: السمات",
     themeIntroBody = "اختر المظهر الذي يعجبك. المس للتجربة واحتفظ بما يريحك.",
+    supportRateApp = "قيّم التطبيق",
+    supportRateAppHint = "ادعمنا بتقييمك في المتجر",
+    supportShareApp = "شارك التطبيق",
+    supportShareAppHint = "انصح به أحباءك",
+    shareAppMessage = "هدى القرآن: اقرأ القرآن واستمع إليه، مواقيت الصلاة، الأدعية وأسماء الله الحسنى. {url}",
+    supportFeedback = "أرسل ملاحظاتك",
+    supportFeedbackHint = "شاركنا أفكارك أو مشاكلك",
+    fitreZakatRowTitle = "حاسبة الفطرة والزكاة",
+    fitreZakatRowHint = "احسب زكاتك وفطرتك وفديتك",
 )
 
 private val german = Strings(
@@ -913,6 +949,15 @@ private val german = Strings(
     themeChangeLaterNote = "Du kannst es jederzeit in den Einstellungen ändern.",
     themeIntroTitle = "Neu: Designs",
     themeIntroBody = "Wähle das Aussehen, das dir gefällt. Tippe zum Ausprobieren und behalte, was sich richtig anfühlt.",
+    supportRateApp = "App bewerten",
+    supportRateAppHint = "Unterstützen Sie uns mit einer Bewertung im Store",
+    supportShareApp = "App teilen",
+    supportShareAppHint = "Empfehlen Sie sie Ihren Liebsten",
+    shareAppMessage = "Huda Qur'an: Koran lesen und hören, Gebetszeiten, Duas und die Namen Allahs. {url}",
+    supportFeedback = "Feedback senden",
+    supportFeedbackHint = "Teilen Sie uns Ideen oder Probleme mit",
+    fitreZakatRowTitle = "Fitra- / Zakat-Rechner",
+    fitreZakatRowHint = "Berechnen Sie Zakat, Fitra und Fidya",
 )
 
 private val french = Strings(
@@ -1076,6 +1121,15 @@ private val french = Strings(
     themeChangeLaterNote = "Vous pouvez le changer à tout moment dans les Réglages.",
     themeIntroTitle = "Nouveau : les thèmes",
     themeIntroBody = "Choisissez l'apparence qui vous plaît. Touchez pour essayer et gardez celle qui vous convient.",
+    supportRateApp = "Noter l'application",
+    supportRateAppHint = "Soutenez-nous avec un avis sur le store",
+    supportShareApp = "Partager l'application",
+    supportShareAppHint = "Recommandez-la à vos proches",
+    shareAppMessage = "Huda Coran : lisez et écoutez le Coran, horaires de prière, invocations et les Noms d'Allah. {url}",
+    supportFeedback = "Envoyer un avis",
+    supportFeedbackHint = "Dites-nous vos idées ou vos problèmes",
+    fitreZakatRowTitle = "Calcul de la fitra / zakat",
+    fitreZakatRowHint = "Calculez votre zakat, fitra et fidya",
 )
 
 private val uzbek = Strings(
@@ -1239,6 +1293,15 @@ private val uzbek = Strings(
     themeChangeLaterNote = "Istalgan vaqtda Sozlamalardan o'zgartirishingiz mumkin.",
     themeIntroTitle = "Yangi: Mavzular",
     themeIntroBody = "Ilova ko'rinishini xohlaganingizcha tanlang. Bosib sinab ko'ring, yoqqanini qoldiring.",
+    supportRateApp = "Ilovani baholash",
+    supportRateAppHint = "Do'konda baho berib qo'llab-quvvatlang",
+    supportShareApp = "Ilovani ulashish",
+    supportShareAppHint = "Yaqinlaringizga tavsiya qiling",
+    shareAppMessage = "Huda Qur'on: Qur'on o'qing va tinglang, namoz vaqtlari, duolar va Asmoul Husna. {url}",
+    supportFeedback = "Fikr-mulohaza yuborish",
+    supportFeedbackHint = "G'oya yoki muammolaringizni bizga yuboring",
+    fitreZakatRowTitle = "Fitr / zakot hisoblash",
+    fitreZakatRowHint = "Zakot, fitr va fidyangizni hisoblang",
 )
 
 private val kyrgyz = Strings(
@@ -1402,6 +1465,15 @@ private val kyrgyz = Strings(
     themeChangeLaterNote = "Каалаган убакта Жөндөөлөрдөн өзгөртө аласыз.",
     themeIntroTitle = "Жаңы: Темалар",
     themeIntroBody = "Колдонмонун көрүнүшүн каалаганыңыздай тандаңыз. Басып сынап көрүңүз, жаккан бойдон калсын.",
+    supportRateApp = "Колдонмону баалоо",
+    supportRateAppHint = "Дүкөндө баа берип колдоңуз",
+    supportShareApp = "Колдонмону бөлүшүү",
+    supportShareAppHint = "Жакындарыңызга сунуштаңыз",
+    shareAppMessage = "Худа Куран: Куран окуңуз жана угуңуз, намаз убактылары, дубалар жана Асмаул Хусна. {url}",
+    supportFeedback = "Пикир жөнөтүү",
+    supportFeedbackHint = "Идеяңызды же көйгөйүңүздү бизге жазыңыз",
+    fitreZakatRowTitle = "Питир / зекет эсептөө",
+    fitreZakatRowHint = "Зекетиңизди, питириңизди жана фидияңызды эсептеңиз",
 )
 
 private val turkmen = Strings(
@@ -1565,6 +1637,15 @@ private val turkmen = Strings(
     themeChangeLaterNote = "Islän wagtyňyz Sazlamalardan üýtgedip bilersiňiz.",
     themeIntroTitle = "Täze: Temalar",
     themeIntroBody = "Programmanyň görnüşini isleýşiňiz ýaly saýlaň. Basyp synap görüň, halanyňyzy galdyryň.",
+    supportRateApp = "Programmany baha ber",
+    supportRateAppHint = "Dükanda baha berip goldaw ber",
+    supportShareApp = "Programmany paýlaş",
+    supportShareAppHint = "Ýakynlaryňyza maslahat ber",
+    shareAppMessage = "Huda Gurhan: Gurhany oka we diňle, namaz wagtlary, dogalar we Esmaül Hüsna. {url}",
+    supportFeedback = "Pikir iber",
+    supportFeedbackHint = "Pikirleriňizi ýa-da meselelerňizi bize ýazyň",
+    fitreZakatRowTitle = "Pitir / zekat hasaplamasy",
+    fitreZakatRowHint = "Zekatyňyzy, pitiriňizi we fidýaňyzy hasaplaň",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

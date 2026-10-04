@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
@@ -73,24 +74,29 @@ fun SectionListScreen(kind: SectionKind, modifier: Modifier = Modifier, onBack: 
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
             val showAds = adsSupported && !preferences.isAdFree()
-            val midCount = total / 2
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 96.dp),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(midCount) { index ->
-                    SectionCell(index + 1, strings.sectionSingular(kind), onOpenSection)
+                var start = 0
+                while (start < total) {
+                    val chunkStart = start
+                    val chunkEnd = minOf(start + LIST_AD_INTERVAL, total)
+                    items(count = chunkEnd - chunkStart, key = { "section_${chunkStart + it + 1}" }) { index ->
+                        SectionCell(chunkStart + index + 1, strings.sectionSingular(kind), onOpenSection)
+                    }
+                    // An in-feed ad after every full run of rows; the closing ad below covers the end.
+                    if (showAds && chunkEnd < total) {
+                        item(span = { GridItemSpan(maxLineSpan) }, key = "ad_$chunkEnd") {
+                            AdBannerCard(modifier = Modifier.padding(vertical = 4.dp))
+                        }
+                    }
+                    start = chunkEnd
                 }
                 if (showAds) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(vertical = 4.dp)) }
-                }
-                items(total - midCount) { index ->
-                    SectionCell(midCount + index + 1, strings.sectionSingular(kind), onOpenSection)
-                }
-                if (showAds) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
+                    item(span = { GridItemSpan(maxLineSpan) }, key = "ad_end") { AdBannerCard(modifier = Modifier.padding(top = 4.dp)) }
                 }
                 item(span = { GridItemSpan(maxLineSpan) }, key = "site_footer") { SiteFooter() }
             }
