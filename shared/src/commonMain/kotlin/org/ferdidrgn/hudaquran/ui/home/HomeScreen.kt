@@ -1,6 +1,8 @@
 package org.ferdidrgn.hudaquran.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,6 +77,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -107,6 +110,7 @@ import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.pressScale
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
@@ -1242,6 +1246,7 @@ private fun WebHomeHero(
 @Composable
 private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String, onOpenSettings: () -> Unit) {
     val strings = LocalStrings.current
+    val colors = MaterialTheme.colorScheme
     GlassSurface(modifier = Modifier.fillMaxWidth()) {
         if (prayerTimes == null) {
             Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
@@ -1254,38 +1259,43 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
         val next = prayerTimes.nextPrayer(now.hour, now.minute)
 
         Column(modifier = Modifier.fillMaxWidth()) {
+            val locationSource = remember { MutableInteractionSource() }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .pressScale(locationSource, 0.98f)
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = onOpenSettings)
+                    .clickable(interactionSource = locationSource, indication = LocalIndication.current, onClick = onOpenSettings)
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Filled.LocationOn,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = colors.primary
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = locationDisplayName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = colors.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Konumu Değiştir ›",
+                    text = strings.selectLocationTitle + " ›",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colors.onSurface.copy(alpha = 0.8f)
                 )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            HorizontalDivider(color = colors.onSurface.copy(alpha = 0.14f))
             Spacer(Modifier.height(10.dp))
 
             Row(
@@ -1293,17 +1303,18 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         strings.nextPrayerLabel,
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colors.onSurface.copy(alpha = 0.8f)
                     )
                     if (next != null) {
                         Text(
                             "${next.prayer.label} • ${next.prayer.time}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.primary,
                         )
                         val h = next.minutesUntil / 60
                         val m = next.minutesUntil % 60
@@ -1315,28 +1326,45 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                                 strings.minutesLeftTemplate.replace("{m}", m.toString())
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = colors.onSurface.copy(alpha = 0.85f),
                         )
                     }
                 }
                 IconBubble(icon = Icons.Outlined.AccessTime, accent = true)
             }
             Spacer(Modifier.height(14.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 prayerTimes.prayers.forEach { prayer ->
                     val isNext = next?.prayer?.key == prayer.key
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val rowSource = remember { MutableInteractionSource() }
+                    val labelColor = if (isNext) colors.onPrimaryContainer else colors.onSurface.copy(alpha = 0.8f)
+                    val timeColor = if (isNext) colors.onPrimaryContainer else colors.onSurface
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .pressScale(rowSource, 0.94f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isNext) colors.primaryContainer else Color.Transparent)
+                            .clickable(interactionSource = rowSource, indication = LocalIndication.current, onClick = onOpenSettings)
+                            .padding(horizontal = 2.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
                         Text(
                             prayer.label,
                             fontSize = 11.sp,
-                            color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
+                            color = labelColor,
+                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             prayer.time,
                             fontSize = 12.sp,
-                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.SemiBold,
+                            color = timeColor,
                         )
                     }
                 }
