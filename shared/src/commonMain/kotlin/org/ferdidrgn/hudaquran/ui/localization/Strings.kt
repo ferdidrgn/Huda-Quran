@@ -4,7 +4,13 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 
-data class Strings(
+/**
+ * Plain class, not a data class: a data class's synthetic `copy$default` takes every field plus
+ * bitmask ints, and past ~245 fields that exceeds the JVM's 255-slot method limit
+ * (ClassFormatError at load). The constructor alone allows up to 254 fields; beyond that, split
+ * the copy into grouped sub-objects.
+ */
+class Strings(
     val navHome: String,
     val navSurahs: String,
     val navFavorites: String,
