@@ -9,6 +9,7 @@ import platform.Foundation.create
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImage
+import platform.UIKit.popoverPresentationController
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun shareText(text: String) {
