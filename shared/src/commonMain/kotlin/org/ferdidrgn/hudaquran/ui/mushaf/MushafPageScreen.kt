@@ -520,7 +520,7 @@ fun MushafPageScreen(
                 }
 
                 // "Page N" seal after an automatic page turn.
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = turnedPageBadge != null,
                     modifier = Modifier.align(Alignment.TopCenter).padding(top = 18.dp),
                     enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.85f),
