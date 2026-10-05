@@ -287,6 +287,12 @@ data class Strings(
     val mushafCopyAction: String,
     val mushafAddFavorite: String,
     val mushafRemoveFavorite: String,
+    val shareCardTitle: String,
+    val shareImageAction: String,
+    val shareTextAction: String,
+    val shareCopyLink: String,
+    val shareLinkCopied: String,
+    val shareImageFailed: String,
 )
 
 private val turkish = Strings(
@@ -476,6 +482,12 @@ private val turkish = Strings(
     mushafCopyAction = "Kopyala",
     mushafAddFavorite = "Favorilere ekle",
     mushafRemoveFavorite = "Favorilerden çıkar",
+    shareCardTitle = "Ayeti paylaş",
+    shareImageAction = "Görseli paylaş",
+    shareTextAction = "Metni paylaş",
+    shareCopyLink = "Bağlantıyı kopyala",
+    shareLinkCopied = "Bağlantı kopyalandı",
+    shareImageFailed = "Görsel hazırlanamadı",
 )
 
 private val english = Strings(
@@ -665,6 +677,12 @@ private val english = Strings(
     mushafCopyAction = "Copy",
     mushafAddFavorite = "Add to favorites",
     mushafRemoveFavorite = "Remove from favorites",
+    shareCardTitle = "Share ayah",
+    shareImageAction = "Share image",
+    shareTextAction = "Share text",
+    shareCopyLink = "Copy link",
+    shareLinkCopied = "Link copied",
+    shareImageFailed = "Couldn't prepare the image",
 )
 
 private val arabic = Strings(
@@ -854,6 +872,12 @@ private val arabic = Strings(
     mushafCopyAction = "نسخ",
     mushafAddFavorite = "أضف إلى المفضلة",
     mushafRemoveFavorite = "أزل من المفضلة",
+    shareCardTitle = "مشاركة الآية",
+    shareImageAction = "مشاركة الصورة",
+    shareTextAction = "مشاركة النص",
+    shareCopyLink = "نسخ الرابط",
+    shareLinkCopied = "تم نسخ الرابط",
+    shareImageFailed = "تعذّر إعداد الصورة",
 )
 
 private val german = Strings(
@@ -1043,6 +1067,12 @@ private val german = Strings(
     mushafCopyAction = "Kopieren",
     mushafAddFavorite = "Zu Favoriten hinzufügen",
     mushafRemoveFavorite = "Aus Favoriten entfernen",
+    shareCardTitle = "Vers teilen",
+    shareImageAction = "Bild teilen",
+    shareTextAction = "Text teilen",
+    shareCopyLink = "Link kopieren",
+    shareLinkCopied = "Link kopiert",
+    shareImageFailed = "Bild konnte nicht erstellt werden",
 )
 
 private val french = Strings(
@@ -1232,6 +1262,12 @@ private val french = Strings(
     mushafCopyAction = "Copier",
     mushafAddFavorite = "Ajouter aux favoris",
     mushafRemoveFavorite = "Retirer des favoris",
+    shareCardTitle = "Partager le verset",
+    shareImageAction = "Partager l'image",
+    shareTextAction = "Partager le texte",
+    shareCopyLink = "Copier le lien",
+    shareLinkCopied = "Lien copié",
+    shareImageFailed = "Impossible de préparer l'image",
 )
 
 private val uzbek = Strings(
@@ -1421,6 +1457,12 @@ private val uzbek = Strings(
     mushafCopyAction = "Nusxalash",
     mushafAddFavorite = "Sevimlilarga qo'shish",
     mushafRemoveFavorite = "Sevimlilardan olib tashlash",
+    shareCardTitle = "Oyatni ulashish",
+    shareImageAction = "Rasmni ulashish",
+    shareTextAction = "Matnni ulashish",
+    shareCopyLink = "Havolani nusxalash",
+    shareLinkCopied = "Havola nusxalandi",
+    shareImageFailed = "Rasmni tayyorlab bo'lmadi",
 )
 
 private val kyrgyz = Strings(
@@ -1610,6 +1652,12 @@ private val kyrgyz = Strings(
     mushafCopyAction = "Көчүрүү",
     mushafAddFavorite = "Тандалмаларга кошуу",
     mushafRemoveFavorite = "Тандалмалардан алып салуу",
+    shareCardTitle = "Аятты бөлүшүү",
+    shareImageAction = "Сүрөттү бөлүшүү",
+    shareTextAction = "Текстти бөлүшүү",
+    shareCopyLink = "Шилтемени көчүрүү",
+    shareLinkCopied = "Шилтеме көчүрүлдү",
+    shareImageFailed = "Сүрөттү даярдоо мүмкүн болбоду",
 )
 
 private val turkmen = Strings(
@@ -1799,6 +1847,12 @@ private val turkmen = Strings(
     mushafCopyAction = "Göçür",
     mushafAddFavorite = "Halanlaryma goş",
     mushafRemoveFavorite = "Halanlarymdan aýyr",
+    shareCardTitle = "Aýaty paýlaş",
+    shareImageAction = "Suraty paýlaş",
+    shareTextAction = "Teksti paýlaş",
+    shareCopyLink = "Baglanyşygy göçür",
+    shareLinkCopied = "Baglanyşyk göçürildi",
+    shareImageFailed = "Suraty taýýarlap bolmady",
 )
 
 fun stringsFor(language: AppLanguage): Strings = when (language) {

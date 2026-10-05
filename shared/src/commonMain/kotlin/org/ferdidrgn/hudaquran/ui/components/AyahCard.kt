@@ -32,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +52,8 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.util.shareText
+import org.ferdidrgn.hudaquran.ui.share.AyahShareData
+import org.ferdidrgn.hudaquran.ui.share.AyahShareSheet
 
 /**
  * One ayah as a reading block: the ayah number in an eight-point star medallion, the Arabic set
@@ -76,6 +80,7 @@ fun AyahCard(
     val strings = LocalStrings.current
     val colors = MaterialTheme.colorScheme
     val active = isPlaying || isLoading
+    var showShare by remember { mutableStateOf(false) }
     val container by animateColorAsState(
         targetValue = if (active) lerp(colors.surface, colors.primaryContainer, 0.75f) else colors.surface,
         animationSpec = tween(260),
@@ -105,19 +110,7 @@ fun AyahCard(
             AyahIconButton(
                 icon = Icons.Outlined.Share,
                 contentDescription = strings.cdShare,
-                onClick = {
-                    val reference = "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} ${ayah.numberInSurah}"
-                    val text = buildString {
-                        append(ayah.arabicText)
-                        if (ayah.translationText.isNotBlank()) {
-                            append("\n\n")
-                            append(ayah.translationText)
-                        }
-                        append("\n\n")
-                        append(reference)
-                    }
-                    shareText(text)
-                },
+                onClick = { showShare = true },
             )
             AyahIconButton(
                 icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -168,6 +161,18 @@ fun AyahCard(
                 Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = colors.primary, modifier = Modifier.size(16.dp))
                 Text(strings.tafsirLabel, style = MaterialTheme.typography.labelLarge, color = colors.primary)
             }
+        }
+        if (showShare) {
+            AyahShareSheet(
+                data = AyahShareData(
+                    surahNumber = ayah.surahNumber,
+                    ayahNumber = ayah.numberInSurah,
+                    surahName = localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage),
+                    arabic = ayah.arabicText,
+                    translation = ayah.translationText,
+                ),
+                onDismiss = { showShare = false },
+            )
         }
     }
 }

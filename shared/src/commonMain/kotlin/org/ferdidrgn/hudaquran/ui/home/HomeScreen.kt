@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoStories
@@ -104,6 +105,8 @@ import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.share.AyahShareSheet
+import org.ferdidrgn.hudaquran.ui.share.toShareData
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.platform.Platform
@@ -167,6 +170,7 @@ fun HomeScreen(
     var showThemeIntro by remember { mutableStateOf(!preferences.themeIntroSeen) }
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
+    var shareDaily by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf(false) }
     var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
     var meta by remember { mutableStateOf<QuranMeta?>(null) }
@@ -420,13 +424,26 @@ fun HomeScreen(
                 GlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             strings.dailyAyahTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+                        if (dailyAyah != null) {
+                            Icon(
+                                Icons.Outlined.Share,
+                                contentDescription = strings.cdShare,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .clickable { shareDaily = true }
+                                    .padding(12.dp),
+                            )
+                        }
                         // Retry only after a failed load: the ayah is fixed for the whole day.
                         if (!isLoadingDaily && dailyAyah == null) {
                             Icon(
@@ -482,6 +499,11 @@ fun HomeScreen(
                         }
 
                         else -> Text(strings.dailyAyahError)
+                    }
+                    if (shareDaily) {
+                        dailyAyah?.let { daily ->
+                            AyahShareSheet(data = daily.toShareData(appLanguage), onDismiss = { shareDaily = false })
+                        }
                     }
                 }
             }
@@ -972,6 +994,7 @@ private fun WebDailyAyahSection(
     onOpenSurah: (Int, Int?) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
+    var showShare by remember { mutableStateOf(false) }
     Column {
         SectionHeader(strings.dailyAyahTitle)
         Spacer(Modifier.height(12.dp))
@@ -1019,6 +1042,22 @@ private fun WebDailyAyahSection(
                             .clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) }
                             .padding(horizontal = 12.dp, vertical = 12.dp),
                     )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .border(1.dp, scheme.primary.copy(alpha = 0.35f), RoundedCornerShape(50))
+                            .clickable { showShare = true }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(Icons.Outlined.Share, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(18.dp))
+                        Text(strings.cdShare, style = MaterialTheme.typography.labelLarge, color = scheme.primary)
+                    }
+                    if (showShare) {
+                        AyahShareSheet(data = dailyAyah.toShareData(appLanguage), onDismiss = { showShare = false })
+                    }
                 }
                 else -> Column(
                     modifier = Modifier.align(Alignment.Center),

@@ -39,8 +39,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,7 +77,8 @@ import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.util.shareText
+import org.ferdidrgn.hudaquran.ui.share.AyahShareData
+import org.ferdidrgn.hudaquran.ui.share.AyahShareSheet
 import kotlin.math.roundToInt
 
 private const val MAX_PAGE_FONT_SP = 34
@@ -441,6 +444,24 @@ internal fun AyahActionsDialog(
     val clipboard = LocalClipboardManager.current
     val surahName = localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)
     val shareBody = ayahShareText(ayah, surahName)
+    var showShareCard by remember { mutableStateOf(false) }
+    if (showShareCard) {
+        // Postcard preview replaces the action list; closing it closes the whole dialog.
+        AyahShareSheet(
+            data = AyahShareData(
+                surahNumber = ayah.surahNumber,
+                ayahNumber = ayah.numberInSurah,
+                surahName = surahName,
+                arabic = ayah.arabicText,
+                translation = ayah.translationText,
+            ),
+            onDismiss = {
+                showShareCard = false
+                onShared()
+            },
+        )
+        return
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -471,8 +492,7 @@ internal fun AyahActionsDialog(
                     onCopied()
                 }
                 AyahActionRow(Icons.Outlined.Share, strings.cdShare) {
-                    shareText(shareBody)
-                    onShared()
+                    showShareCard = true
                 }
                 AyahActionRow(
                     if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,

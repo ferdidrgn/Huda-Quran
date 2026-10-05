@@ -592,9 +592,10 @@ private fun rateAppUrl(): String = when (currentPlatform) {
 
 private fun shareAppUrl(): String = when (currentPlatform) {
     Platform.IOS ->
-        if (IOS_APP_STORE_ID.isBlank()) WEBSITE_URL else "https://apps.apple.com/app/id$IOS_APP_STORE_ID"
-    Platform.ANDROID -> PLAY_STORE_URL
-    Platform.WEB -> WEBSITE_URL
+        if (IOS_APP_STORE_ID.isBlank()) "$WEBSITE_URL?src=app_share" else "https://apps.apple.com/app/id$IOS_APP_STORE_ID"
+    // Play's `referrer` carries the attribution through the install (utm_source=app_share).
+    Platform.ANDROID -> "$PLAY_STORE_URL&referrer=utm_source%3Dapp_share"
+    Platform.WEB -> "$WEBSITE_URL?src=app_share"
 }
 
 private fun feedbackMailto(): String =
