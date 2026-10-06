@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,7 +40,9 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.cardinalDirectionTr
 import org.ferdidrgn.hudaquran.domain.model.qiblaBearing
 import org.ferdidrgn.hudaquran.sensors.QiblaCompass
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import kotlin.math.PI
 import kotlin.math.cos
@@ -98,7 +102,7 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         }
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -155,6 +159,11 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+
+            if (adsSupported && !preferences.isAdFree() && !isLoading) {
+                Spacer(Modifier.height(28.dp))
+                AdBannerCard()
             }
         }
     }

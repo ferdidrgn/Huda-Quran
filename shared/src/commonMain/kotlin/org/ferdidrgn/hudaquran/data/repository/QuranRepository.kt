@@ -152,6 +152,38 @@ class QuranRepository(
         throw fetched.exceptionOrNull() ?: IllegalStateException("Section detail unavailable")
     }
 
+    // Recently opened Mushaf pages, kept in memory so turning back (or the page-synced recitation
+    // prefetching the next page) never refetches or re-parses them. Insertion-ordered for eviction.
+    private val mushafPageMemo = LinkedHashMap<String, QuranSectionDetail>()
+
+    private fun mushafPageKey(page: Int, translationEdition: String, reciterEdition: String) =
+        "$page|$translationEdition|$reciterEdition"
+
+    /** A Mushaf page already in memory, or null — lets a page render on its first frame. */
+    fun cachedMushafPage(
+        page: Int,
+        translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
+        reciterEdition: String = QuranEditions.DEFAULT_RECITER,
+    ): QuranSectionDetail? = mushafPageMemo[mushafPageKey(page, translationEdition, reciterEdition)]
+
+    /** One Mushaf page (Arabic + meal + per-ayah audio), memoised; falls back to the offline cache. */
+    suspend fun getMushafPage(
+        page: Int,
+        translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
+        reciterEdition: String = QuranEditions.DEFAULT_RECITER,
+    ): QuranSectionDetail {
+        val key = mushafPageKey(page, translationEdition, reciterEdition)
+        mushafPageMemo[key]?.let { return it }
+        val detail = getSectionDetail(SectionKind.PAGE, page, translationEdition, reciterEdition)
+        mushafPageMemo.remove(key)
+        mushafPageMemo[key] = detail
+        while (mushafPageMemo.size > MUSHAF_PAGE_MEMO_SIZE) {
+            val eldest = mushafPageMemo.keys.firstOrNull() ?: break
+            mushafPageMemo.remove(eldest)
+        }
+        return detail
+    }
+
     suspend fun getSajdaAyahs(
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
@@ -199,7 +231,7 @@ class QuranRepository(
             api.getEditions(format = "audio", type = "versebyverse")
                 .map { Reciter(it.identifier, it.englishName.ifBlank { it.name }) }
                 .distinctBy { it.identifier }
-                .sortedBy { it.displayName }
+                .sortedWith(compareBy({ it.identifier != QuranEditions.DEFAULT_RECITER }, { it.displayName }))
         }.getOrElse { QuranEditions.reciters }
         cachedReciters = loaded
         return loaded
@@ -290,6 +322,7 @@ class QuranRepository(
 }
 
 private const val TOTAL_AYAHS = 6236
+private const val MUSHAF_PAGE_MEMO_SIZE = 40
 
 /**
  * Day → global ayah number (1..6236). Stepping by 1683 — coprime with 6236 — walks every ayah once

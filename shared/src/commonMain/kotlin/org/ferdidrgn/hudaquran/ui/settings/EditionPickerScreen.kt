@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.showFeedAdAfter
 import org.ferdidrgn.hudaquran.ui.components.BackButton
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
@@ -93,7 +94,6 @@ fun EditionPickerScreen(
             }
             else -> {
                 val showAds = !preferences.isAdFree()
-                val midIndex = filtered.size / 2
                 LazyColumn(contentPadding = PaddingValues(16.dp)) {
                     itemsIndexed(filtered, key = { _, item -> item.id }) { index, item ->
                         GlassSurface(
@@ -115,7 +115,7 @@ fun EditionPickerScreen(
                                 RadioButton(selected = item.id == selectedId, onClick = { onSelect(item.id) })
                             }
                         }
-                        if (showAds && index == midIndex) AdBannerCard(modifier = Modifier.padding(bottom = 8.dp))
+                        if (showAds && showFeedAdAfter(index, filtered.size)) AdBannerCard(modifier = Modifier.padding(bottom = 8.dp))
                     }
                     if (showAds) item { AdBannerCard() }
                 }

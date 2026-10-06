@@ -584,6 +584,9 @@ private fun AppDestinationContent(
             // Mushaf hides every nav bar, so its back arrow must never be a dead end.
             onBack = { if (!navigator.back()) navigator.replaceAll(Screen.Home) },
             onPageSettled = { page -> navigator.replaceTop(Screen.MushafPage(page)) },
+            onOpenTafsir = { ayah ->
+                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
+            },
         )
 
         is Screen.Qibla -> QiblaScreen(

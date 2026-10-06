@@ -21,6 +21,8 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Dua
 import org.ferdidrgn.hudaquran.domain.model.duaList
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
+import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
@@ -49,11 +51,10 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         ) {
             val showAds = !AppContainer.preferences.isAdFree()
             val grouped = duaList.groupBy { it.category }
-            val midCategory = grouped.keys.elementAtOrNull(grouped.size / 2)
+            var shown = 0
+            // Every LIST_AD_INTERVAL duas; a short list still gets one ad around its middle.
+            val adEvery = minOf(LIST_AD_INTERVAL, maxOf(3, duaList.size / 2))
             grouped.forEach { (category, duas) ->
-                if (showAds && category == midCategory && grouped.size > 1) {
-                    item(key = "ad_mid") { AdBannerCard() }
-                }
                 item(key = "header-$category") {
                     Text(
                         category,
@@ -62,7 +63,13 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
-                items(duas, key = { it.id }) { dua -> DuaCard(dua) }
+                duas.forEach { dua ->
+                    item(key = dua.id) { DuaCard(dua) }
+                    shown++
+                    if (showAds && shown % adEvery == 0 && shown < duaList.size) {
+                        item(key = "ad_$shown") { ListAdCard() }
+                    }
+                }
             }
             if (showAds) item(key = "ad_end") { AdBannerCard() }
             item(key = "site_footer") { SiteFooter() }

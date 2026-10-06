@@ -1,6 +1,8 @@
 package org.ferdidrgn.hudaquran.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoStories
@@ -75,6 +78,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -101,12 +105,15 @@ import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 import org.ferdidrgn.hudaquran.domain.model.TajwidLesson
 import org.ferdidrgn.hudaquran.domain.model.esmaulHusna
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.share.AyahShareSheet
+import org.ferdidrgn.hudaquran.ui.share.toShareData
 import org.ferdidrgn.hudaquran.domain.model.tajwidCourse
 import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
+import org.ferdidrgn.hudaquran.ui.components.pressScale
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
 import org.ferdidrgn.hudaquran.ui.components.SectionHeader
@@ -163,6 +170,7 @@ fun HomeScreen(
     var showThemeIntro by remember { mutableStateOf(!preferences.themeIntroSeen) }
     var dailyAyah by remember { mutableStateOf<DailyAyah?>(null) }
     var isLoadingDaily by remember { mutableStateOf(true) }
+    var shareDaily by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf(false) }
     var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
     var meta by remember { mutableStateOf<QuranMeta?>(null) }
@@ -416,13 +424,26 @@ fun HomeScreen(
                 GlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             strings.dailyAyahTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+                        if (dailyAyah != null) {
+                            Icon(
+                                Icons.Outlined.Share,
+                                contentDescription = strings.cdShare,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .clickable { shareDaily = true }
+                                    .padding(12.dp),
+                            )
+                        }
                         // Retry only after a failed load: the ayah is fixed for the whole day.
                         if (!isLoadingDaily && dailyAyah == null) {
                             Icon(
@@ -478,6 +499,11 @@ fun HomeScreen(
                         }
 
                         else -> Text(strings.dailyAyahError)
+                    }
+                    if (shareDaily) {
+                        dailyAyah?.let { daily ->
+                            AyahShareSheet(data = daily.toShareData(appLanguage), onDismiss = { shareDaily = false })
+                        }
                     }
                 }
             }
@@ -968,6 +994,7 @@ private fun WebDailyAyahSection(
     onOpenSurah: (Int, Int?) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
+    var showShare by remember { mutableStateOf(false) }
     Column {
         SectionHeader(strings.dailyAyahTitle)
         Spacer(Modifier.height(12.dp))
@@ -1015,6 +1042,22 @@ private fun WebDailyAyahSection(
                             .clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) }
                             .padding(horizontal = 12.dp, vertical = 12.dp),
                     )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .border(1.dp, scheme.primary.copy(alpha = 0.35f), RoundedCornerShape(50))
+                            .clickable { showShare = true }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(Icons.Outlined.Share, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(18.dp))
+                        Text(strings.cdShare, style = MaterialTheme.typography.labelLarge, color = scheme.primary)
+                    }
+                    if (showShare) {
+                        AyahShareSheet(data = dailyAyah.toShareData(appLanguage), onDismiss = { showShare = false })
+                    }
                 }
                 else -> Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -1242,6 +1285,7 @@ private fun WebHomeHero(
 @Composable
 private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String, onOpenSettings: () -> Unit) {
     val strings = LocalStrings.current
+    val colors = MaterialTheme.colorScheme
     GlassSurface(modifier = Modifier.fillMaxWidth()) {
         if (prayerTimes == null) {
             Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
@@ -1254,38 +1298,43 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
         val next = prayerTimes.nextPrayer(now.hour, now.minute)
 
         Column(modifier = Modifier.fillMaxWidth()) {
+            val locationSource = remember { MutableInteractionSource() }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .pressScale(locationSource, 0.98f)
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = onOpenSettings)
+                    .clickable(interactionSource = locationSource, indication = LocalIndication.current, onClick = onOpenSettings)
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Filled.LocationOn,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = colors.primary
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = locationDisplayName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = colors.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Konumu Değiştir ›",
+                    text = strings.selectLocationTitle + " ›",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colors.onSurface.copy(alpha = 0.8f)
                 )
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            HorizontalDivider(color = colors.onSurface.copy(alpha = 0.14f))
             Spacer(Modifier.height(10.dp))
 
             Row(
@@ -1293,17 +1342,18 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         strings.nextPrayerLabel,
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colors.onSurface.copy(alpha = 0.8f)
                     )
                     if (next != null) {
                         Text(
                             "${next.prayer.label} • ${next.prayer.time}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.primary,
                         )
                         val h = next.minutesUntil / 60
                         val m = next.minutesUntil % 60
@@ -1315,28 +1365,45 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                                 strings.minutesLeftTemplate.replace("{m}", m.toString())
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = colors.onSurface.copy(alpha = 0.85f),
                         )
                     }
                 }
                 IconBubble(icon = Icons.Outlined.AccessTime, accent = true)
             }
             Spacer(Modifier.height(14.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 prayerTimes.prayers.forEach { prayer ->
                     val isNext = next?.prayer?.key == prayer.key
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val rowSource = remember { MutableInteractionSource() }
+                    val labelColor = if (isNext) colors.onPrimaryContainer else colors.onSurface.copy(alpha = 0.8f)
+                    val timeColor = if (isNext) colors.onPrimaryContainer else colors.onSurface
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .pressScale(rowSource, 0.94f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isNext) colors.primaryContainer else Color.Transparent)
+                            .clickable(interactionSource = rowSource, indication = LocalIndication.current, onClick = onOpenSettings)
+                            .padding(horizontal = 2.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
                         Text(
                             prayer.label,
                             fontSize = 11.sp,
-                            color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
+                            color = labelColor,
+                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             prayer.time,
                             fontSize = 12.sp,
-                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isNext) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isNext) FontWeight.Bold else FontWeight.SemiBold,
+                            color = timeColor,
                         )
                     }
                 }

@@ -27,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
+import org.ferdidrgn.hudaquran.ui.components.adsSupported
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
@@ -140,6 +142,11 @@ fun TafsirScreen(
                 else -> GlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Text(tafsirText, style = MaterialTheme.typography.bodyLarge)
                 }
+            }
+
+            if (adsSupported && !preferences.isAdFree() && !isLoading) {
+                Spacer(Modifier.height(16.dp))
+                AdBannerCard()
             }
         }
     }

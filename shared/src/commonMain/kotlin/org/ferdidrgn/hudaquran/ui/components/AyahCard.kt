@@ -32,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -48,7 +52,8 @@ import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-import org.ferdidrgn.hudaquran.util.shareText
+import org.ferdidrgn.hudaquran.ui.share.AyahShareData
+import org.ferdidrgn.hudaquran.ui.share.AyahShareSheet
 
 /**
  * One ayah as a reading block: the ayah number in an eight-point star medallion, the Arabic set
@@ -66,11 +71,16 @@ fun AyahCard(
     onFavoriteToggle: () -> Unit,
     showSurahLabel: Boolean = false,
     onTafsirClick: (() -> Unit)? = null,
+    showTranslation: Boolean = true,
+    translationColor: Color? = null,
+    arabicFontSize: TextUnit = 26.sp,
+    translationFontSize: TextUnit = TextUnit.Unspecified,
 ) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
     val colors = MaterialTheme.colorScheme
     val active = isPlaying || isLoading
+    var showShare by remember { mutableStateOf(false) }
     val container by animateColorAsState(
         targetValue = if (active) lerp(colors.surface, colors.primaryContainer, 0.75f) else colors.surface,
         animationSpec = tween(260),
@@ -100,19 +110,7 @@ fun AyahCard(
             AyahIconButton(
                 icon = Icons.Outlined.Share,
                 contentDescription = strings.cdShare,
-                onClick = {
-                    val reference = "${localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage)} ${ayah.numberInSurah}"
-                    val text = buildString {
-                        append(ayah.arabicText)
-                        if (ayah.translationText.isNotBlank()) {
-                            append("\n\n")
-                            append(ayah.translationText)
-                        }
-                        append("\n\n")
-                        append(reference)
-                    }
-                    shareText(text)
-                },
+                onClick = { showShare = true },
             )
             AyahIconButton(
                 icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -127,8 +125,8 @@ fun AyahCard(
         Text(
             ayah.arabicText,
             fontFamily = LocalArabicFontFamily.current,
-            fontSize = 26.sp,
-            lineHeight = 52.sp,
+            fontSize = arabicFontSize,
+            lineHeight = arabicFontSize * 2,
             color = colors.onSurface,
             // Absolute right, not End: End flips to the left when the paragraph resolves RTL,
             // and Arabic must always hang from the right edge whatever the UI language is.
@@ -136,13 +134,14 @@ fun AyahCard(
             style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Rtl),
             modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp),
         )
-        if (ayah.translationText.isNotBlank()) {
+        if (showTranslation && ayah.translationText.isNotBlank()) {
             OrnamentRule(modifier = Modifier.padding(vertical = 10.dp), centered = true)
             Text(
                 ayah.translationText,
                 style = MaterialTheme.typography.bodyLarge,
-                lineHeight = 26.sp,
-                color = colors.onSurface.copy(alpha = 0.82f),
+                fontSize = translationFontSize,
+                lineHeight = if (translationFontSize == TextUnit.Unspecified) 26.sp else translationFontSize * 1.6f,
+                color = translationColor ?: colors.onSurface.copy(alpha = 0.82f),
                 modifier = Modifier.padding(end = 4.dp),
             )
         }
@@ -162,6 +161,18 @@ fun AyahCard(
                 Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = colors.primary, modifier = Modifier.size(16.dp))
                 Text(strings.tafsirLabel, style = MaterialTheme.typography.labelLarge, color = colors.primary)
             }
+        }
+        if (showShare) {
+            AyahShareSheet(
+                data = AyahShareData(
+                    surahNumber = ayah.surahNumber,
+                    ayahNumber = ayah.numberInSurah,
+                    surahName = localizedSurahName(ayah.surahNumber, ayah.surahName, appLanguage),
+                    arabic = ayah.arabicText,
+                    translation = ayah.translationText,
+                ),
+                onDismiss = { showShare = false },
+            )
         }
     }
 }

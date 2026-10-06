@@ -31,6 +31,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.showFeedAdAfter
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.PageMotif
@@ -85,7 +86,6 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             }
             else -> {
                 val showAds = !preferences.isAdFree()
-                val midIndex = ayahs.size / 2
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -106,7 +106,7 @@ fun SajdaAyahsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                             onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
                             showSurahLabel = true,
                         )
-                        if (showAds && index == midIndex) AdBannerCard()
+                        if (showAds && showFeedAdAfter(index, ayahs.size)) AdBannerCard()
                     }
                     if (showAds) item { AdBannerCard() }
                     item(key = "site_footer") { SiteFooter() }

@@ -1,6 +1,7 @@
 package org.ferdidrgn.hudaquran.ui.navigation
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.ferdidrgn.hudaquran.analytics.AppAnalytics
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -20,7 +21,23 @@ object DeepLinkController {
     val popped: StateFlow<Screen?> = _popped.asStateFlow()
 
     fun handle(url: String) {
-        DeepLink.parse(url)?.let { _pending.value = it }
+        val screen = DeepLink.parse(url) ?: return
+        _pending.value = screen
+        AppAnalytics.logEvent("deep_link_open", linkAttribution(url, screen))
+    }
+
+    /** Where an opened link came from: `?src=` (e.g. ayah_card, app_share) or a standard utm_source. */
+    private fun linkAttribution(url: String, screen: Screen): Map<String, String> {
+        val query = url.substringAfter('?', "").substringBefore('#')
+        val params = query.split('&').mapNotNull { pair ->
+            val key = pair.substringBefore('=', "")
+            if (key.isEmpty()) null else key to pair.substringAfter('=')
+        }.toMap()
+        return buildMap {
+            put("path", DeepLink.toPath(screen))
+            put("source", params["src"] ?: params["utm_source"] ?: "direct")
+            params["utm_campaign"]?.let { put("campaign", it) }
+        }
     }
 
     fun handlePopState(url: String) {

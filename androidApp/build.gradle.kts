@@ -54,8 +54,8 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 17
-        versionName = "1.17.0"
+        versionCode = 18
+        versionName = "1.18.0"
         // Public RevenueCat SDK key (goog_…), from the REVENUECAT_GOOGLE_KEY environment variable
         // (a CI secret) or `revenuecatGoogleKey` in ~/.gradle/gradle.properties. Blank = purchases off.
         val revenueCatKey = providers.environmentVariable("REVENUECAT_GOOGLE_KEY")
@@ -86,6 +86,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // RevenueCat Test Store key — debug builds ONLY (never shipped; release reads the real
+            // goog_… key from the environment / gradle property above).
+            buildConfigField("String", "REVENUECAT_GOOGLE_KEY", "\"test_FZbXAoHhWzdZpQKvlnraKRilWDb\"")
+        }
         release {
             // Falls back to debug-signing (installable locally, but NOT a valid Play Store
             // upload) whenever the real keystore env vars above aren't set.

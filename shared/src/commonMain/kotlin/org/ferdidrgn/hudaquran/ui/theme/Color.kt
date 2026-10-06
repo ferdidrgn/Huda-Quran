@@ -41,4 +41,5 @@ val SakuraSurface = Color(0xFF2D222F) // dark slate-plum surface
 val SakuraWine = Color(0xFF4B2138) // deep burgundy, surface variant
 val SakuraPlum = Color(0xFF6D3C52) // muted wine, containers
 val SakuraMauve = Color(0xFF765D67) // dusty mauve, secondary text/outline
+val SakuraMist = Color(0xFFD2B3BE) // light dusty mauve: secondary text that stays readable on Sakura surfaces
 val SakuraBlossom = Color(0xFFFADCD5) // pale cherry-blossom pink, primary accent & text

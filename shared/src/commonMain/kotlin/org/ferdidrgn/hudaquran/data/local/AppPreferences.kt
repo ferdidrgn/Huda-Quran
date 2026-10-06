@@ -27,6 +27,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_LAST_READ_AYAH = "last_read_ayah"
         private const val KEY_LAST_READ_SURAH_NAME = "last_read_surah_name"
         private const val KEY_RECITER = "selected_reciter"
+        private const val KEY_RECITER_BASFAR_MIGRATED = "reciter_basfar_migrated"
         private const val KEY_TRANSLATION = "selected_translation"
         private const val KEY_TAFSIR = "selected_tafsir"
         private const val KEY_THEME = "theme_mode"
@@ -44,6 +45,9 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_STREAK_CURRENT = "reading_streak_current"
         private const val KEY_STREAK_LAST_DAY = "reading_streak_last_day"
         private const val KEY_TEXT_SIZE = "text_size_option"
+        private const val KEY_MUSHAF_SHOW_TRANSLATION = "mushaf_show_translation"
+        private const val KEY_SURAH_SHOW_TRANSLATION = "surah_show_translation"
+        private const val KEY_MUSHAF_GESTURE_HINT_SEEN = "mushaf_gesture_hint_seen"
     }
 
     var adsRemovedUntilMillis: Long
@@ -136,8 +140,15 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         get() = settings.getBoolean(KEY_THEME_INTRO_SEEN, false)
         set(value) = settings.putBoolean(KEY_THEME_INTRO_SEEN, value)
 
+    /** Abdullah Basfar became the default in 1.5.1; everyone starts from him once, then may change. */
     var selectedReciter: String
-        get() = settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+        get() {
+            if (!settings.getBoolean(KEY_RECITER_BASFAR_MIGRATED, false)) {
+                settings.putBoolean(KEY_RECITER_BASFAR_MIGRATED, true)
+                settings.putString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+            }
+            return settings.getString(KEY_RECITER, QuranEditions.DEFAULT_RECITER)
+        }
         set(value) = settings.putString(KEY_RECITER, value)
 
     var selectedTranslation: String
@@ -172,6 +183,29 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         settings.putString(KEY_TEXT_SIZE, value.name)
         _textSize.value = value
     }
+
+    /** Meal under each Mushaf page; on by default so first-time readers see the meaning. */
+    private val _mushafShowTranslation = MutableStateFlow(settings.getBoolean(KEY_MUSHAF_SHOW_TRANSLATION, true))
+    val mushafShowTranslation: StateFlow<Boolean> = _mushafShowTranslation.asStateFlow()
+
+    fun setMushafShowTranslation(show: Boolean) {
+        settings.putBoolean(KEY_MUSHAF_SHOW_TRANSLATION, show)
+        _mushafShowTranslation.value = show
+    }
+
+    /** Meal under each ayah in the surah reader; on by default. */
+    private val _surahShowTranslation = MutableStateFlow(settings.getBoolean(KEY_SURAH_SHOW_TRANSLATION, true))
+    val surahShowTranslation: StateFlow<Boolean> = _surahShowTranslation.asStateFlow()
+
+    fun setSurahShowTranslation(show: Boolean) {
+        settings.putBoolean(KEY_SURAH_SHOW_TRANSLATION, show)
+        _surahShowTranslation.value = show
+    }
+
+    /** The one-time "tap an ayah to listen, hold for actions" hint in Mushaf mode has been shown. */
+    var mushafGestureHintSeen: Boolean
+        get() = settings.getBoolean(KEY_MUSHAF_GESTURE_HINT_SEEN, false)
+        set(value) = settings.putBoolean(KEY_MUSHAF_GESTURE_HINT_SEEN, value)
 
     private val _favorites = MutableStateFlow(loadFavorites())
     val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()

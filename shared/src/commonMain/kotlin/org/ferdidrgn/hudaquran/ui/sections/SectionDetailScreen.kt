@@ -32,6 +32,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
+import org.ferdidrgn.hudaquran.ui.components.showFeedAdAfter
 import org.ferdidrgn.hudaquran.ui.components.AyahCard
 import org.ferdidrgn.hudaquran.ui.components.PageHeader
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
@@ -86,7 +87,6 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
             }
             else -> {
                 val showAds = !preferences.isAdFree()
-                val midIndex = detail!!.ayahs.size / 2
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -108,7 +108,7 @@ fun SectionDetailScreen(kind: SectionKind, number: Int, modifier: Modifier = Mod
                             onFavoriteToggle = { preferences.toggleFavorite(ayah.surahNumber, ayah.numberInSurah) },
                             showSurahLabel = true,
                         )
-                        if (showAds && index == midIndex) AdBannerCard()
+                        if (showAds && showFeedAdAfter(index, detail!!.ayahs.size)) AdBannerCard()
                     }
                     if (showAds) item { AdBannerCard() }
                     item(key = "site_footer") { SiteFooter() }

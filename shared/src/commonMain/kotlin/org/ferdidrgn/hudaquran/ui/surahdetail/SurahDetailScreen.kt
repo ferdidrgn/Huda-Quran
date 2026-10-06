@@ -3,6 +3,8 @@ package org.ferdidrgn.hudaquran.ui.surahdetail
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +41,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -59,6 +72,8 @@ import org.ferdidrgn.hudaquran.ui.components.PlayToggleButton
 import org.ferdidrgn.hudaquran.ui.components.SiteFooter
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
+import org.ferdidrgn.hudaquran.ui.mushaf.WIDE_PAGE_BREAKPOINT
+import org.ferdidrgn.hudaquran.ui.mushaf.translationInk
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 
 @Composable
@@ -84,7 +99,10 @@ fun SurahDetailScreen(
     val playerState by playback.playerState.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
+    val showTranslation by preferences.surahShowTranslation.collectAsState()
     val strings = LocalStrings.current
+    val mealColor = translationInk()
+    val focusRequester = remember { FocusRequester() }
 
     val currentAyah = if (nowPlaying?.mode == PlaybackMode.AYAH_QUEUE) {
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
@@ -112,22 +130,62 @@ fun SurahDetailScreen(
         isLoading = false
     }
 
+    // Follow the recitation: when the playing ayah (of this surah) changes, bring it into view
+    // unless it is already comfortably on screen.
+    val playingNumber = currentAyah?.takeIf { it.surahNumber == surahNumber }?.numberInSurah
+    LaunchedEffect(playingNumber, detail) {
+        val number = playingNumber ?: return@LaunchedEffect
+        val loaded = detail ?: return@LaunchedEffect
+        val index = loaded.ayahs.indexOfFirst { it.numberInSurah == number }
+        if (index < 0) return@LaunchedEffect
+        val item = index + 1 // the cartouche header is item 0
+        val visible = listState.layoutInfo.visibleItemsInfo
+        val onScreen = visible.any { it.index == item && it.offset >= 0 && it.offset < listState.layoutInfo.viewportEndOffset * 0.6f }
+        if (!onScreen) listState.animateScrollToItem(item)
+    }
+
+    // Web / hardware keyboard: Space plays or pauses (starting from the first ayah if nothing plays).
+    LaunchedEffect(Unit) { runCatching { focusRequester.requestFocus() } }
+    fun onSpace() {
+        val loaded = detail ?: return
+        val playing = currentAyah?.takeIf { it.surahNumber == surahNumber }
+        if (playing != null || isWholeSurahPlaying) {
+            playback.togglePlayPause()
+        } else {
+            playback.playQueue(loaded.ayahs, 0, surahNumber, loaded.surah.englishName, preferences.selectedReciter)
+        }
+    }
+
     val showBarTitle by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val barTitleAlpha by animateFloatAsState(if (showBarTitle || detail == null) 1f else 0f, tween(220), label = "barTitle")
 
     // Capped at readable-line-width and centered so a wide desktop browser window reads like a
     // book page, not the same phone column stretched full-bleed across the screen. A no-op on
     // mobile, where the available width is always under the cap.
-    Box(
-        modifier = modifier.fillMaxSize().screenBackground(),
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .screenBackground()
+            .onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown && event.key == Key.Spacebar) {
+                    onSpace()
+                    true
+                } else {
+                    false
+                }
+            }
+            .focusRequester(focusRequester)
+            .focusable(),
         contentAlignment = Alignment.TopCenter,
     ) {
+    // Wide browser windows get a grander reading column and larger Arabic/meal type.
+    val wide = maxWidth >= WIDE_PAGE_BREAKPOINT
     IslamicMotifBackground(
         modifier = Modifier.matchParentSize(),
         tint = MaterialTheme.colorScheme.primary,
         alpha = 0.03f,
     )
-    Column(modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()) {
+    Column(modifier = Modifier.widthIn(max = if (wide) 1040.dp else 760.dp).fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -150,6 +208,13 @@ fun SurahDetailScreen(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     )
                 }
+            }
+            IconButton(onClick = { preferences.setSurahShowTranslation(!showTranslation) }) {
+                Icon(
+                    Icons.Filled.Translate,
+                    contentDescription = strings.toggleTranslationLabel,
+                    tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (detail != null) {
                 val isThisWholeSurahLoading = isWholeSurahPlaying && playerState.status == PlaybackStatus.LOADING
@@ -213,6 +278,10 @@ fun SurahDetailScreen(
                                 },
                                 onFavoriteToggle = { preferences.toggleFavorite(surahNumber, ayah.numberInSurah) },
                                 onTafsirClick = { onOpenTafsir(ayah) },
+                                showTranslation = showTranslation,
+                                translationColor = mealColor,
+                                arabicFontSize = if (wide) 34.sp else 26.sp,
+                                translationFontSize = if (wide) 19.sp else 16.5.sp,
                             )
                             if (showAds && index == midIndex) AdBannerCard()
                         }
