@@ -53,7 +53,7 @@ import org.ferdidrgn.hudaquran.ui.calendar.IslamicCalendarScreen
 import org.ferdidrgn.hudaquran.ui.components.AppBottomNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppSideNavigationBar
 import org.ferdidrgn.hudaquran.ui.components.AppTopNavigationBar
-import org.ferdidrgn.hudaquran.ui.components.GlobalMiniPlayer
+import org.ferdidrgn.hudaquran.ui.components.ExpandablePlayerSheet
 import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.LocalFooterNavigation
 import org.ferdidrgn.hudaquran.ui.components.LocalMotifDrawnByHost
@@ -79,7 +79,6 @@ import org.ferdidrgn.hudaquran.ui.navigation.DeepLinkController
 import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.navigation.observeBrowserNavigation
 import org.ferdidrgn.hudaquran.ui.navigation.syncBrowserUrl
-import org.ferdidrgn.hudaquran.ui.nowplaying.NowPlayingScreen
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
 import org.ferdidrgn.hudaquran.ui.qibla.QiblaScreen
 import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
@@ -171,8 +170,7 @@ fun App() {
         val screen = navigator.current
         // Mushaf (book) mode is a full-screen, distraction-free reading surface: no nav bars or
         // mini player around the page.
-        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding &&
-            screen != Screen.NowPlaying && screen !is Screen.MushafPage
+        val chromeVisible = screen != Screen.Splash && screen != Screen.Onboarding && screen !is Screen.MushafPage
 
         var previousScreen by remember { mutableStateOf<Screen?>(null) }
         LaunchedEffect(screen) {
@@ -213,9 +211,9 @@ fun App() {
 
             when {
                 !chromeVisible -> {
-                    // Full-screen destinations have no Scaffold to pad them: keep Mushaf and the
-                    // player below the status bar and above the navigation bar. Splash and
-                    // onboarding paint edge to edge and inset their own content.
+                    // Full-screen destinations have no Scaffold to pad them: keep Mushaf below the
+                    // status bar and above the navigation bar. Splash and onboarding paint edge to
+                    // edge and inset their own content.
                     val insetModifier = if (screen == Screen.Splash || screen == Screen.Onboarding) {
                         Modifier
                     } else {
@@ -270,9 +268,12 @@ fun App() {
                                     )
                                 }
                             }
-                        }
-                        if (nowPlaying != null) {
-                            GlobalMiniPlayer(onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) })
+                            // Floats above the page itself (transparent margins around it) rather
+                            // than reserving a row below the content, so it reads as a pill
+                            // resting on top of the site, not a fixed footer pushing it up.
+                            if (nowPlaying != null) {
+                                ExpandablePlayerSheet(modifier = Modifier.fillMaxSize(), collapsedBottomInset = 16.dp)
+                            }
                         }
                     }
                 }
@@ -281,25 +282,30 @@ fun App() {
                     Scaffold(
                         bottomBar = {
                             Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                                if (nowPlaying != null) {
-                                    GlobalMiniPlayer(
-                                        onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) },
-                                    )
-                                }
                                 if (screen.isBottomNavDestination()) {
                                     AppBottomNavigationBar(navigator, screen)
                                 }
                             }
                         },
                     ) { padding ->
-                        AppDestinationContent(
-                            screen = screen,
-                            navigator = navigator,
-                            contentModifier = Modifier.padding(padding),
-                            strings = strings,
-                            preferences = preferences,
-                            coroutineScope = coroutineScope,
-                        )
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            AppDestinationContent(
+                                screen = screen,
+                                navigator = navigator,
+                                contentModifier = Modifier.padding(padding),
+                                strings = strings,
+                                preferences = preferences,
+                                coroutineScope = coroutineScope,
+                            )
+                            // Floats over the content, hovering just above the tab bar, instead of
+                            // sharing its row — the page behind shows through the margins around it.
+                            if (nowPlaying != null) {
+                                ExpandablePlayerSheet(
+                                    modifier = Modifier.fillMaxSize(),
+                                    collapsedBottomInset = padding.calculateBottomPadding() + 10.dp,
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -314,43 +320,37 @@ fun App() {
                             expanded = sizeClass == WindowSizeClass.EXPANDED,
                             appTitle = APP_TITLE,
                         )
-                        Scaffold(
-                            modifier = Modifier.weight(1f),
-                            bottomBar = {
+                        Scaffold(modifier = Modifier.weight(1f)) { padding ->
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize().padding(padding),
+                                    contentAlignment = Alignment.TopCenter,
+                                ) {
+                                    IslamicMotifBackground(
+                                        modifier = Modifier.matchParentSize(),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        alpha = 0.035f,
+                                    )
+                                    val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
+                                        expandedContentMaxWidth
+                                    } else {
+                                        mediumContentMaxWidth
+                                    }
+                                    Box(modifier = Modifier.widthIn(max = contentMaxWidth).fillMaxSize()) {
+                                        CompositionLocalProvider(LocalMotifDrawnByHost provides true) {
+                                            AppDestinationContent(
+                                                screen = screen,
+                                                navigator = navigator,
+                                                contentModifier = Modifier,
+                                                strings = strings,
+                                                preferences = preferences,
+                                                coroutineScope = coroutineScope,
+                                            )
+                                        }
+                                    }
+                                }
                                 if (nowPlaying != null) {
-                                    Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                                        GlobalMiniPlayer(
-                                            onOpenNowPlaying = { navigator.navigate(Screen.NowPlaying) },
-                                        )
-                                    }
-                                }
-                            },
-                        ) { padding ->
-                            Box(
-                                modifier = Modifier.fillMaxSize().padding(padding),
-                                contentAlignment = Alignment.TopCenter,
-                            ) {
-                                IslamicMotifBackground(
-                                    modifier = Modifier.matchParentSize(),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    alpha = 0.035f,
-                                )
-                                val contentMaxWidth = if (sizeClass == WindowSizeClass.EXPANDED) {
-                                    expandedContentMaxWidth
-                                } else {
-                                    mediumContentMaxWidth
-                                }
-                                Box(modifier = Modifier.widthIn(max = contentMaxWidth).fillMaxSize()) {
-                                    CompositionLocalProvider(LocalMotifDrawnByHost provides true) {
-                                        AppDestinationContent(
-                                            screen = screen,
-                                            navigator = navigator,
-                                            contentModifier = Modifier,
-                                            strings = strings,
-                                            preferences = preferences,
-                                            coroutineScope = coroutineScope,
-                                        )
-                                    }
+                                    ExpandablePlayerSheet(modifier = Modifier.fillMaxSize(), collapsedBottomInset = 16.dp)
                                 }
                             }
                         }
@@ -561,11 +561,6 @@ private fun AppDestinationContent(
         is Screen.SajdaAyahs -> SajdaAyahsScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
-        )
-
-        is Screen.NowPlaying -> NowPlayingScreen(
-            modifier = contentModifier,
-            onClose = { navigator.back() },
         )
 
         is Screen.TajwidLessonList -> TajwidLessonListScreen(

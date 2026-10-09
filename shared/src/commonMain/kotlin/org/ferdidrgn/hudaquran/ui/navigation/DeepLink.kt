@@ -124,7 +124,6 @@ object DeepLink {
         is Screen.SectionList -> "/${screen.kind.apiPath}"
         is Screen.SectionDetail -> "/${screen.kind.apiPath}/${screen.number}"
         is Screen.SajdaAyahs -> "/sajda"
-        is Screen.NowPlaying -> "/"
         is Screen.MushafPage -> "/mushaf/${screen.pageNumber}"
         is Screen.Qibla -> "/qibla"
         is Screen.EsmaulHusnaList -> "/esma-ul-husna"
