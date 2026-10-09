@@ -98,6 +98,7 @@ import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
+import org.ferdidrgn.hudaquran.ui.theme.syncLauncherIcon
 import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
 
 private const val APP_TITLE = "Huda Qur'an"
@@ -142,6 +143,7 @@ fun App() {
     LaunchedEffect(Unit) { BillingManager.refresh() }
     LaunchedEffect(Unit) { AppAnalytics.initialize() }
     LaunchedEffect(Unit) { PushNotifications.initialize() }
+    LaunchedEffect(themeMode) { syncLauncherIcon(themeMode) }
 
     fun maybeShowInterstitial() {
         if (!preferences.isAdFree() && AdGate.recordActionAndCheck()) {
