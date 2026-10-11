@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft pulse for themed playback chrome. System MediaStyle uses static album art for the
+     expanded shade; this AVD is available for custom RemoteViews / future heads-up layouts. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <group
+                android:name="star"
+                android:pivotX="12"
+                android:pivotY="12">
+                <path
+                    android:name="starPath"
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M12,2.8l1.7,4.2l4.5,0.4l-3.4,2.9l1,4.4L12,12.6L8.2,14.7l1,-4.4L5.8,7.4l4.5,-0.4z" />
+            </group>
+            <path
+                android:name="crescent"
+                android:fillColor="#FFFFFFFF"
+                android:fillAlpha="0.85"
+                android:pathData="M14.5,3.2A9,9 0,1 0,20.8 15.5A7.2,7.2 0,1 1,14.5 3.2Z" />
+        </vector>
+    </aapt:attr>
+    <target android:name="star">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:duration="1400"
+                    android:valueFrom="0.88"
+                    android:valueTo="1.08"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/fast_out_slow_in" />
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:duration="1400"
+                    android:valueFrom="0.88"
+                    android:valueTo="1.08"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"
+                    android:interpolator="@android:interpolator/fast_out_slow_in" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="starPath">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.55"
+                android:valueTo="1"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"
+                android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -6,11 +6,14 @@ import android.os.Bundle
 import org.ferdidrgn.hudaquran.billing.BillingManager
 import org.ferdidrgn.hudaquran.data.local.AppContextHolder
 import org.ferdidrgn.hudaquran.data.local.CurrentActivityHolder
+import org.ferdidrgn.hudaquran.ui.theme.applyPendingLauncherIcon
 
 class HudaQuranApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         AppContextHolder.init(this)
+        // Only safe window to flip launcher aliases: process was fully dead, no live session.
+        applyPendingLauncherIcon(this)
         BillingManager.configure(BuildConfig.REVENUECAT_GOOGLE_KEY)
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityResumed(activity: Activity) {

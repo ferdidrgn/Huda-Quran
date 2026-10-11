@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
@@ -21,11 +22,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
-import org.ferdidrgn.hudaquran.notifications.NOTIFICATION_ACCENT_COLOR
+import org.ferdidrgn.hudaquran.notifications.notificationAccentFor
 import org.ferdidrgn.hudaquran.notifications.notificationIconRes
 import org.ferdidrgn.hudaquran.notifications.openAppPendingIntent
+import org.ferdidrgn.hudaquran.notifications.playbackNotificationArtwork
 import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import kotlin.math.abs
 
@@ -47,8 +50,15 @@ class PlaybackNotificationService : Service() {
     private var lastReportedPositionMs = 0L
     private var lastReportedAtMs = 0L
     private val reciterNames = mutableMapOf<String, String>()
+    private var cachedArtworkTheme: ThemeMode? = null
+    private var cachedArtwork: Bitmap? = null
 
-    private data class NotificationKey(val nowPlaying: NowPlaying, val status: PlaybackStatus, val durationMs: Long)
+    private data class NotificationKey(
+        val nowPlaying: NowPlaying,
+        val status: PlaybackStatus,
+        val durationMs: Long,
+        val themeMode: ThemeMode,
+    )
 
     companion object {
         private const val CHANNEL_ID = "huda_quran_playback"
@@ -92,25 +102,34 @@ class PlaybackNotificationService : Service() {
         }
 
         scope.launch {
-            combine(playback.nowPlaying, playback.playerState) { nowPlaying, state -> nowPlaying to state }
-                .collect { (nowPlaying, state) ->
-                    if (nowPlaying == null) {
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
-                        return@collect
-                    }
-                    updatePlaybackState(nowPlaying, state)
-                    // The player reports its position several times a second; rebuilding and
-                    // re-posting the foreground notification on every tick made it flicker and
-                    // got it rate-limited by the system. Only rebuild when something visible changes.
-                    val key = NotificationKey(nowPlaying, state.status, state.durationMs)
-                    if (key != lastNotificationKey) {
-                        lastNotificationKey = key
-                        val (title, artist) = describe(nowPlaying)
-                        updateMetadata(title, artist, state.durationMs)
-                        startForeground(NOTIFICATION_ID, buildNotification(title, artist, nowPlaying, state.status))
-                    }
+            combine(
+                playback.nowPlaying,
+                playback.playerState,
+                AppContainer.preferences.themeMode,
+            ) { nowPlaying, state, themeMode ->
+                Triple(nowPlaying, state, themeMode)
+            }.collect { (nowPlaying, state, themeMode) ->
+                if (nowPlaying == null) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return@collect
                 }
+                updatePlaybackState(nowPlaying, state)
+                // The player reports its position several times a second; rebuilding and
+                // re-posting the foreground notification on every tick made it flicker and
+                // got it rate-limited by the system. Only rebuild when something visible changes.
+                val key = NotificationKey(nowPlaying, state.status, state.durationMs, themeMode)
+                if (key != lastNotificationKey) {
+                    lastNotificationKey = key
+                    val (title, artist) = describe(nowPlaying)
+                    val artwork = artworkFor(themeMode)
+                    updateMetadata(title, artist, state.durationMs, artwork)
+                    startForeground(
+                        NOTIFICATION_ID,
+                        buildNotification(title, artist, nowPlaying, state.status, themeMode, artwork),
+                    )
+                }
+            }
         }
     }
 
@@ -124,6 +143,9 @@ class PlaybackNotificationService : Service() {
         mediaSession?.isActive = false
         mediaSession?.release()
         mediaSession = null
+        cachedArtwork?.recycle()
+        cachedArtwork = null
+        cachedArtworkTheme = null
         super.onDestroy()
     }
 
@@ -140,12 +162,26 @@ class PlaybackNotificationService : Service() {
         return title to artist
     }
 
-    private fun updateMetadata(title: String, artist: String, durationMs: Long) {
+    private fun artworkFor(themeMode: ThemeMode): Bitmap {
+        val cached = cachedArtwork
+        if (cached != null && cachedArtworkTheme == themeMode && !cached.isRecycled) return cached
+        // Don't recycle the previous bitmap here — MediaSession / the posted notification may
+        // still hold it until the system swaps metadata.
+        val created = playbackNotificationArtwork(themeMode, this)
+        cachedArtwork = created
+        cachedArtworkTheme = themeMode
+        return created
+    }
+
+    private fun updateMetadata(title: String, artist: String, durationMs: Long, artwork: Bitmap) {
         val metadata = MediaMetadataCompat.Builder()
             .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
             .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
             .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Huda Qur'an")
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, artwork)
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, artwork)
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, artwork)
             .apply { if (durationMs > 0) putLong(MediaMetadataCompat.METADATA_KEY_DURATION, durationMs) }
             .build()
         mediaSession?.setMetadata(metadata)
@@ -188,10 +224,18 @@ class PlaybackNotificationService : Service() {
         )
     }
 
-    private fun buildNotification(title: String, artist: String, nowPlaying: NowPlaying, status: PlaybackStatus): android.app.Notification {
+    private fun buildNotification(
+        title: String,
+        artist: String,
+        nowPlaying: NowPlaying,
+        status: PlaybackStatus,
+        themeMode: ThemeMode,
+        artwork: Bitmap,
+    ): android.app.Notification {
         val strings = stringsFor(AppContainer.preferences.appLanguage.value)
         val isPlaying = status == PlaybackStatus.PLAYING
         val hasQueue = nowPlaying.mode == PlaybackMode.AYAH_QUEUE
+        val accent = notificationAccentFor(themeMode, this)
         val previousAction = NotificationCompat.Action(
             android.R.drawable.ic_media_previous,
             strings.cdPrevious,
@@ -226,7 +270,9 @@ class PlaybackNotificationService : Service() {
             .setContentText(artist)
             .setSubText("Huda Qur'an")
             .setSmallIcon(notificationIconRes())
-            .setColor(NOTIFICATION_ACCENT_COLOR)
+            .setLargeIcon(artwork)
+            .setColor(accent)
+            .setColorized(true)
             .setContentIntent(openAppPendingIntent())
             .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_STOP))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

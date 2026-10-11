@@ -82,10 +82,10 @@
 
         <!--
           Theme-matched launcher icons. Exactly one of these three is enabled at a time —
-          LauncherIconSync (androidMain) flips them to match the reader's chosen appearance
-          (Settings > Appearance), defaulting to Sakura since that's the app's default theme. All
-          three target the same MainActivity and carry only the MAIN/LAUNCHER filter, so toggling
-          them never touches the deep-link filters declared on the activity itself above.
+          LauncherIcon (androidMain) queues a flip when appearance changes and applies it only
+          on the next cold start (process fully dead), never while a session is backgrounded.
+          Default is Sakura. All three target MainActivity and carry only MAIN/LAUNCHER, so
+          toggling them never touches the deep-link filters on the activity itself above.
         -->
         <activity-alias
             android:name=".LauncherLight"
