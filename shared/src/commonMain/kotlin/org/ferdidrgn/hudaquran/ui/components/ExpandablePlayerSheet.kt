@@ -1,6 +1,13 @@
 package org.ferdidrgn.hudaquran.ui.components
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +19,8 @@ import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.snapTo
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -79,8 +88,11 @@ private val CollapsedHeight = 68.dp
 private val CollapsedSideMargin = 14.dp
 private val SheetMaxWidth = 640.dp
 
-/** Ease the sheet open/closed — slower than a snappy spring so it reads as a morph, not a jump. */
-private val PlayerSheetMotion = tween<Float>(durationMillis = 480, easing = FastOutSlowInEasing)
+/** A lively bounce on open/close and on drag release, rather than a flat, mechanical glide. */
+private val PlayerSheetMotion = spring<Float>(
+    dampingRatio = Spring.DampingRatioMediumBouncy,
+    stiffness = Spring.StiffnessMediumLow,
+)
 
 private enum class PlayerSheetAnchor { Collapsed, Expanded }
 
@@ -113,7 +125,14 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
         if (nowPlaying == null) sheetState.snapTo(PlayerSheetAnchor.Collapsed)
     }
 
-    val current = nowPlaying ?: return
+    // The caller mounts this inside an AnimatedVisibility that keeps it composed for the whole
+    // exit transition; without this, nowPlaying going null would blank the sheet's content a
+    // frame before the fade/slide-out even starts playing.
+    var lastTrack by remember { mutableStateOf(nowPlaying) }
+    LaunchedEffect(nowPlaying) {
+        if (nowPlaying != null) lastTrack = nowPlaying
+    }
+    val current = lastTrack ?: return
 
     var reciterName by remember(current.reciterId) { mutableStateOf(current.reciterId) }
     LaunchedEffect(current.reciterId) {
@@ -137,6 +156,20 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
     val progress = if (playerState.durationMs > 0) {
         (playerState.positionMs.toFloat() / playerState.durationMs.toFloat()).coerceIn(0f, 1f)
     } else 0f
+
+    val pillInteractionSource = remember { MutableInteractionSource() }
+    val pillPressed by pillInteractionSource.collectIsPressedAsState()
+    val pillPressScale by animateFloatAsState(if (pillPressed) 0.97f else 1f, label = "playerPillPress")
+
+    // A slow breathing pulse on the headphone icon while audio is actually running, so the
+    // collapsed pill itself tells you something is alive instead of sitting static.
+    val breathTransition = rememberInfiniteTransition(label = "playerIconBreath")
+    val breath by breathTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "playerIconBreath",
+    )
 
     fun expand() {
         scope.launch { sheetState.animateTo(PlayerSheetAnchor.Expanded, PlayerSheetMotion) }
@@ -218,14 +251,15 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
                     .height(CollapsedHeight)
                     .graphicsLayer {
                         alpha = miniAlpha
-                        // Subtle scale so the pill feels like it dissolves into the full surface.
-                        val s = 0.96f + 0.04f * miniAlpha
+                        // Subtle scale so the pill feels like it dissolves into the full surface,
+                        // with an extra squeeze while the finger is actually holding it down.
+                        val s = (0.96f + 0.04f * miniAlpha) * pillPressScale
                         scaleX = s
                         scaleY = s
                     }
                     .then(
                         if (miniAlpha > 0.05f) {
-                            Modifier.clickable(onClick = ::expand)
+                            Modifier.clickable(interactionSource = pillInteractionSource, indication = null, onClick = ::expand)
                         } else {
                             Modifier
                         },
@@ -242,19 +276,41 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Outlined.Headphones,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
+                        Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                            // A soft halo that breathes outward only while audio is actually
+                            // playing — alpha/scale live entirely inside graphicsLayer, so the
+                            // pulse never forces a recomposition, just a cheap re-draw.
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        alpha = if (isPlaying) 0.35f * breath else 0f
+                                        val haloScale = 1f + 0.5f * breath
+                                        scaleX = haloScale
+                                        scaleY = haloScale
+                                    }
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
                             )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        val scale = 1f + (if (isPlaying) 0.12f * breath else 0f)
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Headphones,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
                         }
                         Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(
@@ -324,12 +380,16 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
 
 @Composable
 private fun PlayerSheetRoundButton(background: Color, onClick: () -> Unit, icon: @Composable () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(if (pressed) 0.9f else 1f, label = "roundButtonPress")
     Box(
         modifier = Modifier
             .size(38.dp)
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             .clip(CircleShape)
             .background(background)
-            .clickable(onClick = onClick),
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         icon()

@@ -1,5 +1,12 @@
 package org.ferdidrgn.hudaquran
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
@@ -106,6 +112,15 @@ private const val APP_TITLE = "Huda Qur'an"
 /** Content wide enough to use tablet/desktop space well, narrow enough to stay readable. */
 private val mediumContentMaxWidth = 760.dp
 private val expandedContentMaxWidth = 1100.dp
+
+/**
+ * The player pill itself rises into view (and sinks away) instead of popping in and out — the one
+ * open/close "bottom sheet" beat the mini player was missing entirely.
+ */
+private val playerSheetEnter = fadeIn(tween(320, easing = FastOutSlowInEasing)) +
+    slideInVertically(tween(420, easing = FastOutSlowInEasing)) { it / 2 }
+private val playerSheetExit = fadeOut(tween(220, easing = FastOutSlowInEasing)) +
+    slideOutVertically(tween(280, easing = FastOutSlowInEasing)) { it / 2 }
 
 /**
  * Long-form reading/text screens read better in a capped, centered column on a wide monitor.
@@ -272,7 +287,12 @@ fun App() {
                             // Floats above the page itself (transparent margins around it) rather
                             // than reserving a row below the content, so it reads as a pill
                             // resting on top of the site, not a fixed footer pushing it up.
-                            if (nowPlaying != null) {
+                            AnimatedVisibility(
+                                visible = nowPlaying != null,
+                                modifier = Modifier.fillMaxSize(),
+                                enter = playerSheetEnter,
+                                exit = playerSheetExit,
+                            ) {
                                 ExpandablePlayerSheet(modifier = Modifier.fillMaxSize(), collapsedBottomInset = 16.dp)
                             }
                         }
@@ -280,8 +300,10 @@ fun App() {
                 }
 
                 sizeClass == WindowSizeClass.COMPACT -> {
-                    var bottomBarHeight by remember { mutableStateOf(0.dp) }
-                    val density = LocalDensity.current
+                    // Captured straight from Scaffold's own innerPadding as it composes content
+                    // below — synchronous, so the mini player never has a frame where it reads a
+                    // stale (zero) inset and overlaps the tab bar.
+                    var bottomInset by remember { mutableStateOf(0.dp) }
                     // The sheet is a sibling of the whole Scaffold, not something placed inside its
                     // content slot: Scaffold always draws bottomBar on top of content, so a sheet
                     // nested in there would stay stuck behind the tab bar once expanded to full
@@ -289,17 +311,14 @@ fun App() {
                     Box(modifier = Modifier.fillMaxSize()) {
                         Scaffold(
                             bottomBar = {
-                                Column(
-                                    modifier = Modifier
-                                        .windowInsetsPadding(WindowInsets.navigationBars)
-                                        .onSizeChanged { size -> bottomBarHeight = with(density) { size.height.toDp() } },
-                                ) {
+                                Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
                                     if (screen.isBottomNavDestination()) {
                                         AppBottomNavigationBar(navigator, screen)
                                     }
                                 }
                             },
                         ) { padding ->
+                            bottomInset = padding.calculateBottomPadding()
                             AppDestinationContent(
                                 screen = screen,
                                 navigator = navigator,
@@ -311,10 +330,15 @@ fun App() {
                         }
                         // Floats over the content, hovering just above the tab bar when collapsed,
                         // and — drawn last here — covers the tab bar entirely once expanded.
-                        if (nowPlaying != null) {
+                        AnimatedVisibility(
+                            visible = nowPlaying != null,
+                            modifier = Modifier.fillMaxSize(),
+                            enter = playerSheetEnter,
+                            exit = playerSheetExit,
+                        ) {
                             ExpandablePlayerSheet(
                                 modifier = Modifier.fillMaxSize(),
-                                collapsedBottomInset = bottomBarHeight + 10.dp,
+                                collapsedBottomInset = bottomInset + 10.dp,
                             )
                         }
                     }
@@ -360,7 +384,12 @@ fun App() {
                                         }
                                     }
                                 }
-                                if (nowPlaying != null) {
+                                AnimatedVisibility(
+                                    visible = nowPlaying != null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    enter = playerSheetEnter,
+                                    exit = playerSheetExit,
+                                ) {
                                     ExpandablePlayerSheet(modifier = Modifier.fillMaxSize(), collapsedBottomInset = 16.dp)
                                 }
                             }
