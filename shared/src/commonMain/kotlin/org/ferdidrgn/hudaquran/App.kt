@@ -27,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
@@ -279,16 +280,26 @@ fun App() {
                 }
 
                 sizeClass == WindowSizeClass.COMPACT -> {
-                    Scaffold(
-                        bottomBar = {
-                            Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-                                if (screen.isBottomNavDestination()) {
-                                    AppBottomNavigationBar(navigator, screen)
+                    var bottomBarHeight by remember { mutableStateOf(0.dp) }
+                    val density = LocalDensity.current
+                    // The sheet is a sibling of the whole Scaffold, not something placed inside its
+                    // content slot: Scaffold always draws bottomBar on top of content, so a sheet
+                    // nested in there would stay stuck behind the tab bar once expanded to full
+                    // screen instead of covering it.
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Scaffold(
+                            bottomBar = {
+                                Column(
+                                    modifier = Modifier
+                                        .windowInsetsPadding(WindowInsets.navigationBars)
+                                        .onSizeChanged { size -> bottomBarHeight = with(density) { size.height.toDp() } },
+                                ) {
+                                    if (screen.isBottomNavDestination()) {
+                                        AppBottomNavigationBar(navigator, screen)
+                                    }
                                 }
-                            }
-                        },
-                    ) { padding ->
-                        Box(modifier = Modifier.fillMaxSize()) {
+                            },
+                        ) { padding ->
                             AppDestinationContent(
                                 screen = screen,
                                 navigator = navigator,
@@ -297,14 +308,14 @@ fun App() {
                                 preferences = preferences,
                                 coroutineScope = coroutineScope,
                             )
-                            // Floats over the content, hovering just above the tab bar, instead of
-                            // sharing its row — the page behind shows through the margins around it.
-                            if (nowPlaying != null) {
-                                ExpandablePlayerSheet(
-                                    modifier = Modifier.fillMaxSize(),
-                                    collapsedBottomInset = padding.calculateBottomPadding() + 10.dp,
-                                )
-                            }
+                        }
+                        // Floats over the content, hovering just above the tab bar when collapsed,
+                        // and — drawn last here — covers the tab bar entirely once expanded.
+                        if (nowPlaying != null) {
+                            ExpandablePlayerSheet(
+                                modifier = Modifier.fillMaxSize(),
+                                collapsedBottomInset = bottomBarHeight + 10.dp,
+                            )
                         }
                     }
                 }
