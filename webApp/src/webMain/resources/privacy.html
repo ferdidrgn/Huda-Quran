@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gizlilik Politikası — Huda Qur'an</title>
-    <meta name="description" content="Huda Qur'an uygulamasının ve hudaquran.web.app sitesinin gizlilik politikası: hangi verilerin toplandığı, nasıl kullanıldığı ve kullanıcı hakları.">
+    <meta name="description" content="Huda Qur'an uygulamasının ve hudaquran.web.app sitesinin gizlilik politikası: hangi verilerin toplandığı, Google reklamları ve Firebase'in rolü, ve kullanıcı hakları.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1b0c1a">
     <link rel="canonical" href="https://hudaquran.web.app/privacy.html">
@@ -16,72 +16,7 @@
         on the Kotlin/Wasm bundle — exactly what an AdSense/legal reviewer (or a user with a slow
         connection) needs from a privacy policy.
     -->
-    <style>
-        :root {
-            --canvas: #1b0c1a;
-            --surface: #2d222f;
-            --ink: #fadcd5;
-            --ink-muted: #c4a9b1;
-            --gilt: #d9a7b4;
-            --gilt-bright: #fadcd5;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            background: var(--canvas);
-            color: var(--ink);
-            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-            line-height: 1.7;
-        }
-        header {
-            padding: 28px 20px 20px;
-            border-bottom: 1px solid rgba(250, 220, 213, 0.18);
-        }
-        header a {
-            color: var(--ink-muted);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        header a:hover { color: var(--gilt-bright); }
-        h1 {
-            margin: 14px 0 4px;
-            color: var(--gilt-bright);
-            font-size: 26px;
-        }
-        .updated {
-            margin: 0;
-            color: var(--ink-muted);
-            font-size: 13px;
-        }
-        main {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 32px 20px 64px;
-        }
-        h2 {
-            color: var(--gilt-bright);
-            font-size: 19px;
-            margin: 32px 0 10px;
-        }
-        p, li { color: var(--ink-muted); font-size: 15px; }
-        ul { padding-left: 20px; }
-        a { color: var(--gilt); }
-        .card {
-            background: var(--surface);
-            border: 1px solid rgba(250, 220, 213, 0.14);
-            border-radius: 14px;
-            padding: 18px 20px;
-            margin: 10px 0;
-        }
-        .card p:last-child { margin-bottom: 0; }
-        footer {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 0 20px 40px;
-            color: rgba(196, 169, 177, 0.7);
-            font-size: 12px;
-        }
-    </style>
+    <link rel="stylesheet" href="legal.css">
 </head>
 <body>
     <header>
@@ -92,11 +27,12 @@
     <main>
         <p>
             Bu sayfa, Huda Qur'an mobil uygulaması (Android, iOS) ve
-            <a href="https://hudaquran.web.app/">hudaquran.web.app</a> web sitesi için geçerlidir.
-            Huda Qur'an; Kur'an-ı Kerim'i okuma, dinleme, meal, tecvid dersleri, namaz vakitleri ve
-            kıble yönü gibi özellikler sunan, üyelik veya kayıt gerektirmeyen ücretsiz bir
-            uygulamadır. Aşağıda hangi verilerin, hangi amaçla ve kimler tarafından işlendiğini
-            açık şekilde bulabilirsiniz.
+            <a href="https://hudaquran.web.app/">hudaquran.web.app</a> web sitesi
+            ("Huda Qur'an", "uygulama", "site") için geçerlidir. Huda Qur'an; Kur'an-ı Kerim'i
+            okuma, dinleme, meal, tecvid dersleri, namaz vakitleri ve kıble yönü gibi özellikler
+            sunan, üyelik veya kayıt gerektirmeyen ücretsiz bir uygulamadır. Aşağıda hangi
+            verilerin, hangi amaçla ve kimler tarafından işlendiğini açık şekilde bulabilirsiniz.
+            Uygulamayı kullanarak bu politikayı kabul etmiş olursunuz.
         </p>
 
         <h2>Hesap ve kişisel kimlik bilgisi</h2>
@@ -140,24 +76,39 @@
             kapatabilirsiniz.
         </p>
 
-        <h2>Reklamlar</h2>
+        <h2>Reklamlar ve Google iş ortakları</h2>
         <div class="card">
             <p>
-                Uygulamanın ücretsiz kalabilmesi için mobil uygulamalarda
-                <strong>Google AdMob</strong>, web sitesinde ise (etkinleştirildiğinde)
-                <strong>Google AdSense</strong> aracılığıyla reklam gösterilebilir. Bu hizmetler;
-                reklam kimliği (Advertising ID), yaklaşık (IP tabanlı) konum ve çerezler gibi
-                verileri, size daha ilgili reklamlar göstermek veya reklam performansını ölçmek
-                amacıyla kullanabilir.
+                Uygulamanın ücretsiz kalabilmesi için mobil uygulamalarda <strong>Google
+                AdMob</strong>, web sitesinde ise (etkinleştirildiğinde) <strong>Google
+                AdSense</strong> aracılığıyla reklam gösterilebilir.
             </p>
             <p>
-                Android'de reklam kimliğinizi Ayarlar → Gizlilik → Reklamlar menüsünden
-                sıfırlayabilir veya kişiselleştirilmiş reklamları kapatabilirsiniz. Web'de
-                kişiselleştirilmiş reklam tercihlerinizi
-                <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Reklam Ayarları</a>'ndan
-                yönetebilirsiniz. Daha fazla bilgi için
-                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Google'ın
-                ortak sitelerde veri kullanımı</a> sayfasına bakabilirsiniz.
+                Google dahil üçüncü taraf satıcılar, kullanıcılara reklam göstermek için
+                çerezleri (cookie) kullanır. Google'ın reklam çerezlerini kullanması, Google ve iş
+                ortaklarının kullanıcılara bu site ve/veya İnternet'teki başka sitelerdeki önceki
+                ziyaretlerine dayanarak reklam sunmasına olanak tanır. Bu hizmetler; reklam
+                kimliği (Advertising ID), yaklaşık (IP tabanlı) konum ve çerez tanımlayıcıları gibi
+                verileri, size daha ilgili reklamlar göstermek veya reklam performansını ölçmek
+                amacıyla işleyebilir.
+            </p>
+            <p>
+                Kullanıcılar, kişiselleştirilmiş reklamcılığı
+                <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Reklam Ayarları</a>'nı
+                ziyaret ederek devre dışı bırakabilir (Android'de Ayarlar → Gizlilik → Reklamlar
+                menüsünden reklam kimliğini de sıfırlayabilir veya kişiselleştirmeyi
+                kapatabilirsiniz). Google dışı sağlayıcıların çerezleri için
+                <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info/choices</a>
+                adresini ziyaret edebilirsiniz. Google'ın reklam ortağı sitelerdeki veri
+                kullanımı hakkında daha fazla bilgiyi
+                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">buradan</a>
+                okuyabilirsiniz.
+            </p>
+            <p>
+                Avrupa Ekonomik Alanı, Birleşik Krallık veya İsviçre'den erişen kullanıcılara,
+                Google'ın AB Kullanıcı Onayı Politikası kapsamında kişiselleştirilmiş reklamlardan
+                önce onay istemi gösterilebilir; bu tercihinizi istediğiniz zaman yukarıdaki
+                bağlantılardan değiştirebilirsiniz.
             </p>
         </div>
 
@@ -166,6 +117,16 @@
             Uygulama içi bağış/satın alma seçenekleri Google Play Faturalandırma veya Apple App
             Store üzerinden işlenir. Kart veya ödeme bilgileriniz bizim tarafımızdan görülmez ya
             da saklanmaz; tamamen ilgili mağazanın kendi güvenli altyapısında işlenir.
+        </p>
+
+        <h2>Üçüncü taraf içerik kaynakları</h2>
+        <p>
+            Kur'an metni, mealler ve tefsirler <a href="https://alquran.cloud/" target="_blank" rel="noopener">AlQuran Cloud</a>,
+            namaz vakitleri <a href="https://aladhan.com/" target="_blank" rel="noopener">Aladhan</a>
+            API'si üzerinden; zekât hesaplayıcısındaki güncel altın ve döviz kurları ise
+            gold-api.com ve frankfurter.dev servislerinden alınır. Bu isteklerde kişisel
+            verileriniz gönderilmez — yalnızca seçtiğiniz sure/sayfa/şehir gibi uygulama içi
+            tercihler sorgulanır.
         </p>
 
         <h2>Çerezler (web sitesi)</h2>
@@ -184,7 +145,7 @@
         <h2>Çocukların gizliliği</h2>
         <p>
             Huda Qur'an genel kitleye yönelik bir uygulamadır ve bilerek 13 yaş altı çocuklardan
-            kişisel veri toplamaz. Bir ebeveyn veya vası olarak çocuğunuzun bize veri sağladığını
+            kişisel veri toplamaz. Bir ebeveyn veya vasi olarak çocuğunuzun bize veri sağladığını
             düşünüyorsanız, aşağıdaki e-posta adresinden bizimle iletişime geçin.
         </p>
 
@@ -207,6 +168,8 @@
             Gizlilikle ilgili soru, talep veya geri bildirimleriniz için:
             <a href="mailto:ferdidurgun34@gmail.com">ferdidurgun34@gmail.com</a>
         </p>
+
+        <p class="cross-links"><a href="/terms.html">Kullanım Şartları →</a></p>
     </main>
     <footer>© Huda Kur'an — Kur'an-ı Kerim okuma, dinleme ve öğrenme uygulaması.</footer>
 </body>

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Language
@@ -337,6 +338,12 @@ fun SettingsScreen(
                 icon = Icons.Outlined.PrivacyTip,
                 onClick = { openLink(PRIVACY_POLICY_URL) },
             )
+            NavigationRow(
+                title = strings.supportTermsOfService,
+                value = strings.supportTermsOfServiceHint,
+                icon = Icons.Outlined.Description,
+                onClick = { openLink(TERMS_OF_SERVICE_URL) },
+            )
             if (BillingManager.isSupported) {
                 OrnamentRule(modifier = Modifier.padding(vertical = 10.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -591,6 +598,7 @@ private const val FEEDBACK_EMAIL = "ferdidurgun34@gmail.com"
 
 /** Static (non-canvas) page so it stays crawlable and readable without the app ever loading. */
 private const val PRIVACY_POLICY_URL = "https://hudaquran.web.app/privacy.html"
+private const val TERMS_OF_SERVICE_URL = "https://hudaquran.web.app/terms.html"
 
 private fun rateAppUrl(): String = when (currentPlatform) {
     Platform.IOS ->

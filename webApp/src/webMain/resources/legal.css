@@ -1,0 +1,82 @@
+/* Shared styling for the site's static legal pages (privacy.html, terms.html) — the same Sakura
+   dusk palette as the app's own theme and the Compose-side SEO fallback (styles.css), so a visitor
+   never feels like they left the site. Deliberately its own small file rather than reusing
+   styles.css: these pages are long-form reading documents (headings, paragraphs, lists), not the
+   app shell layout styles.css exists for. */
+:root {
+    --canvas: #1b0c1a;
+    --surface: #2d222f;
+    --ink: #fadcd5;
+    --ink-muted: #c4a9b1;
+    --gilt: #d9a7b4;
+    --gilt-bright: #fadcd5;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.7;
+}
+header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid rgba(250, 220, 213, 0.18);
+}
+header a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 14px;
+}
+header a:hover { color: var(--gilt-bright); }
+h1 {
+    margin: 14px 0 4px;
+    color: var(--gilt-bright);
+    font-size: 26px;
+}
+.updated {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 13px;
+}
+main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+}
+h2 {
+    color: var(--gilt-bright);
+    font-size: 19px;
+    margin: 32px 0 10px;
+}
+h3 {
+    color: var(--ink);
+    font-size: 16px;
+    margin: 20px 0 8px;
+}
+p, li { color: var(--ink-muted); font-size: 15px; }
+ul, ol { padding-left: 20px; }
+li { margin: 4px 0; }
+a { color: var(--gilt); }
+strong { color: var(--ink); }
+.card {
+    background: var(--surface);
+    border: 1px solid rgba(250, 220, 213, 0.14);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 10px 0;
+}
+.card p:last-child { margin-bottom: 0; }
+.cross-links {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 13px;
+}
+footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+    color: rgba(196, 169, 177, 0.7);
+    font-size: 12px;
+}
