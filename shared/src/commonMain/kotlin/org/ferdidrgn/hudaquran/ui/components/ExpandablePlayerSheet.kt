@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -186,7 +185,11 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
     BoxWithConstraints(modifier = modifier) {
         val fullHeightPx = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val collapsedHeightPx = with(density) { CollapsedHeight.toPx() }
-        val collapsedOffsetPx = (fullHeightPx - collapsedHeightPx).coerceAtLeast(1f)
+        val collapsedBottomInsetPx = with(density) { collapsedBottomInset.toPx() }
+        // The collapsed pill must rest collapsedBottomInset above this box's own bottom edge (the
+        // full screen, so the sheet can still paint over the tab bar once expanded) — not flush
+        // against it, which is what ignoring the inset here produced.
+        val collapsedOffsetPx = (fullHeightPx - collapsedHeightPx - collapsedBottomInsetPx).coerceAtLeast(1f)
 
         LaunchedEffect(collapsedOffsetPx) {
             sheetState.updateAnchors(
@@ -214,7 +217,6 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
         }
 
         val sideMargin = lerpDp(CollapsedSideMargin, 0.dp, collapseFactor)
-        val bottomMargin = lerpDp(collapsedBottomInset, 0.dp, collapseFactor)
         val topRadius = lerpDp(26.dp, 28.dp, t)
         val bottomRadius = lerpDp(26.dp, 0.dp, collapseFactor)
         val elevation = lerpDp(10.dp, 0.dp, collapseFactor)
@@ -226,13 +228,22 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
             bottomEnd = bottomRadius,
         )
 
+        // The sheet's own height is tied to its current offset instead of fillMaxHeight(): it's
+        // sized to end exactly at (this box's bottom edge − the remaining inset), so the painted
+        // surface's bottom edge always lands where intended instead of always reaching the true
+        // bottom regardless of the inset (fillMaxHeight() + a bottom padding only trims a sliver
+        // off a box that was already far taller than the viewport, so the trim was invisible —
+        // whatever's past the viewport just gets clipped by the screen's own edge).
+        val remainingBottomGapPx = collapsedBottomInsetPx * (1f - collapseFactor)
+        val sheetHeightPx = (fullHeightPx - offsetY - remainingBottomGapPx).coerceAtLeast(0f)
+
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .widthIn(max = SheetMaxWidth)
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(start = sideMargin, end = sideMargin, bottom = bottomMargin)
+                .height(with(density) { sheetHeightPx.toDp() })
+                .padding(start = sideMargin, end = sideMargin)
                 .offset { IntOffset(0, offsetY.roundToInt()) }
                 .shadow(elevation, shape, clip = false)
                 .clip(shape)
@@ -243,8 +254,8 @@ fun ExpandablePlayerSheet(modifier: Modifier = Modifier, collapsedBottomInset: D
                     flingBehavior = flingBehavior,
                 ),
         ) {
-            // Mini pill lives at the top of the full-height sheet so translationY reveals exactly
-            // CollapsedHeight when parked on the Collapsed anchor.
+            // Mini pill lives at the top of the sheet, which is exactly CollapsedHeight tall once
+            // parked on the Collapsed anchor (see sheetHeightPx above).
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
