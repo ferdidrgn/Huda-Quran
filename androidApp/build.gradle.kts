@@ -54,8 +54,8 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 20
-        versionName = "1.20.0"
+        versionCode = 21
+        versionName = "1.21.0"
         // Public RevenueCat SDK key (goog_…), from the REVENUECAT_GOOGLE_KEY environment variable
         // (a CI secret) or `revenuecatGoogleKey` in ~/.gradle/gradle.properties. Blank = purchases off.
         val revenueCatKey = providers.environmentVariable("REVENUECAT_GOOGLE_KEY")
