@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -330,6 +331,12 @@ fun SettingsScreen(
                     onClick = { openLink(feedbackMailto()) },
                 )
             }
+            NavigationRow(
+                title = strings.supportPrivacyPolicy,
+                value = strings.supportPrivacyPolicyHint,
+                icon = Icons.Outlined.PrivacyTip,
+                onClick = { openLink(PRIVACY_POLICY_URL) },
+            )
             if (BillingManager.isSupported) {
                 OrnamentRule(modifier = Modifier.padding(vertical = 10.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -580,7 +587,10 @@ private const val WEBSITE_URL = "https://hudaquran.web.app/"
 private const val IOS_APP_STORE_ID = ""
 
 /** Developer inbox for the "send feedback" row; the row stays hidden while this is blank. */
-private const val FEEDBACK_EMAIL = ""
+private const val FEEDBACK_EMAIL = "ferdidurgun34@gmail.com"
+
+/** Static (non-canvas) page so it stays crawlable and readable without the app ever loading. */
+private const val PRIVACY_POLICY_URL = "https://hudaquran.web.app/privacy.html"
 
 private fun rateAppUrl(): String = when (currentPlatform) {
     Platform.IOS ->

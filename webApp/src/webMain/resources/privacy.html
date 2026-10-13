@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gizlilik Politikası — Huda Qur'an</title>
+    <meta name="description" content="Huda Qur'an uygulamasının ve hudaquran.web.app sitesinin gizlilik politikası: hangi verilerin toplandığı, nasıl kullanıldığı ve kullanıcı hakları.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1b0c1a">
+    <link rel="canonical" href="https://hudaquran.web.app/privacy.html">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!--
+        Deliberately a plain static HTML file, not a Compose/canvas route: Firebase Hosting serves
+        a real file on disk before it ever falls back to index.html's "**" rewrite (see
+        firebase.json), so this page loads instantly with real, crawlable text and never depends
+        on the Kotlin/Wasm bundle — exactly what an AdSense/legal reviewer (or a user with a slow
+        connection) needs from a privacy policy.
+    -->
+    <style>
+        :root {
+            --canvas: #1b0c1a;
+            --surface: #2d222f;
+            --ink: #fadcd5;
+            --ink-muted: #c4a9b1;
+            --gilt: #d9a7b4;
+            --gilt-bright: #fadcd5;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--canvas);
+            color: var(--ink);
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            line-height: 1.7;
+        }
+        header {
+            padding: 28px 20px 20px;
+            border-bottom: 1px solid rgba(250, 220, 213, 0.18);
+        }
+        header a {
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        header a:hover { color: var(--gilt-bright); }
+        h1 {
+            margin: 14px 0 4px;
+            color: var(--gilt-bright);
+            font-size: 26px;
+        }
+        .updated {
+            margin: 0;
+            color: var(--ink-muted);
+            font-size: 13px;
+        }
+        main {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 32px 20px 64px;
+        }
+        h2 {
+            color: var(--gilt-bright);
+            font-size: 19px;
+            margin: 32px 0 10px;
+        }
+        p, li { color: var(--ink-muted); font-size: 15px; }
+        ul { padding-left: 20px; }
+        a { color: var(--gilt); }
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(250, 220, 213, 0.14);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin: 10px 0;
+        }
+        .card p:last-child { margin-bottom: 0; }
+        footer {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+            color: rgba(196, 169, 177, 0.7);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/">← Huda Qur'an'a dön</a>
+        <h1>Gizlilik Politikası</h1>
+        <p class="updated">Son güncelleme: 13 Ekim 2026</p>
+    </header>
+    <main>
+        <p>
+            Bu sayfa, Huda Qur'an mobil uygulaması (Android, iOS) ve
+            <a href="https://hudaquran.web.app/">hudaquran.web.app</a> web sitesi için geçerlidir.
+            Huda Qur'an; Kur'an-ı Kerim'i okuma, dinleme, meal, tecvid dersleri, namaz vakitleri ve
+            kıble yönü gibi özellikler sunan, üyelik veya kayıt gerektirmeyen ücretsiz bir
+            uygulamadır. Aşağıda hangi verilerin, hangi amaçla ve kimler tarafından işlendiğini
+            açık şekilde bulabilirsiniz.
+        </p>
+
+        <h2>Hesap ve kişisel kimlik bilgisi</h2>
+        <p>
+            Uygulamayı kullanmak için hesap oluşturmanız, kayıt olmanız veya adınız, e-postanız ya
+            da telefon numaranız gibi bir bilgi vermeniz gerekmez. Favori ayetler, tercih edilen
+            hafız/meal/tefsir, tema ve metin boyutu gibi ayarlarınız yalnızca cihazınızda yerel
+            olarak saklanır; bizim sunucularımıza gönderilmez.
+        </p>
+
+        <h2>Konum</h2>
+        <p>
+            Uygulama cihazınızın GPS konumuna erişmez ve konum izni istemez. Namaz vakitleri,
+            Ayarlar ekranında elle seçtiğiniz şehir/ülkeye göre hesaplanır; kıble yönü de bu
+            seçime göre gösterilir.
+        </p>
+
+        <h2>Kullanım istatistikleri ve çökme raporları</h2>
+        <div class="card">
+            <p>
+                Uygulamayı iyileştirmek için <strong>Google Firebase Analytics</strong> ve
+                <strong>Firebase Crashlytics</strong> kullanıyoruz. Bunlar; görüntülenen ekranlar,
+                kullanılan özellikler, uygulama sürümü, cihaz modeli, işletim sistemi sürümü ve
+                genel (ülke düzeyinde) konum gibi kişisel olarak sizi tanımlamayan, anonim/toplu
+                kullanım verilerini toplar. Bir hata oluştuğunda, sorunu çözebilmemiz için cihaz
+                bilgisi ve hata kaydı (stack trace) Firebase Crashlytics'e iletilir.
+            </p>
+            <p>
+                Bu veriler Google LLC tarafından işlenir; ayrıntı için
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Gizlilik Politikası</a>'na
+                bakabilirsiniz.
+            </p>
+        </div>
+
+        <h2>Bildirimler</h2>
+        <p>
+            İzin verirseniz, namaz vakti hatırlatıcıları gibi bildirimleri zamanında
+            gösterebilmek için Firebase Cloud Messaging bir cihaz bildirim belirteci (token)
+            kullanır. Bu belirteç yalnızca bildirim göndermek için kullanılır ve kimliğinizi
+            doğrudan içermez. Bildirimleri cihazınızın sistem ayarlarından her zaman
+            kapatabilirsiniz.
+        </p>
+
+        <h2>Reklamlar</h2>
+        <div class="card">
+            <p>
+                Uygulamanın ücretsiz kalabilmesi için mobil uygulamalarda
+                <strong>Google AdMob</strong>, web sitesinde ise (etkinleştirildiğinde)
+                <strong>Google AdSense</strong> aracılığıyla reklam gösterilebilir. Bu hizmetler;
+                reklam kimliği (Advertising ID), yaklaşık (IP tabanlı) konum ve çerezler gibi
+                verileri, size daha ilgili reklamlar göstermek veya reklam performansını ölçmek
+                amacıyla kullanabilir.
+            </p>
+            <p>
+                Android'de reklam kimliğinizi Ayarlar → Gizlilik → Reklamlar menüsünden
+                sıfırlayabilir veya kişiselleştirilmiş reklamları kapatabilirsiniz. Web'de
+                kişiselleştirilmiş reklam tercihlerinizi
+                <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google Reklam Ayarları</a>'ndan
+                yönetebilirsiniz. Daha fazla bilgi için
+                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Google'ın
+                ortak sitelerde veri kullanımı</a> sayfasına bakabilirsiniz.
+            </p>
+        </div>
+
+        <h2>Satın alımlar</h2>
+        <p>
+            Uygulama içi bağış/satın alma seçenekleri Google Play Faturalandırma veya Apple App
+            Store üzerinden işlenir. Kart veya ödeme bilgileriniz bizim tarafımızdan görülmez ya
+            da saklanmaz; tamamen ilgili mağazanın kendi güvenli altyapısında işlenir.
+        </p>
+
+        <h2>Çerezler (web sitesi)</h2>
+        <p>
+            hudaquran.web.app, Firebase Analytics ve (etkinleştirildiğinde) Google AdSense
+            tarafından kullanılan çerezleri içerebilir. Tarayıcınızın ayarlarından çerezleri
+            yönetebilir veya engelleyebilirsiniz; bu, bazı site özelliklerini etkileyebilir.
+        </p>
+
+        <h2>Veri güvenliği ve saklama</h2>
+        <p>
+            Yukarıda açıklanan veriler, Google Firebase altyapısında güvenli şekilde işlenir ve
+            yalnızca gerekli olduğu sürece saklanır. Verilerinizi üçüncü taraflara satmıyoruz.
+        </p>
+
+        <h2>Çocukların gizliliği</h2>
+        <p>
+            Huda Qur'an genel kitleye yönelik bir uygulamadır ve bilerek 13 yaş altı çocuklardan
+            kişisel veri toplamaz. Bir ebeveyn veya vası olarak çocuğunuzun bize veri sağladığını
+            düşünüyorsanız, aşağıdaki e-posta adresinden bizimle iletişime geçin.
+        </p>
+
+        <h2>Haklarınız</h2>
+        <p>
+            Hakkınızda işlenen veriler hakkında bilgi almak, düzeltilmesini veya silinmesini talep
+            etmek için aşağıdaki e-posta adresinden bize ulaşabilirsiniz. Taleplerinizi makul bir
+            süre içinde yanıtlıyoruz.
+        </p>
+
+        <h2>Bu politikadaki değişiklikler</h2>
+        <p>
+            Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler bu
+            sayfada yayımlanır; sayfanın üst kısmındaki "son güncelleme" tarihi her zaman güncel
+            halini gösterir.
+        </p>
+
+        <h2>İletişim</h2>
+        <p>
+            Gizlilikle ilgili soru, talep veya geri bildirimleriniz için:
+            <a href="mailto:ferdidurgun34@gmail.com">ferdidurgun34@gmail.com</a>
+        </p>
+    </main>
+    <footer>© Huda Kur'an — Kur'an-ı Kerim okuma, dinleme ve öğrenme uygulaması.</footer>
+</body>
+</html>
