@@ -1,6 +1,11 @@
 package org.ferdidrgn.hudaquran
 
-import androidx.compose.animation.AnimatedVisibility
+// Aliased: androidx.compose.animation also declares ColumnScope/RowScope extension overloads of
+// the same name, and importing the plain name lets the compiler's implicit-receiver search find
+// those scoped overloads from an enclosing Column/Row even through an intervening Box, which fails
+// to resolve ("cannot be called in this context with an implicit receiver"). The alias sidesteps
+// that name clash entirely.
+import androidx.compose.animation.AnimatedVisibility as PlayerSheetVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -287,7 +292,7 @@ fun App() {
                             // Floats above the page itself (transparent margins around it) rather
                             // than reserving a row below the content, so it reads as a pill
                             // resting on top of the site, not a fixed footer pushing it up.
-                            AnimatedVisibility(
+                            PlayerSheetVisibility(
                                 visible = nowPlaying != null,
                                 modifier = Modifier.fillMaxSize(),
                                 enter = playerSheetEnter,
@@ -330,7 +335,7 @@ fun App() {
                         }
                         // Floats over the content, hovering just above the tab bar when collapsed,
                         // and — drawn last here — covers the tab bar entirely once expanded.
-                        AnimatedVisibility(
+                        PlayerSheetVisibility(
                             visible = nowPlaying != null,
                             modifier = Modifier.fillMaxSize(),
                             enter = playerSheetEnter,
@@ -384,7 +389,7 @@ fun App() {
                                         }
                                     }
                                 }
-                                AnimatedVisibility(
+                                PlayerSheetVisibility(
                                     visible = nowPlaying != null,
                                     modifier = Modifier.fillMaxSize(),
                                     enter = playerSheetEnter,
