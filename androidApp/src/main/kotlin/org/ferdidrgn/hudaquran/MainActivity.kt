@@ -38,9 +38,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // Portrait-only everywhere, Mushaf included: a landscape page on a phone is too short to
-        // read, and Mushaf fits each page to the portrait frame instead.
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        // Portrait-only on phones, Mushaf included: a landscape page on a phone is too short to
+        // read, and Mushaf fits each page to the portrait frame instead. Large screens (tablets,
+        // unfolded foldables, sw600dp+) are left free: Android 16+ ignores an orientation lock
+        // there anyway (large-screen compatibility changes flagged by Play Console vitals), and
+        // forcing portrait on that much width would waste the extra space instead of just being
+        // a no-op, so we don't request it in the first place.
+        if (resources.configuration.smallestScreenWidthDp < 600) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
 
         requestNotificationPermissionIfNeeded()
         handleDeepLinkIntent(intent)
