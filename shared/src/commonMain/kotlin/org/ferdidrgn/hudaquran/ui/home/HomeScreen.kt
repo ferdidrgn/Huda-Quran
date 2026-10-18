@@ -222,8 +222,13 @@ fun HomeScreen(
             modifier = modifier,
             strings = strings,
             surahs = surahs,
+            popularSurahs = popularSurahs,
+            surahLoadError = loadError,
+            onRetrySurahs = { surahReloadKey++ },
+            prayerTimes = prayerTimes,
             appLanguage = appLanguage,
             lastRead = lastRead,
+            lastMushafPage = lastMushafPage,
             khatmFurthestPage = khatmFurthestPage,
             khatmCompletedCount = khatmCompletedCount,
             readingStreak = readingStreak,
@@ -310,12 +315,53 @@ fun HomeScreen(
             }
         }
 
-        // 2. Namaz Vakitleri (Şehir Konumu En Üstte Çok Net)
+        // Namaz vakitleri. İmsak bu satırın ilk vaktidir; istenen sıra bunun hemen ardından gelir.
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(1) { PrayerWidget(prayerTimes, locationDisplayName, onOpenSettings) }
         }
 
-        // 3. İstediğin Sıralama: Hac Kurası En Başta, Ardından Kıble, Sureler ve Cüzler Mozaik Alanı
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(2) {
+                FeaturedSurahsSection(
+                    popularSurahs = popularSurahs,
+                    loadError = loadError,
+                    onRetry = { surahReloadKey++ },
+                    onOpenSurahList = onOpenSurahList,
+                    onOpenSurah = { onOpenSurah(it, null) },
+                )
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(3) {
+                ReadingProgressCard(
+                    lastRead = lastRead,
+                    lastMushafPage = lastMushafPage,
+                    khatmFurthestPage = khatmFurthestPage,
+                    khatmCompletedCount = khatmCompletedCount,
+                    appLanguage = appLanguage,
+                    onOpenSurah = onOpenSurah,
+                    onOpenMushafMode = onOpenMushafMode,
+                )
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(4) {
+                DailyAyahSection(
+                    dailyAyah = dailyAyah,
+                    isLoadingDaily = isLoadingDaily,
+                    shareDaily = shareDaily,
+                    appLanguage = appLanguage,
+                    onShare = { shareDaily = true },
+                    onRetry = { isLoadingDaily = true },
+                    onDismissShare = { shareDaily = false },
+                    onOpenSurah = onOpenSurah,
+                )
+            }
+        }
+
+        // Kalan bölümler, önceki göreli sırasıyla.
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(2) {
                 Column {
@@ -377,22 +423,7 @@ fun HomeScreen(
             }
         }
 
-        // 5. Okuma İlerlemesi / Kaldığın Yer Kartı
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(4) {
-                ReadingProgressCard(
-                    lastRead = lastRead,
-                    lastMushafPage = lastMushafPage,
-                    khatmFurthestPage = khatmFurthestPage,
-                    khatmCompletedCount = khatmCompletedCount,
-                    appLanguage = appLanguage,
-                    onOpenSurah = onOpenSurah,
-                    onOpenMushafMode = onOpenMushafMode,
-                )
-            }
-        }
-
-        // 6. İstatistikler
+        // İstatistikler
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(5) {
                 Row(
@@ -414,97 +445,6 @@ fun HomeScreen(
                         accent = true,
                         onClick = onOpenJuzList,
                     )
-                }
-            }
-        }
-
-        // 7. Günün Ayeti
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(6) {
-                GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            strings.dailyAyahTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (dailyAyah != null) {
-                            Icon(
-                                Icons.Outlined.Share,
-                                contentDescription = strings.cdShare,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .clickable { shareDaily = true }
-                                    .padding(12.dp),
-                            )
-                        }
-                        // Retry only after a failed load: the ayah is fixed for the whole day.
-                        if (!isLoadingDaily && dailyAyah == null) {
-                            Icon(
-                                Icons.Filled.Refresh,
-                                contentDescription = strings.retry,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .clickable { isLoadingDaily = true }
-                                    .padding(12.dp),
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    when {
-                        isLoadingDaily -> Box(
-                            Modifier.fillMaxWidth().padding(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-
-                        dailyAyah != null -> {
-                            Text(
-                                dailyAyah!!.arabicText,
-                                fontFamily = LocalArabicFontFamily.current,
-                                fontSize = 24.sp,
-                                lineHeight = 46.sp,
-                                textAlign = TextAlign.Right,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                dailyAyah!!.translationText,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                "${
-                                    localizedSurahName(
-                                        dailyAyah!!.surahNumber,
-                                        dailyAyah!!.surahName,
-                                        appLanguage
-                                    )
-                                } ${dailyAyah!!.numberInSurah}",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable {
-                                    dailyAyah?.let { onOpenSurah(it.surahNumber, it.numberInSurah) }
-                                },
-                            )
-                        }
-
-                        else -> Text(strings.dailyAyahError)
-                    }
-                    if (shareDaily) {
-                        dailyAyah?.let { daily ->
-                            AyahShareSheet(data = daily.toShareData(appLanguage), onDismiss = { shareDaily = false })
-                        }
-                    }
                 }
             }
         }
@@ -553,51 +493,6 @@ fun HomeScreen(
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
                             EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
-                        }
-                    }
-                }
-            }
-        }
-
-        // 10. Öne Çıkan Sureler (En Alt Kısım)
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(10) {
-                Column {
-                    SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
-                    Spacer(Modifier.height(10.dp))
-                    when {
-                        loadError -> {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    strings.surahsLoadErrorShort,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                                Spacer(Modifier.width(10.dp))
-                                Text(
-                                    strings.retry,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.clickable { surahReloadKey++ },
-                                )
-                            }
-                        }
-
-                        popularSurahs.isEmpty() -> {
-                            Box(
-                                Modifier.fillMaxWidth().padding(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-
-                        else -> {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
-                                    SurahPreviewCard(surah) { onOpenSurah(surah.number, null) }
-                                }
-                            }
                         }
                     }
                 }
@@ -708,8 +603,13 @@ private fun WebHomeContent(
     modifier: Modifier,
     strings: Strings,
     surahs: List<Surah>,
+    popularSurahs: List<Surah>,
+    surahLoadError: Boolean,
+    onRetrySurahs: () -> Unit,
+    prayerTimes: PrayerTimes?,
     appLanguage: AppLanguage,
     lastRead: LastRead?,
+    lastMushafPage: Int?,
     khatmFurthestPage: Int,
     khatmCompletedCount: Int,
     readingStreak: Int,
@@ -787,6 +687,37 @@ private fun WebHomeContent(
             }
         }
 
+        PrayerWidget(prayerTimes, locationDisplayName, onOpenSettings)
+
+        FeaturedSurahsSection(
+            popularSurahs = popularSurahs,
+            loadError = surahLoadError,
+            onRetry = onRetrySurahs,
+            onOpenSurahList = onOpenSurahList,
+            onOpenSurah = { onOpenSurah(it, null) },
+        )
+
+        ReadingProgressCard(
+            lastRead = lastRead,
+            lastMushafPage = lastMushafPage,
+            khatmFurthestPage = khatmFurthestPage,
+            khatmCompletedCount = khatmCompletedCount,
+            appLanguage = appLanguage,
+            onOpenSurah = onOpenSurah,
+            onOpenMushafMode = onOpenMushafMode,
+        )
+
+        WebDailyAyahSection(
+            strings = strings,
+            dailyAyah = dailyAyah,
+            isLoadingDaily = isLoadingDaily,
+            appLanguage = appLanguage,
+            onRefresh = onRefreshDaily,
+            onOpenSurah = onOpenSurah,
+        )
+
+        WebLessonCarousel(strings = strings, onOpenLesson = onOpenLesson)
+
         WebContinueSection(
             strings = strings,
             lastRead = lastRead,
@@ -796,17 +727,6 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
             onOpenSurahList = onOpenSurahList,
             onOpenMushafMode = onOpenMushafMode,
-        )
-
-        WebLessonCarousel(strings = strings, onOpenLesson = onOpenLesson)
-
-        WebDailyAyahSection(
-            strings = strings,
-            dailyAyah = dailyAyah,
-            isLoadingDaily = isLoadingDaily,
-            appLanguage = appLanguage,
-            onRefresh = onRefreshDaily,
-            onOpenSurah = onOpenSurah,
         )
 
         WebBrowseSection(
@@ -1407,6 +1327,146 @@ private fun PrayerWidget(prayerTimes: PrayerTimes?, locationDisplayName: String,
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeaturedSurahsSection(
+    popularSurahs: List<Surah>,
+    loadError: Boolean,
+    onRetry: () -> Unit,
+    onOpenSurahList: () -> Unit,
+    onOpenSurah: (Int) -> Unit,
+) {
+    val strings = LocalStrings.current
+    Column {
+        SectionHeader(strings.featuredSurahsTitle, strings.viewAll, onOpenSurahList)
+        Spacer(Modifier.height(10.dp))
+        when {
+            loadError -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        strings.surahsLoadErrorShort,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        strings.retry,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.clickable(onClick = onRetry),
+                    )
+                }
+            }
+
+            popularSurahs.isEmpty() -> {
+                Box(
+                    Modifier.fillMaxWidth().padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            else -> {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(popularSurahs, key = { "popular-${it.number}" }) { surah ->
+                        SurahPreviewCard(surah) { onOpenSurah(surah.number) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyAyahSection(
+    dailyAyah: DailyAyah?,
+    isLoadingDaily: Boolean,
+    shareDaily: Boolean,
+    appLanguage: AppLanguage,
+    onShare: () -> Unit,
+    onRetry: () -> Unit,
+    onDismissShare: () -> Unit,
+    onOpenSurah: (Int, Int?) -> Unit,
+) {
+    val strings = LocalStrings.current
+    GlassSurface(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                strings.dailyAyahTitle,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            if (dailyAyah != null) {
+                Icon(
+                    Icons.Outlined.Share,
+                    contentDescription = strings.cdShare,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onShare)
+                        .padding(12.dp),
+                )
+            }
+            if (!isLoadingDaily && dailyAyah == null) {
+                Icon(
+                    Icons.Filled.Refresh,
+                    contentDescription = strings.retry,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onRetry)
+                        .padding(12.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        when {
+            isLoadingDaily -> Box(
+                Modifier.fillMaxWidth().padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+
+            dailyAyah != null -> {
+                Text(
+                    dailyAyah.arabicText,
+                    fontFamily = LocalArabicFontFamily.current,
+                    fontSize = 24.sp,
+                    lineHeight = 46.sp,
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    dailyAyah.translationText,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "${localizedSurahName(dailyAyah.surahNumber, dailyAyah.surahName, appLanguage)} ${dailyAyah.numberInSurah}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { onOpenSurah(dailyAyah.surahNumber, dailyAyah.numberInSurah) },
+                )
+            }
+
+            else -> Text(strings.dailyAyahError)
+        }
+        if (shareDaily) {
+            dailyAyah?.let { daily ->
+                AyahShareSheet(data = daily.toShareData(appLanguage), onDismiss = onDismissShare)
             }
         }
     }
