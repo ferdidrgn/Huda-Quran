@@ -361,6 +361,15 @@ fun HomeScreen(
             }
         }
 
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(5) {
+                EsmaulHusnaSection(
+                    onOpenEsmaulHusna = onOpenEsmaulHusna,
+                    onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
+                )
+            }
+        }
+
         // Kalan bölümler, önceki göreli sırasıyla.
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(2) {
@@ -478,21 +487,6 @@ fun HomeScreen(
                             items(reciters.take(10)) { reciter ->
                                 ReciterAvatarChip(reciter, onClick = onOpenReciters)
                             }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 9. Esma'ül Hüsna
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(9) {
-                Column {
-                    SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
-                    Spacer(Modifier.height(10.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
-                            EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
                         }
                     }
                 }
@@ -716,6 +710,11 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
         )
 
+        EsmaulHusnaSection(
+            onOpenEsmaulHusna = onOpenEsmaulHusna,
+            onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
+        )
+
         WebLessonCarousel(strings = strings, onOpenLesson = onOpenLesson)
 
         WebContinueSection(
@@ -736,16 +735,6 @@ private fun WebHomeContent(
             onOpenSurah = onOpenSurah,
             onOpenSectionDetail = onOpenSectionDetail,
         )
-
-        Column {
-            SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
-            Spacer(Modifier.height(10.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
-                    EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
-                }
-            }
-        }
 
         Column {
             SectionHeader(strings.discoverQuranTitle)
@@ -1686,6 +1675,23 @@ private fun ReciterAvatarChip(reciter: Reciter, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+private fun EsmaulHusnaSection(
+    onOpenEsmaulHusna: () -> Unit,
+    onOpenEsmaulHusnaDetail: (Int) -> Unit,
+) {
+    val strings = LocalStrings.current
+    Column {
+        SectionHeader(strings.esmaulHusnaTitle, strings.viewAll, onOpenEsmaulHusna)
+        Spacer(Modifier.height(10.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            itemsIndexed(esmaulHusna, key = { _, esma -> esma.name }) { index, esma ->
+                EsmaChip(esma, onClick = { onOpenEsmaulHusnaDetail(index) })
+            }
+        }
     }
 }
 
