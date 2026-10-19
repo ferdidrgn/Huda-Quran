@@ -350,11 +350,11 @@ fun HomeScreen(
 
         // Namaz vakitleri. İmsak bu satırın ilk vaktidir; istenen sıra bunun hemen ardından gelir.
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(1) { PrayerWidget(prayerTimes, locationDisplayName, onOpenSettings) }
+            StaggeredEntrance(2) { PrayerWidget(prayerTimes, locationDisplayName, onOpenSettings) }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(2) {
+            StaggeredEntrance(3) {
                 FeaturedSurahsSection(
                     popularSurahs = popularSurahs,
                     loadError = loadError,
@@ -366,7 +366,7 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(3) {
+            StaggeredEntrance(4) {
                 ReadingProgressCard(
                     lastRead = lastRead,
                     lastMushafPage = lastMushafPage,
@@ -380,7 +380,7 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(4) {
+            StaggeredEntrance(5) {
                 DailyAyahSection(
                     dailyAyah = dailyAyah,
                     isLoadingDaily = isLoadingDaily,
@@ -395,7 +395,7 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(5) {
+            StaggeredEntrance(6) {
                 EsmaulHusnaSection(
                     onOpenEsmaulHusna = onOpenEsmaulHusna,
                     onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
@@ -405,7 +405,7 @@ fun HomeScreen(
 
         // Kalan bölümler, önceki göreli sırasıyla.
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(2) {
+            StaggeredEntrance(7) {
                 Column {
                     SectionHeader(strings.discoverQuranTitle)
                     Spacer(Modifier.height(8.dp))
@@ -479,9 +479,9 @@ fun HomeScreen(
             }
         }
 
-        // 4. Kur'an Detayları ve Bölümleri (Sayfalar, Manziller, Rukular, Hizb Çeyrekleri, Secde Ayetleri)
+        // Kur'an Detayları ve Bölümleri (Sayfalar, Manziller, Rukular, Hizb Çeyrekleri, Secde Ayetleri)
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(3) {
+            StaggeredEntrance(8) {
                 Column {
                     SectionHeader("Kur'an Detayları & Bölümleri")
                     Spacer(Modifier.height(8.dp))
@@ -556,7 +556,7 @@ fun HomeScreen(
             }
         }
 
-        // 8. İstenen Kural: Hafızlar (En Altın Bir Üstünde)
+        // Hafızlar
         item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(8) {
                 Column {
