@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.launch
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -65,6 +67,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     val playback = AppContainer.playbackManager
+    val scope = rememberCoroutineScope()
 
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -173,6 +176,22 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         onPreviewToggle = {
                             if (isThisPreviewing) {
                                 playback.togglePlayPause()
+                            } else if (reciter.identifier.startsWith("qf.chapter.")) {
+                                scope.launch {
+                                    runCatching {
+                                        repository.getQuranFoundationChapterAudioUrl(reciter.identifier, PREVIEW_SURAH_NUMBER)
+                                            ?: error("Sure sesi bulunamadı")
+                                    }.onSuccess { url ->
+                                        playback.playWholeSurah(
+                                            PREVIEW_SURAH_NUMBER,
+                                            PREVIEW_SURAH_NAME,
+                                            url,
+                                            reciter.identifier,
+                                        )
+                                    }.onFailure {
+                                        unavailableReciters = unavailableReciters + reciter.identifier
+                                    }
+                                }
                             } else {
                                 playback.playWholeSurah(
                                     PREVIEW_SURAH_NUMBER,

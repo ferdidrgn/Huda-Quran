@@ -1,0 +1,16 @@
+{
+  "name": "huda-quran-functions",
+  "private": true,
+  "description": "Secret-safe read-only proxy for Quran Foundation content APIs",
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions,hosting",
+    "deploy": "firebase deploy --only functions:quranFoundationProxy,hosting"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.4.0"
+  }
+}

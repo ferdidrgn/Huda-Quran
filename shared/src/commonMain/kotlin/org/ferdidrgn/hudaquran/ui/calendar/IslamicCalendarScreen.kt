@@ -24,12 +24,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.ferdidrgn.hudaquran.data.local.VaktelyaCalendarEvent
+import org.ferdidrgn.hudaquran.data.local.VaktelyaCalendarRepository
+import org.ferdidrgn.hudaquran.data.local.VaktelyaCalendarSnapshot
 import org.ferdidrgn.hudaquran.data.repository.OccasionCountdown
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
@@ -52,11 +57,13 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var reloadKey by remember { mutableStateOf(0) }
+    var sourceSnapshot by remember { mutableStateOf<VaktelyaCalendarSnapshot?>(null) }
 
     LaunchedEffect(reloadKey) {
         isLoading = true
         loadError = false
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        sourceSnapshot = VaktelyaCalendarRepository.getUpcomingEvents(today)
         runCatching { prayerRepository.getUpcomingIslamicOccasions(today) }
             .onSuccess { occasions = it }
             .onFailure { loadError = true }
@@ -74,13 +81,32 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 
         when {
             isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            (loadError || occasions.isEmpty()) && !sourceSnapshot?.events.isNullOrEmpty() -> {
+                val snapshot = sourceSnapshot!!
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    item(key = "calendar_snapshot") {
+                        Text(
+                            "${snapshot.region} · ${snapshot.checkedOn.dayOfMonth}.${snapshot.checkedOn.monthNumber}.${snapshot.checkedOn.year}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                    }
+                    itemsIndexed(snapshot.events, key = { _, event -> "${event.date}-${event.title}" }) { index, event ->
+                        StaggeredEntrance(index) { VerifiedEventRow(event) }
+                    }
+                    item(key = "calendar_retry") {
+                        Button(onClick = { reloadKey++ }, modifier = Modifier.fillMaxWidth()) { Text(strings.retry) }
+                    }
+                    item(key = "site_footer") { SiteFooter() }
+                }
+            }
             loadError || occasions.isEmpty() -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        strings.serverUnreachable,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center,
-                    )
+                    Text(strings.serverUnreachable, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(14.dp))
                     Button(onClick = { reloadKey++ }) { Text(strings.retry) }
                 }
@@ -105,6 +131,27 @@ fun IslamicCalendarScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             }
         }
     }
+    }
+}
+
+@Composable
+private fun VerifiedEventRow(event: VaktelyaCalendarEvent) {
+    val uriHandler = LocalUriHandler.current
+    GlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { runCatching { uriHandler.openUri(event.sourceUrl) } },
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "${event.date.dayOfMonth}.${event.date.monthNumber}.${event.date.year}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text("Diyanet", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

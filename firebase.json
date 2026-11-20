@@ -1,4 +1,8 @@
 {
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
   "hosting": {
     "site": "hudaquran",
     "public": "webApp/build/dist/wasmJs/productionExecutable",
@@ -7,6 +11,13 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/api/qf/**",
+        "function": {
+          "functionId": "quranFoundationProxy",
+          "region": "us-central1"
+        }
+      },
       { "source": "/mushaf", "destination": "/mushaf.html" },
       { "source": "/hadith", "destination": "/hadith.html" },
       { "source": "/tafsir", "destination": "/tafsir.html" },

@@ -6,9 +6,19 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.content
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.ferdidrgn.hudaquran.data.local.QuranCache
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
+import org.ferdidrgn.hudaquran.data.remote.QuranFoundationApi
+import org.ferdidrgn.hudaquran.data.remote.QuranFoundationProxyConfig
 import org.ferdidrgn.hudaquran.data.remote.QuranpediaApi
 import org.ferdidrgn.hudaquran.data.remote.normalizeContentLanguageCode
 import org.ferdidrgn.hudaquran.data.remote.TurkishQuranApi
@@ -43,6 +53,9 @@ data class DailyAyah(
 class QuranRepository(
     private val api: QuranApi = QuranApi(),
     private val turkishApi: TurkishQuranApi = TurkishQuranApi(),
+    private val quranFoundation: QuranFoundationApi = QuranFoundationApi(
+        QuranFoundationProxyConfig("https://hudaquran.web.app/api/qf"),
+    ),
     private val quranpediaApi: QuranpediaApi = QuranpediaApi(),
     private val cache: QuranCache = QuranCache(),
 ) {
@@ -267,8 +280,35 @@ class QuranRepository(
                 }.awaitAll().filterNotNull()
             }
         }
-        cachedReciters = loaded
-        return loaded
+        // Chapter-reciter IDs and ayah-by-ayah IDs have different audio URL formats. Keep
+        // QF chapter reciters explicitly tagged so the UI resolves their chapter audio endpoint.
+        val chapterReciters = withTimeoutOrNull(2_500L) {
+            runCatching {
+                val payload = quranFoundation.chapterReciters("tr")
+                (payload["reciters"] as? JsonArray).orEmpty().mapNotNull { item ->
+                    val reciter = item as? JsonObject ?: return@mapNotNull null
+                    val id = (reciter["id"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
+                    val translatedName = (reciter["translated_name"] as? JsonObject)?.get("name")
+                        ?.jsonPrimitive?.content
+                    val baseName = translatedName?.takeIf(String::isNotBlank)
+                        ?: reciter["name"]?.jsonPrimitive?.content?.takeIf(String::isNotBlank)
+                        ?: return@mapNotNull null
+                    val style = (reciter["style"] as? JsonObject)?.get("name")?.jsonPrimitive?.content
+                    Reciter("qf.chapter.$id", listOfNotNull(baseName, style?.takeIf(String::isNotBlank)).joinToString(" · "))
+                }
+            }.getOrDefault(emptyList())
+        }.orEmpty()
+        val combined = (loaded + chapterReciters).distinctBy(Reciter::identifier)
+        cachedReciters = combined
+        return combined
+    }
+
+    suspend fun getQuranFoundationChapterAudioUrl(reciterIdentifier: String, chapter: Int): String? {
+        val id = reciterIdentifier.removePrefix("qf.chapter.").toIntOrNull() ?: return null
+        if (chapter !in 1..114) return null
+        val payload = quranFoundation.chapterAudio(id, chapter)
+        return (payload["audio_file"] as? JsonObject)?.get("audio_url")?.jsonPrimitive?.content
+            ?: payload["audio_file"]?.jsonPrimitive?.content
     }
 
     suspend fun getTranslations(languageCode: String? = null): List<Translation> {
