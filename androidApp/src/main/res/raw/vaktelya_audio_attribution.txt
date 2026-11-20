@@ -1,0 +1,3 @@
+Notification and adhan preview sounds are carried from the user-supplied Vaktelya Pro 1.4.1 APK.
+Original package: com.vaktelya.pro, version 1.4.1.
+Review the original package's license and attribution terms before publishing a release build.

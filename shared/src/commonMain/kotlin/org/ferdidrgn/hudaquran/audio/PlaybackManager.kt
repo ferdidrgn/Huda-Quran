@@ -21,9 +21,6 @@ import org.ferdidrgn.hudaquran.domain.model.TOTAL_MUSHAF_PAGES
 private const val LOADING_TIMEOUT_MS = 20_000L
 
 /** `/quran/audio/128/ar.x/1.mp3` or `/quran/audio-surah/128/ar.x/1.mp3` on the Islamic Network CDN. */
-private val CDN_BITRATE = Regex("""(/quran/audio(?:-surah)?/)(\d+)(/)""")
-private val FALLBACK_BITRATES = listOf(128, 64, 192, 48, 40, 32)
-
 /**
  * Pages a page-synced recitation may turn on its own before it stops at the start of the next
  * one — the listener may have fallen asleep or forgotten it on. Any user interaction resets it.
@@ -37,6 +34,12 @@ private const val PAGE_TURN_PAUSE_MS = 900L
 private const val SURAH_CHANGE_PAUSE_MS = 600L
 
 enum class PlaybackMode { AYAH_QUEUE, WHOLE_SURAH }
+
+data class PlaybackFailure(val reciterId: String?, val url: String)
+
+/** Pure guard for the loading watchdog; it must not fail a track that has already changed. */
+internal fun isStuckLoadingTrack(state: PlaybackState, stuckUrl: String?): Boolean =
+    stuckUrl != null && state.status == PlaybackStatus.LOADING && state.currentUrl == stuckUrl
 
 /**
  * A recitation that follows the mushaf page by page: the queue starts with one page's ayahs and
@@ -95,6 +98,9 @@ class PlaybackManager(private val player: AudioPlayer) {
 
     val playerState: StateFlow<PlaybackState> = player.state
 
+    private val _lastFailure = MutableStateFlow<PlaybackFailure?>(null)
+    val lastFailure: StateFlow<PlaybackFailure?> = _lastFailure.asStateFlow()
+
     private val _repeatOne = MutableStateFlow(false)
     val repeatOne: StateFlow<Boolean> = _repeatOne.asStateFlow()
 
@@ -118,6 +124,9 @@ class PlaybackManager(private val player: AudioPlayer) {
     private var sessionCounter = 0L
     private var pageLoader: (suspend (Int) -> List<Ayah>)? = null
     private var prefetch: Pair<Int, Deferred<List<Ayah>?>>? = null
+    // The page loader captures the selected reciter. Never reuse a result prefetched for a
+    // different reciter when the user changes it while a mushaf session is alive.
+    private var prefetchReciterId: String? = null
     private var pageLoadJob: Job? = null
     private var pendingTransition: Job? = null
     private val chime: PageTurnChime by lazy { PageTurnChime() }
@@ -135,10 +144,8 @@ class PlaybackManager(private val player: AudioPlayer) {
                         delay(LOADING_TIMEOUT_MS)
                         // Still loading the same track after the timeout: the stream never opened, so
                         // stop and clear it rather than leave the UI spinning forever with no way to retry.
-                        if (playerState.value.status == PlaybackStatus.LOADING && playerState.value.currentUrl == stuckUrl) {
-                            cancelFlowJobs()
-                            player.stop()
-                            _nowPlaying.value = null
+                        if (isStuckLoadingTrack(playerState.value, stuckUrl)) {
+                            failPlayback(stuckUrl!!, _nowPlaying.value?.reciterId)
                         }
                     }
                 } else {
@@ -157,16 +164,32 @@ class PlaybackManager(private val player: AudioPlayer) {
      * failed. On an error, try the same file at the next bitrate before giving up.
      */
     private fun retryAtAnotherBitrate(url: String?) {
-        if (url == null || _nowPlaying.value == null) return
-        val match = CDN_BITRATE.find(url) ?: return
-        val current = match.groupValues[2].toIntOrNull() ?: return
-        val key = url.replaceRange(match.groups[2]!!.range, "{b}")
-        val tried = triedBitrates.getOrPut(key) { mutableSetOf() }.apply { add(current) }
-        val next = FALLBACK_BITRATES.firstOrNull { it !in tried } ?: run {
-            triedBitrates.remove(key)
+        val currentPlaying = _nowPlaying.value
+        if (url == null || currentPlaying == null) return
+        val current = audioBitrate(url) ?: run {
+            failPlayback(url, currentPlaying.reciterId)
             return
         }
-        player.play(url.replaceRange(match.groups[2]!!.range, next.toString()))
+        val key = url.replace(Regex("""(/quran/audio(?:-surah)?/)(\d+)(/)"""), "$1{b}$3")
+        val tried = triedBitrates.getOrPut(key) { mutableSetOf() }.apply { add(current) }
+        val next = nextAudioBitrateUrl(url, tried) ?: run {
+            triedBitrates.remove(key)
+            failPlayback(url, currentPlaying.reciterId)
+            return
+        }
+        tried.add(next.second)
+        player.play(next.first)
+    }
+
+    private fun failPlayback(url: String, reciterId: String?) {
+        _lastFailure.value = PlaybackFailure(reciterId, url)
+        cancelFlowJobs()
+        player.stop()
+        _nowPlaying.value = null
+    }
+
+    fun clearLastFailure() {
+        _lastFailure.value = null
     }
 
     fun currentAyah(): Ayah? {
@@ -253,6 +276,7 @@ class PlaybackManager(private val player: AudioPlayer) {
 
     fun playWholeSurah(surahNumber: Int, surahName: String, url: String, reciterId: String) {
         cancelFlowJobs()
+        _lastFailure.value = null
         _nowPlaying.value = NowPlaying(PlaybackMode.WHOLE_SURAH, emptyList(), 0, surahNumber, surahName, reciterId)
         player.play(url)
         if (_speed.value != 1f) player.setPlaybackSpeed(_speed.value)
@@ -406,7 +430,7 @@ class PlaybackManager(private val player: AudioPlayer) {
         // Fetch the following page while the last ayahs of this one are recited, so the turn is seamless.
         if (updated.pageFlow != null && index >= updated.queue.size - 2) {
             val nextPage = updated.queue.last().page + 1
-            if (nextPage <= TOTAL_MUSHAF_PAGES) appendWhenLoaded(updated.pageFlow.session, nextPage)
+            if (nextPage <= TOTAL_MUSHAF_PAGES) appendWhenLoaded(updated.pageFlow.session, nextPage, updated.reciterId)
         }
     }
 
@@ -480,7 +504,7 @@ class PlaybackManager(private val player: AudioPlayer) {
         }
         pageLoadJob?.cancel()
         pageLoadJob = scope.launch {
-            val ayahs = prefetchPage(nextPage).await()
+            val ayahs = prefetchPage(nextPage, current.reciterId).await()
             val latest = _nowPlaying.value
             if (latest?.pageFlow?.session != flow.session) return@launch
             if (ayahs.isNullOrEmpty()) {
@@ -505,8 +529,8 @@ class PlaybackManager(private val player: AudioPlayer) {
         }
     }
 
-    private fun appendWhenLoaded(session: Long, page: Int) {
-        val deferred = prefetchPage(page)
+    private fun appendWhenLoaded(session: Long, page: Int, reciterId: String) {
+        val deferred = prefetchPage(page, reciterId)
         scope.launch {
             val ayahs = deferred.await()
             if (ayahs.isNullOrEmpty()) {
@@ -526,16 +550,18 @@ class PlaybackManager(private val player: AudioPlayer) {
         return if (fresh.isEmpty()) np else np.copy(queue = np.queue + fresh)
     }
 
-    private fun prefetchPage(page: Int): Deferred<List<Ayah>?> {
-        // Reuse an in-flight or successful load of the same page; a failed one was cleared by its awaiter.
+    private fun prefetchPage(page: Int, reciterId: String): Deferred<List<Ayah>?> {
+        // Reuse only an in-flight or successful load for the same page and reciter. A failed one
+        // is cleared by its awaiter.
         prefetch?.let { (cachedPage, deferred) ->
-            if (cachedPage == page && !deferred.isCancelled) return deferred
+            if (cachedPage == page && prefetchReciterId == reciterId && !deferred.isCancelled) return deferred
         }
         val loader = pageLoader
         val deferred = scope.async {
             if (loader == null) null else runCatching { loader(page) }.getOrNull()
         }
         prefetch = page to deferred
+        prefetchReciterId = reciterId
         return deferred
     }
 
@@ -561,5 +587,6 @@ class PlaybackManager(private val player: AudioPlayer) {
         cancelTransition()
         prefetch?.second?.cancel()
         prefetch = null
+        prefetchReciterId = null
     }
 }

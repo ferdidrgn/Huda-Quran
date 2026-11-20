@@ -7,6 +7,8 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.snap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AutoStories
@@ -64,6 +67,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -72,12 +78,14 @@ import org.ferdidrgn.hudaquran.billing.BillingManager
 import org.ferdidrgn.hudaquran.billing.BillingProduct
 import org.ferdidrgn.hudaquran.billing.PurchaseOutcome
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
+import org.ferdidrgn.hudaquran.data.local.PrayerNotificationSound
 import org.ferdidrgn.hudaquran.data.local.TextSizeOption
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.data.local.appVersionName
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.PrayerLocations
 import org.ferdidrgn.hudaquran.notifications.ReminderPlanner
+import org.ferdidrgn.hudaquran.notifications.PrayerNotificationScheduler
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
@@ -101,12 +109,19 @@ fun SettingsScreen(
     onOpenZakatCalculator: () -> Unit,
     onOpenDuaList: () -> Unit,
     onOpenIslamicCalendar: () -> Unit,
+    onOpenOfflineContent: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
     val prayerRepository = AppContainer.prayerRepository
     val selectedTheme by preferences.themeMode.collectAsState()
     val selectedTextSize by preferences.textSize.collectAsState()
+    val elderlyProfile by preferences.elderlyProfile.collectAsState()
+    val highContrast by preferences.highContrast.collectAsState()
+    val largeTouchTargets by preferences.largeTouchTargets.collectAsState()
+    val reducedMotion by preferences.reducedMotion.collectAsState()
+    val showMushafTranslation by preferences.mushafShowTranslation.collectAsState()
+    val showSurahTranslation by preferences.surahShowTranslation.collectAsState()
     val notificationsEnabled by preferences.prayerNotificationsEnabled.collectAsState()
     val appLanguage by preferences.appLanguage.collectAsState()
     val strings = LocalStrings.current
@@ -143,11 +158,15 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        val reciter = repository.getReciters().firstOrNull { it.identifier == preferences.selectedReciter }
+        val reciter = runCatching { repository.getReciters() }
+            .getOrNull()
+            ?.firstOrNull { it.identifier == preferences.selectedReciter }
         if (reciter != null) reciterName = reciter.displayName
-        val translation = repository.getTranslations().firstOrNull { it.identifier == preferences.selectedTranslation }
+        val translation = runCatching { repository.getTranslations() }
+            .getOrNull()
+            ?.firstOrNull { it.identifier == preferences.selectedTranslation }
         if (translation != null) translationName = "${translation.displayName} (${translation.language})"
-        val tafsirs = repository.getTafsirs()
+        val tafsirs = runCatching { repository.getTafsirs() }.getOrNull().orEmpty()
         val tafsir = tafsirs.firstOrNull { it.identifier == preferences.selectedTafsir }
         tafsirName = when {
             tafsir != null -> "${tafsir.displayName} (${tafsir.language})"
@@ -159,6 +178,9 @@ fun SettingsScreen(
     val reminderLead by preferences.prayerReminderLeadMinutes.collectAsState()
     val reminderAtTime by preferences.prayerAtTimeEnabled.collectAsState()
     val occasionReminders by preferences.occasionRemindersEnabled.collectAsState()
+    val notificationSound by preferences.prayerNotificationSound.collectAsState()
+    val notificationVibration by preferences.prayerNotificationVibration.collectAsState()
+    val bootReschedule by preferences.prayerBootReschedule.collectAsState()
 
     fun rescheduleNotifications() {
         scope.launch { ReminderPlanner.reschedule() }
@@ -195,6 +217,44 @@ fun SettingsScreen(
             ThemeSegmentedControl(selected = selectedTheme, onSelect = { preferences.setThemeMode(it) })
         }
 
+        SectionTitle(strings.elderlyProfileTitle)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            ReminderSwitchRow(strings.elderlyProfileTitle, elderlyProfile) {
+                preferences.setElderlyProfile(it)
+            }
+            Text(
+                strings.elderlyProfileSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            ReminderSwitchRow(strings.highContrastTitle, highContrast) {
+                preferences.setHighContrast(it)
+            }
+            Text(
+                strings.highContrastSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+            ReminderSwitchRow(strings.largeTouchTargetsTitle, largeTouchTargets) {
+                preferences.setLargeTouchTargets(it)
+            }
+            Text(
+                strings.largeTouchTargetsSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+            ReminderSwitchRow(strings.reducedMotionTitle, reducedMotion) {
+                preferences.setReducedMotion(it)
+            }
+            Text(
+                strings.reducedMotionSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+        }
+
         SectionTitle(strings.textSizeLabel)
         GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
@@ -219,6 +279,22 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 modifier = Modifier.padding(top = 4.dp),
             )
+        }
+
+        SectionTitle(strings.mushafModeLabel)
+        GlassSurface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            ReminderSwitchRow("${strings.mushafModeLabel}: ${strings.toggleTranslationLabel}", showMushafTranslation) {
+                preferences.setMushafShowTranslation(it)
+            }
+            Text(
+                strings.mushafStartSubtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            ReminderSwitchRow("${strings.surahFallback}: ${strings.toggleTranslationLabel}", showSurahTranslation) {
+                preferences.setSurahShowTranslation(it)
+            }
         }
 
         if (!preferences.isAdFree()) {
@@ -281,6 +357,55 @@ fun SettingsScreen(
                     preferences.setOccasionRemindersEnabled(it)
                     rescheduleNotifications()
                 }
+                Text("Bildirim sesi", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf(
+                        PrayerNotificationSound.SILENT to "Sessiz",
+                        PrayerNotificationSound.DEFAULT to "Varsayılan",
+                        PrayerNotificationSound.ADHAN_1 to "Ezan 1",
+                        PrayerNotificationSound.ADHAN_2 to "Ezan 2",
+                        PrayerNotificationSound.ADHAN_3 to "Ezan 3",
+                        PrayerNotificationSound.BEEP to "Kısa bip",
+                        PrayerNotificationSound.DOUBLE_BEEP to "Çift bip",
+                    ).forEach { (sound, label) ->
+                        FilterPill(label = label, selected = notificationSound == sound, onClick = {
+                            preferences.setPrayerNotificationSound(sound)
+                            rescheduleNotifications()
+                        })
+                    }
+                }
+                ReminderSwitchRow("Titreşim", notificationVibration) {
+                    preferences.setPrayerNotificationVibration(it)
+                    rescheduleNotifications()
+                }
+                ReminderSwitchRow("Telefon yeniden başlayınca bildirimleri kur", bootReschedule) {
+                    preferences.setPrayerBootReschedule(it)
+                }
+                Text("Vakit bazlı bildirimler", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 12.dp))
+                Text(
+                    "İstemediğin vakitleri kapatabilirsin.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                )
+                listOf("Fajr" to "Sabah", "Dhuhr" to "Öğle", "Asr" to "İkindi", "Maghrib" to "Akşam", "Isha" to "Yatsı")
+                    .forEach { (key, label) ->
+                        ReminderSwitchRow(label, preferences.isPrayerEnabled(key)) { enabled ->
+                            preferences.setPrayerEnabled(key, enabled)
+                            rescheduleNotifications()
+                        }
+                    }
+                OutlinedButton(
+                    onClick = {
+                        PrayerNotificationScheduler().preview(
+                            "Huda Quran bildirim önizlemesi",
+                            "Bildirim sesi ve titreşim ayarların böyle çalışacak.",
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                ) { Text("Test bildirimi gönder") }
                 Text(
                     strings.notificationSoundHint,
                     style = MaterialTheme.typography.bodySmall,
@@ -426,6 +551,13 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(4.dp))
             NavigationRow(
+                title = strings.offlineContentTitle,
+                value = strings.offlineContentSubtitle,
+                icon = Icons.Outlined.Description,
+                onClick = onOpenOfflineContent,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            NavigationRow(
                 title = strings.hacKuraLabel,
                 value = "hacumre.diyanet.gov.tr",
                 icon = Icons.Outlined.Language,
@@ -460,6 +592,7 @@ private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .selectableGroup()
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(4.dp),
@@ -477,7 +610,12 @@ private fun ThemeSegmentedControl(selected: ThemeMode, onSelect: (ThemeMode) -> 
                             .weight(1f)
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                            .clickable { onSelect(mode) }
+                            .selectable(
+                                selected = isSelected,
+                                onClick = { onSelect(mode) },
+                                role = Role.RadioButton,
+                            )
+                            .heightIn(min = 48.dp)
                             .padding(vertical = 10.dp),
                         horizontalArrangement = Arrangement.Center,
                     ) {
@@ -505,6 +643,7 @@ private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSi
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .selectableGroup()
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(4.dp),
@@ -517,7 +656,12 @@ private fun TextSizeSegmentedControl(selected: TextSizeOption, onSelect: (TextSi
                     .weight(1f)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onSelect(option) }
+                    .selectable(
+                        selected = isSelected,
+                        onClick = { onSelect(option) },
+                        role = Role.RadioButton,
+                    )
+                    .heightIn(min = 48.dp)
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
@@ -546,11 +690,13 @@ private fun SectionTitle(text: String) {
  */
 @Composable
 private fun NavigationRow(title: String, value: String, onClick: () -> Unit, icon: ImageVector? = null) {
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
+    val reducedMotion by AppContainer.preferences.reducedMotion.collectAsState()
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.97f else 1f,
-        animationSpec = tween(120),
+        animationSpec = if (reducedMotion) snap() else tween(120),
         label = "settingsRowScale",
     )
     Row(
@@ -564,8 +710,8 @@ private fun NavigationRow(title: String, value: String, onClick: () -> Unit, ico
             .hoverable(interactionSource)
             .pointerHoverIcon(PointerIcon.Hand)
             .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
-            .heightIn(min = 48.dp)
-            .padding(horizontal = 4.dp, vertical = 10.dp),
+            .heightIn(min = if (largeTouchTargets) 64.dp else 48.dp)
+            .padding(horizontal = 4.dp, vertical = if (largeTouchTargets) 14.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
@@ -629,14 +775,19 @@ private fun formatDate(epochMillis: Long): String {
 
 @Composable
 private fun ReminderSwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = if (largeTouchTargets) 64.dp else 48.dp)
+            .padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Switch(
             checked = checked,
             onCheckedChange = onChange,
+            modifier = Modifier.semantics { contentDescription = label },
             colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
         )
     }

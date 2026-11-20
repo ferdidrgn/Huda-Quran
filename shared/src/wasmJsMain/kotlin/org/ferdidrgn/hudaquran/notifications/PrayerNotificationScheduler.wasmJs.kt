@@ -4,4 +4,5 @@ package org.ferdidrgn.hudaquran.notifications
 actual class PrayerNotificationScheduler actual constructor() {
     actual fun schedule(reminders: List<Reminder>) = Unit
     actual fun cancelAll() = Unit
+    actual fun preview(title: String, body: String) = Unit
 }

@@ -55,15 +55,16 @@ fun SearchScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onOpenSurah:
     var status by remember { mutableStateOf(SearchStatus.IDLE) }
     var retryKey by remember { mutableStateOf(0) }
 
-    LaunchedEffect(query, retryKey) {
-        if (query.isBlank()) {
+    val normalizedQuery = query.trim()
+    LaunchedEffect(normalizedQuery, retryKey) {
+        if (normalizedQuery.isBlank()) {
             status = SearchStatus.IDLE
             results = emptyList()
             return@LaunchedEffect
         }
         delay(400)
         status = SearchStatus.LOADING
-        runCatching { repository.searchQuran(query.trim(), preferences.selectedTranslation) }
+        runCatching { repository.searchQuran(normalizedQuery, preferences.selectedTranslation) }
             .onSuccess {
                 results = it
                 status = SearchStatus.DONE

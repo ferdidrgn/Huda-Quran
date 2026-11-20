@@ -41,7 +41,12 @@ actual class AudioPlayer actual constructor() {
         element.addEventListener("timeupdate", { update() })
         element.addEventListener("loadedmetadata", { update() })
         audio = element
-        element.play()
+        // play() is promise-based in browsers. Autoplay policy, a revoked URL, or a
+        // transient network failure can reject it without dispatching a useful media event;
+        // otherwise the shared player remains stuck in LOADING until its watchdog fires.
+        element.play().catch {
+            update(PlaybackStatus.ERROR)
+        }
     }
 
     actual fun pause() {
@@ -49,7 +54,9 @@ actual class AudioPlayer actual constructor() {
     }
 
     actual fun resume() {
-        audio?.play()
+        audio?.play()?.catch {
+            if (audio != null) _state.value = _state.value.copy(status = PlaybackStatus.ERROR)
+        }
     }
 
     actual fun stop() {

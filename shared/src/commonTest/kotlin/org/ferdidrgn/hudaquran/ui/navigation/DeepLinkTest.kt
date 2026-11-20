@@ -45,6 +45,11 @@ class DeepLinkTest {
         assertEquals(Screen.ReciterPicker, DeepLink.parse("/reciters"))
         assertEquals(Screen.SajdaAyahs, DeepLink.parse("/sajda"))
         assertEquals(Screen.Qibla, DeepLink.parse("/qibla"))
+        assertEquals(Screen.DuaList, DeepLink.parse("/dua"))
+        assertEquals(Screen.DuaList, DeepLink.parse("/duas"))
+        assertEquals(Screen.HadithList, DeepLink.parse("/hadith"))
+        assertEquals(Screen.Settings, DeepLink.parse("/tafsir"))
+        assertEquals(Screen.Home, DeepLink.parse("/prayer"))
     }
 
     @Test
@@ -111,5 +116,29 @@ class DeepLinkTest {
     @Test
     fun buildLinkUsesSingleSlashOpaqueForm() {
         assertEquals("hudaquran:/surah/2/5", DeepLink.buildLink(Screen.SurahDetail(2, 5)))
+    }
+
+    @Test
+    fun progressFeatureRoutesRoundTrip() {
+        val screens = listOf(
+            Screen.WorshipTracker,
+            Screen.KhatmJourney,
+            Screen.Memorization,
+            Screen.StudentMode,
+            Screen.OfflineContent,
+            Screen.TravelMode,
+            Screen.PostPrayerDhikr,
+        )
+        screens.forEach { screen ->
+            assertEquals(screen, DeepLink.parse(DeepLink.toPath(screen)))
+            assertEquals(screen, DeepLink.parse(DeepLink.buildLink(screen)))
+        }
+    }
+
+    @Test
+    fun travelAliasesParseToTravelMode() {
+        assertEquals(Screen.TravelMode, DeepLink.parse("/travel"))
+        assertEquals(Screen.TravelMode, DeepLink.parse("hudaquran:/seferi"))
+        assertEquals("/travel", DeepLink.toPath(Screen.TravelMode))
     }
 }

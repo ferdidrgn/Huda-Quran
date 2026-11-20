@@ -30,6 +30,7 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
+    testImplementation(libs.junit)
 }
 
 // Release signing, sourced from environment variables so the same keystore you already use in

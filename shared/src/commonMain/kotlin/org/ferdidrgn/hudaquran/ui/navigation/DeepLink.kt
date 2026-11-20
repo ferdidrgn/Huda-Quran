@@ -58,8 +58,25 @@ object DeepLink {
                 if (index != null) Screen.EsmaulHusnaDetail(index) else Screen.EsmaulHusnaList
             }
             "zakat" -> Screen.ZakatCalculator
-            "dua" -> Screen.DuaList
+            "dua", "duas" -> Screen.DuaList
+            // Public web content pages use these aliases when an older hash link is opened.
+            // They intentionally land on the nearest useful in-app surface instead of Home.
+            "tafsir" -> Screen.Settings
+            "prayer" -> Screen.Home
+            "about" -> Screen.Home
+            // Kept in sync with the Android dhikr widget's hudaquran:/dhikr target.
+            "dhikr", "zikr", "tesbih" -> Screen.PostPrayerDhikr
+            "hadith" -> {
+                val id = segments.getOrNull(1)
+                if (id.isNullOrBlank()) Screen.HadithList else Screen.HadithDetail(id)
+            }
             "islamic-calendar" -> Screen.IslamicCalendar
+            "tracker", "worship" -> Screen.WorshipTracker
+            "khatm" -> Screen.KhatmJourney
+            "memorization", "ezber" -> Screen.Memorization
+            "student" -> Screen.StudentMode
+            "offline" -> Screen.OfflineContent
+            "travel", "seferi" -> Screen.TravelMode
             else -> null
         }
     }
@@ -130,6 +147,15 @@ object DeepLink {
         is Screen.EsmaulHusnaDetail -> "/esma-ul-husna/${screen.index}"
         is Screen.ZakatCalculator -> "/zakat"
         is Screen.DuaList -> "/dua"
+        is Screen.PostPrayerDhikr -> "/dhikr"
+        is Screen.HadithList -> "/hadith"
+        is Screen.HadithDetail -> "/hadith/${screen.id}"
         is Screen.IslamicCalendar -> "/islamic-calendar"
+        is Screen.WorshipTracker -> "/tracker"
+        is Screen.KhatmJourney -> "/khatm"
+        is Screen.Memorization -> "/memorization"
+        is Screen.StudentMode -> "/student"
+        is Screen.OfflineContent -> "/offline"
+        is Screen.TravelMode -> "/travel"
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.net.Uri
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
@@ -15,6 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.DrawableCompat
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
+import org.ferdidrgn.hudaquran.audio.NowPlaying
+import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -138,4 +141,32 @@ internal fun Context.openAppPendingIntent(requestCode: Int = 0): PendingIntent? 
         addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
     } ?: return null
     return PendingIntent.getActivity(this, requestCode, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+}
+
+/**
+ * Opens the item represented by the active Android media session.  The media notification and
+ * lock-screen card must not always send the reader to Home: when the current item is an ayah the
+ * user should return to that exact surah/ayah, while a whole-surah stream should return to its
+ * surah.  This is derived only from the real PlaybackManager snapshot, never from widget state.
+ */
+internal fun Context.openPlaybackPendingIntent(nowPlaying: NowPlaying, requestCode: Int = 1001): PendingIntent? {
+    val path = if (nowPlaying.mode == PlaybackMode.AYAH_QUEUE) {
+        nowPlaying.queue.getOrNull(nowPlaying.currentIndex)?.let { ayah ->
+            "hudaquran:/surah/${ayah.surahNumber}/${ayah.numberInSurah}"
+        }
+    } else {
+        "hudaquran:/surah/${nowPlaying.surahNumber}"
+    } ?: "hudaquran:/surah/${nowPlaying.surahNumber}"
+
+    val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+        action = Intent.ACTION_VIEW
+        data = Uri.parse(path)
+        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    } ?: return null
+    return PendingIntent.getActivity(
+        this,
+        requestCode,
+        launch,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
 }

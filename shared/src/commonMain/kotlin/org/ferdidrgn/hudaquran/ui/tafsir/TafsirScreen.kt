@@ -15,6 +15,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.FilterChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,16 +36,25 @@ import org.ferdidrgn.hudaquran.ui.components.IslamicMotifBackground
 import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.domain.model.Tafsir
+
+private enum class AyahStudySection { MEAL, TAFSIR, NUZUL }
+
+private fun AyahStudySection.label(): String = when (this) {
+    AyahStudySection.MEAL -> "Meal"
+    AyahStudySection.TAFSIR -> "Tefsir"
+    AyahStudySection.NUZUL -> "İniş sebebi"
+}
 
 /**
  * Shows a single tafsir edition's commentary for one ayah. The tafsir edition list and text both
- * come from the same AlQuran Cloud API the rest of the app already uses (type=tafsir editions,
- * fetched the same way as reciters/translations) — no new API or key needed. If the reader hasn't
- * picked a tafsir yet, the first available edition is auto-selected and remembered.
+ * come from the provider-backed catalogue. If the reader hasn't picked a tafsir yet, the first
+ * Turkish-first available edition is auto-selected and remembered.
  */
 @Composable
 fun TafsirScreen(
     globalAyahNumber: Int,
+    surahNumber: Int,
     surahName: String,
     numberInSurah: Int,
     arabicText: String,
@@ -57,27 +67,33 @@ fun TafsirScreen(
     val strings = LocalStrings.current
 
     var tafsirEditionLabel by remember { mutableStateOf("") }
+    var tafsirInfo by remember { mutableStateOf<Tafsir?>(null) }
     var tafsirText by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var reloadKey by remember { mutableStateOf(0) }
+    var mealText by remember { mutableStateOf("") }
+    var selectedSection by remember { mutableStateOf(AyahStudySection.MEAL) }
 
     LaunchedEffect(globalAyahNumber, preferences.selectedTafsir, reloadKey) {
         isLoading = true
         loadError = false
         runCatching {
+            mealText = repository.getMealForAyah(globalAyahNumber, preferences.selectedTranslation)
             var edition = preferences.selectedTafsir
             if (edition.isBlank()) {
                 val editions = repository.getTafsirs()
                 val first = editions.firstOrNull() ?: throw IllegalStateException("No tafsir editions available")
                 edition = first.identifier
                 preferences.selectedTafsir = edition
+                tafsirInfo = first
                 tafsirEditionLabel = "${first.displayName} (${first.language})"
             } else {
                 val match = repository.getTafsirs().firstOrNull { it.identifier == edition }
+                tafsirInfo = match
                 tafsirEditionLabel = match?.let { "${it.displayName} (${it.language})" } ?: edition
             }
-            repository.getTafsirForAyah(globalAyahNumber, edition)
+            repository.getTafsirForAyah(globalAyahNumber, edition, surahNumber, numberInSurah)
         }.onSuccess { text ->
             if (text.isBlank()) loadError = true else tafsirText = text
         }.onFailure { loadError = true }
@@ -128,6 +144,40 @@ fun TafsirScreen(
                 OutlinedButton(onClick = onChangeTafsir) { Text(strings.changeTafsirLabel) }
             }
 
+            tafsirInfo?.let { info ->
+                GlassSurface(modifier = Modifier.fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp)) {
+                    Text(
+                        "Kaynak: ${info.source ?: "API kataloğu"}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    info.author?.let { Text("Yazar: $it", style = MaterialTheme.typography.bodySmall) }
+                    Text(
+                        "Lisans: ${info.licenseNotice ?: "Sağlayıcı kataloğunda belirtilmedi"}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    info.sourceUrl?.let {
+                        Text(
+                            "Kaynak adresi: $it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                AyahStudySection.entries.forEach { section ->
+                    FilterChip(
+                        selected = selectedSection == section,
+                        onClick = { selectedSection = section },
+                        label = { Text(section.label()) },
+                    )
+                }
+            }
+
             Spacer(Modifier.height(12.dp))
 
             when {
@@ -139,8 +189,22 @@ fun TafsirScreen(
                     Spacer(Modifier.height(14.dp))
                     Button(onClick = { reloadKey++ }) { Text(strings.retry) }
                 }
-                else -> GlassSurface(modifier = Modifier.fillMaxWidth()) {
-                    Text(tafsirText, style = MaterialTheme.typography.bodyLarge)
+                else -> when (selectedSection) {
+                    AyahStudySection.MEAL -> GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                        Text("Meal • ${preferences.selectedTranslation}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Text(mealText.ifBlank { "Seçili meal bu ayet için alınamadı." }, style = MaterialTheme.typography.bodyLarge)
+                    }
+                    AyahStudySection.TAFSIR -> GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                        Text("Tefsir • açıklama", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Text(tafsirText, style = MaterialTheme.typography.bodyLarge)
+                    }
+                    AyahStudySection.NUZUL -> GlassSurface(modifier = Modifier.fillMaxWidth()) {
+                        Text("İniş sebebi / bağlam", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Text("İniş sebebi, tefsirin kendisiyle aynı şey değildir. Bu ayet için seçili API kaynağında doğrulanmış ayrı bir nüzûl sebebi alanı bulunmuyor; bu nedenle burada tahminî bilgi gösterilmiyor.", style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
 
@@ -150,5 +214,5 @@ fun TafsirScreen(
             }
         }
     }
-    }
 }
+

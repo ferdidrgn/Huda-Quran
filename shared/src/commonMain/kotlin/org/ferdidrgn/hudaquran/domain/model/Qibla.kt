@@ -25,6 +25,14 @@ fun qiblaBearing(latitude: Double, longitude: Double): Double {
     return (bearingDegrees + 360.0) % 360.0
 }
 
+/** Returns no direction for malformed provider coordinates instead of displaying a false north. */
+fun safeQiblaBearing(latitude: Double?, longitude: Double?): Double? {
+    if (latitude == null || longitude == null) return null
+    if (!latitude.isFinite() || !longitude.isFinite()) return null
+    if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) return null
+    return qiblaBearing(latitude, longitude).takeIf(Double::isFinite)
+}
+
 /** The nearest of the 16 traditional Turkish compass-rose points for a bearing in degrees. */
 fun cardinalDirectionTr(bearingDegrees: Double): String {
     val points = listOf(

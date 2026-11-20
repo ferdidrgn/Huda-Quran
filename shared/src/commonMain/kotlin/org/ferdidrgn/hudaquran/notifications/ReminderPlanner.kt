@@ -81,10 +81,24 @@ internal fun prayerReminders(
     atTime: Boolean,
     strings: Strings,
     zone: TimeZone,
+    isPrayerEnabled: (String) -> Boolean = { AppContainer.preferences.isPrayerEnabled(it) },
 ): List<Reminder> = buildList {
     timings.prayers.forEachIndexed { prayerIndex, prayer ->
+        if (!isPrayerEnabled(prayer.key)) return@forEachIndexed
         val at = epochMillisOf(date, prayer.time, zone) ?: return@forEachIndexed
         val baseId = 7_000 + dayIndex * 20 + prayerIndex * 2
+        // Keep the real prayer time in the shared plan for widgets even when the user disabled
+        // the optional notification at the exact prayer time. It is data, not a notification.
+        add(
+            Reminder(
+                id = 8_000 + dayIndex * 20 + prayerIndex,
+                atEpochMillis = at,
+                title = prayer.label,
+                body = "",
+                kind = ReminderKind.PRAYER_WIDGET,
+                scheduleNotification = false,
+            ),
+        )
         if (leadMinutes > 0) {
             add(
                 Reminder(
@@ -92,6 +106,7 @@ internal fun prayerReminders(
                     atEpochMillis = at - leadMinutes * 60_000L,
                     title = strings.prayerSoonTitleTemplate.replace("{prayer}", prayer.label).replace("{n}", leadMinutes.toString()),
                     body = strings.prayerSoonBody,
+                    kind = ReminderKind.PRAYER_PRE,
                 ),
             )
         }
@@ -102,6 +117,7 @@ internal fun prayerReminders(
                     atEpochMillis = at,
                     title = strings.prayerNowTitleTemplate.replace("{prayer}", prayer.label),
                     body = strings.prayerNowBody,
+                    kind = ReminderKind.PRAYER_AT_TIME,
                 ),
             )
         }

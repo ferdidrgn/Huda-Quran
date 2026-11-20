@@ -28,6 +28,7 @@ import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.notifications.notificationAccentFor
 import org.ferdidrgn.hudaquran.notifications.notificationIconRes
 import org.ferdidrgn.hudaquran.notifications.openAppPendingIntent
+import org.ferdidrgn.hudaquran.notifications.openPlaybackPendingIntent
 import org.ferdidrgn.hudaquran.notifications.playbackNotificationArtwork
 import org.ferdidrgn.hudaquran.ui.localization.stringsFor
 import kotlin.math.abs
@@ -49,6 +50,9 @@ class PlaybackNotificationService : Service() {
     private var lastReportedStatus: PlaybackStatus? = null
     private var lastReportedPositionMs = 0L
     private var lastReportedAtMs = 0L
+    private var lastReportedMediaKey: String? = null
+    private var lastReportedSpeed = Float.NaN
+    private var lastSessionActivityKey: String? = null
     private val reciterNames = mutableMapOf<String, String>()
     private var cachedArtworkTheme: ThemeMode? = null
     private var cachedArtwork: Bitmap? = null
@@ -81,6 +85,10 @@ class PlaybackNotificationService : Service() {
 
         val playback = AppContainer.playbackManager
         val session = MediaSessionCompat(this, "HudaQuranSession").apply {
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS,
+            )
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() = playback.resume()
                 override fun onPause() = playback.pause()
@@ -115,6 +123,15 @@ class PlaybackNotificationService : Service() {
                     return@collect
                 }
                 updatePlaybackState(nowPlaying, state)
+                val mediaKey = mediaStateKey(nowPlaying)
+                val sessionActivityIntent = if (mediaKey != lastSessionActivityKey) {
+                    openPlaybackPendingIntent(nowPlaying)?.also {
+                        mediaSession?.setSessionActivity(it)
+                        lastSessionActivityKey = mediaKey
+                    }
+                } else {
+                    null
+                }
                 // The player reports its position several times a second; rebuilding and
                 // re-posting the foreground notification on every tick made it flicker and
                 // got it rate-limited by the system. Only rebuild when something visible changes.
@@ -123,10 +140,11 @@ class PlaybackNotificationService : Service() {
                     lastNotificationKey = key
                     val (title, artist) = describe(nowPlaying)
                     val artwork = artworkFor(themeMode)
+                    val contentIntent = sessionActivityIntent ?: openPlaybackPendingIntent(nowPlaying)
                     updateMetadata(title, artist, state.durationMs, artwork)
                     startForeground(
                         NOTIFICATION_ID,
-                        buildNotification(title, artist, nowPlaying, state.status, themeMode, artwork),
+                        buildNotification(title, artist, nowPlaying, state.status, themeMode, artwork, contentIntent),
                     )
                 }
             }
@@ -140,10 +158,21 @@ class PlaybackNotificationService : Service() {
 
     override fun onDestroy() {
         scope.cancel()
-        mediaSession?.isActive = false
-        mediaSession?.release()
+        mediaSession?.let { session ->
+            // Clear the lock-screen transport state before releasing the session; otherwise some
+            // Android System UI versions keep stale controls visible after playback is stopped.
+            session.setPlaybackState(
+                PlaybackStateCompat.Builder()
+                    .setActions(0L)
+                    .setState(PlaybackStateCompat.STATE_STOPPED, 0L, 0f)
+                    .build(),
+            )
+            session.isActive = false
+            session.release()
+        }
         mediaSession = null
-        cachedArtwork?.recycle()
+        // The notification manager / MediaSession may still hold this bitmap after the service
+        // is destroyed. Let it be collected instead of recycling an object owned by the system.
         cachedArtwork = null
         cachedArtworkTheme = null
         super.onDestroy()
@@ -198,15 +227,25 @@ class PlaybackNotificationService : Service() {
         }
         // The system extrapolates the position itself between updates, so only resync on a
         // status change or a real jump (a seek, a new ayah) rather than on every position tick.
-        if (state.status == lastReportedStatus && abs(state.positionMs - expected) < POSITION_RESYNC_THRESHOLD_MS) return
+        val mediaKey = mediaStateKey(nowPlaying)
+        if (state.status == lastReportedStatus && mediaKey == lastReportedMediaKey &&
+            speed == lastReportedSpeed &&
+            abs(state.positionMs - expected) < POSITION_RESYNC_THRESHOLD_MS
+        ) return
         lastReportedStatus = state.status
+        lastReportedMediaKey = mediaKey
         lastReportedPositionMs = state.positionMs
         lastReportedAtMs = now
+        lastReportedSpeed = speed
 
         var actions = PlaybackStateCompat.ACTION_PLAY_PAUSE or PlaybackStateCompat.ACTION_PLAY or
             PlaybackStateCompat.ACTION_PAUSE or PlaybackStateCompat.ACTION_STOP or PlaybackStateCompat.ACTION_SEEK_TO
         if (nowPlaying.mode == PlaybackMode.AYAH_QUEUE) {
-            if (nowPlaying.currentIndex + 1 < nowPlaying.queue.size) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+            // A page flow can load the next page when the current in-memory queue is exhausted,
+            // so its Next action remains valid even at the current queue boundary.
+            if (nowPlaying.currentIndex + 1 < nowPlaying.queue.size || nowPlaying.pageFlow != null) {
+                actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+            }
             if (nowPlaying.currentIndex > 0) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
         }
         val sessionState = when (state.status) {
@@ -224,6 +263,15 @@ class PlaybackNotificationService : Service() {
         )
     }
 
+    private fun mediaStateKey(nowPlaying: NowPlaying): String = buildString {
+        append(nowPlaying.mode).append('|')
+        append(nowPlaying.surahNumber).append('|')
+        append(nowPlaying.reciterId).append('|')
+        append(nowPlaying.currentIndex).append('|')
+        append(nowPlaying.queue.size).append('|')
+        append(nowPlaying.pageFlow?.session ?: 0L)
+    }
+
     private fun buildNotification(
         title: String,
         artist: String,
@@ -231,10 +279,14 @@ class PlaybackNotificationService : Service() {
         status: PlaybackStatus,
         themeMode: ThemeMode,
         artwork: Bitmap,
+        contentIntent: android.app.PendingIntent?,
     ): android.app.Notification {
         val strings = stringsFor(AppContainer.preferences.appLanguage.value)
         val isPlaying = status == PlaybackStatus.PLAYING
         val hasQueue = nowPlaying.mode == PlaybackMode.AYAH_QUEUE
+        val canSkipPrevious = hasQueue && nowPlaying.currentIndex > 0
+        val canSkipNext = hasQueue &&
+            (nowPlaying.currentIndex + 1 < nowPlaying.queue.size || nowPlaying.pageFlow != null)
         val accent = notificationAccentFor(themeMode, this)
         val previousAction = NotificationCompat.Action(
             android.R.drawable.ic_media_previous,
@@ -273,7 +325,7 @@ class PlaybackNotificationService : Service() {
             .setLargeIcon(artwork)
             .setColor(accent)
             .setColorized(true)
-            .setContentIntent(openAppPendingIntent())
+            .setContentIntent(contentIntent ?: openAppPendingIntent())
             .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_STOP))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
@@ -281,13 +333,21 @@ class PlaybackNotificationService : Service() {
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
 
-        val compactIndices = if (hasQueue) {
-            builder.addAction(previousAction).addAction(playPauseAction).addAction(nextAction).addAction(stopAction)
-            intArrayOf(0, 1, 2)
-        } else {
-            builder.addAction(playPauseAction).addAction(stopAction)
-            intArrayOf(0, 1)
-        }
+        val compactIndices = buildList {
+            if (canSkipPrevious) {
+                builder.addAction(previousAction)
+                add(0)
+            }
+            builder.addAction(playPauseAction)
+            add(if (canSkipPrevious) 1 else 0)
+            if (canSkipNext) {
+                builder.addAction(nextAction)
+                add(if (canSkipPrevious) 2 else 1)
+            }
+            builder.addAction(stopAction)
+        // MediaStyle supports at most three compact actions. Keep stop available in the
+        // expanded notification, but never pass a fourth index to the framework.
+        }.take(3).toIntArray()
         return builder
             .setStyle(
                 MediaNotificationCompat.MediaStyle()

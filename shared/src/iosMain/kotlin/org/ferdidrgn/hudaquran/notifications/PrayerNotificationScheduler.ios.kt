@@ -22,7 +22,7 @@ actual class PrayerNotificationScheduler actual constructor() {
             if (!granted) return@requestAuthorizationWithOptions
             center.removeAllPendingNotificationRequests()
             val nowMillis = NSDate().timeIntervalSince1970 * 1000.0
-            reminders.forEach { reminder ->
+            reminders.filter { it.scheduleNotification }.forEach { reminder ->
                 val seconds = (reminder.atEpochMillis - nowMillis) / 1000.0
                 if (seconds < 1.0) return@forEach
                 val content = UNMutableNotificationContent().apply {
@@ -39,5 +39,18 @@ actual class PrayerNotificationScheduler actual constructor() {
 
     actual fun cancelAll() {
         center.removeAllPendingNotificationRequests()
+    }
+
+    actual fun preview(title: String, body: String) {
+        val content = UNMutableNotificationContent().apply {
+            setTitle(title)
+            setBody(body)
+            setSound(UNNotificationSound.defaultSound)
+        }
+        val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(1.0, repeats = false)
+        center.addNotificationRequest(
+            UNNotificationRequest.requestWithIdentifier("huda_preview", content, trigger),
+            withCompletionHandler = null,
+        )
     }
 }

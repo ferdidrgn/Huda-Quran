@@ -29,16 +29,31 @@ class ReminderPlannerTest {
     @Test
     fun preReminderIsLeadMinutesBeforeAndAtTimeIsOptional() {
         val timings = PrayerTimes(listOf(PrayerTime("Dhuhr", "Öğle", "13:05")))
-        val both = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 10, atTime = true, strings = strings, zone = utc)
-        assertEquals(2, both.size)
-        assertEquals(epochMillisOf(day, "12:55", utc), both[0].atEpochMillis)
-        assertTrue(both[0].title.contains("Öğle") && both[0].title.contains("10"))
-        assertEquals(epochMillisOf(day, "13:05", utc), both[1].atEpochMillis)
+        val both = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 10, atTime = true, strings = strings, zone = utc, isPrayerEnabled = { true })
+        assertEquals(3, both.size)
+        assertTrue(both.any {
+            it.kind == ReminderKind.PRAYER_WIDGET &&
+                !it.scheduleNotification &&
+                it.atEpochMillis == epochMillisOf(day, "13:05", utc)
+        })
+        assertTrue(both.any {
+            it.kind == ReminderKind.PRAYER_PRE &&
+                it.scheduleNotification &&
+                it.atEpochMillis == epochMillisOf(day, "12:55", utc) &&
+                it.title.contains("10")
+        })
+        assertTrue(both.any {
+            it.kind == ReminderKind.PRAYER_AT_TIME &&
+                it.scheduleNotification &&
+                it.atEpochMillis == epochMillisOf(day, "13:05", utc)
+        })
 
-        val onlyAtTime = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 0, atTime = true, strings = strings, zone = utc)
-        assertEquals(1, onlyAtTime.size)
-        val none = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 0, atTime = false, strings = strings, zone = utc)
-        assertTrue(none.isEmpty())
+        val onlyAtTime = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 0, atTime = true, strings = strings, zone = utc, isPrayerEnabled = { true })
+        assertEquals(2, onlyAtTime.size)
+        assertTrue(onlyAtTime.any { it.kind == ReminderKind.PRAYER_WIDGET })
+        val none = prayerReminders(timings, day, dayIndex = 0, leadMinutes = 0, atTime = false, strings = strings, zone = utc, isPrayerEnabled = { true })
+        assertEquals(1, none.size)
+        assertTrue(none.single().kind == ReminderKind.PRAYER_WIDGET)
     }
 
     @Test
@@ -59,8 +74,31 @@ class ReminderPlannerTest {
                 .map { (k, t) -> PrayerTime(k, k, t) },
         )
         val ids = (0..1).flatMap { d ->
-            prayerReminders(timings, day, dayIndex = d, leadMinutes = 10, atTime = true, strings = strings, zone = utc).map { it.id }
+            prayerReminders(timings, day, dayIndex = d, leadMinutes = 10, atTime = true, strings = strings, zone = utc, isPrayerEnabled = { true }).map { it.id }
         }
         assertEquals(ids.size, ids.toSet().size)
+    }
+
+    @Test
+    fun disabledPrayerDoesNotCreateEitherReminder() {
+        val timings = PrayerTimes(
+            listOf(
+                PrayerTime("Fajr", "Sabah", "05:00"),
+                PrayerTime("Dhuhr", "Öğle", "12:00"),
+            ),
+        )
+        val reminders = prayerReminders(
+            timings,
+            day,
+            dayIndex = 0,
+            leadMinutes = 10,
+            atTime = true,
+            strings = strings,
+            zone = utc,
+            isPrayerEnabled = { it != "Dhuhr" },
+        )
+
+        assertEquals(3, reminders.size)
+        assertTrue(reminders.all { "Öğle" !in it.title })
     }
 }

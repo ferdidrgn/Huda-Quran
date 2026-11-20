@@ -62,6 +62,7 @@ fun AyahShareSheet(data: AyahShareData, onDismiss: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
+    var options by remember { mutableStateOf(ShareCardOptions()) }
     val message = remember(data) { ayahShareMessage(data) }
     val link = remember(data) { ayahLink(data.surahNumber, data.ayahNumber, SRC_AYAH_CARD) }
 
@@ -84,9 +85,11 @@ fun AyahShareSheet(data: AyahShareData, onDismiss: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = colors.onSurface,
                 )
+                ShareCardOptionsPicker(options = options, onChange = { options = it })
                 AyahPostcardPreview(
                     data = data,
                     captureLayer = graphicsLayer,
+                    options = options,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 )
                 Button(
@@ -100,7 +103,11 @@ fun AyahShareSheet(data: AyahShareData, onDismiss: () -> Unit) {
                                 if (png == null || png.isEmpty()) {
                                     status = strings.shareImageFailed
                                 } else {
-                                    shareImage(png, message, "huda-quran-${data.surahNumber}-${data.ayahNumber}.png")
+                                    shareImage(
+                                        png,
+                                        message,
+                                        shareCardFileName("huda-quran", "${data.surahNumber}-${data.ayahNumber}", options.format),
+                                    )
                                 }
                             }
                         }
@@ -119,25 +126,19 @@ fun AyahShareSheet(data: AyahShareData, onDismiss: () -> Unit) {
                     Spacer(Modifier.size(8.dp))
                     Text(strings.shareImageAction)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(
-                        onClick = { shareText(message) },
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                    ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { shareText(message) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                         Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text(strings.shareTextAction, maxLines = 1)
+                        Text(strings.shareTextAction)
                     }
-                    OutlinedButton(
-                        onClick = {
-                            clipboard.setText(AnnotatedString(link))
-                            status = strings.shareLinkCopied
-                        },
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                    ) {
+                    OutlinedButton(onClick = {
+                        clipboard.setText(AnnotatedString(link))
+                        status = strings.shareLinkCopied
+                    }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                         Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text(strings.shareCopyLink, maxLines = 1)
+                        Text(strings.shareCopyLink)
                     }
                 }
                 val currentStatus = status

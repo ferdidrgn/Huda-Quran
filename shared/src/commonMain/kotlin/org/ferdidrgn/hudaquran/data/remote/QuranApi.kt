@@ -1,8 +1,11 @@
 package org.ferdidrgn.hudaquran.data.remote
 
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.request.get
+import io.ktor.client.request.head
 import io.ktor.client.request.parameter
+import io.ktor.http.HttpHeaders
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -18,6 +21,20 @@ import org.ferdidrgn.hudaquran.data.remote.dto.SurahDto
 import org.ferdidrgn.hudaquran.data.remote.dto.SurahEditionDto
 
 class QuranApi(private val client: io.ktor.client.HttpClient = QuranHttpClient.client) {
+
+    /**
+     * Returns true/false for a confirmed HTTP result and null when the device could not
+     * establish a connection. Network uncertainty must never hide a valid reciter.
+     */
+    suspend fun isAudioUrlReachable(url: String): Boolean? {
+        if (url.isBlank() || !url.startsWith("https://")) return false
+        val head = runCatching { client.head(url) }
+        head.getOrNull()?.let { return it.status.value in 200..399 }
+        return runCatching {
+            val response = client.get(url) { header(HttpHeaders.Range, "bytes=0-1") }
+            response.status.value in 200..399
+        }.getOrNull()
+    }
 
     suspend fun getSurahList(): List<SurahDto> {
         val response: ApiResponseDto<List<SurahDto>> =

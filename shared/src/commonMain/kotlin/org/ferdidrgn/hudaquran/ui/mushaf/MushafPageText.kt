@@ -55,6 +55,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
@@ -75,6 +78,7 @@ import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
+import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.share.AyahShareData
@@ -83,11 +87,31 @@ import kotlin.math.roundToInt
 
 private const val MAX_PAGE_FONT_SP = 34
 private const val MIN_PAGE_FONT_SP = 17
-private const val FIXED_PAGE_FONT_SP = 25
+private const val FIXED_PAGE_FONT_SP = 21
 private const val MAX_PAGE_FONT_SP_WIDE = 48
 private const val MIN_PAGE_FONT_SP_WIDE = 22
-private const val FIXED_PAGE_FONT_SP_WIDE = 34
+private const val FIXED_PAGE_FONT_SP_WIDE = 30
 private const val LINE_HEIGHT_RATIO = 1.85f
+
+/** The two intentional reading contracts of the book screen. */
+internal enum class MushafReadingView {
+    MUSHAF,
+    READING,
+}
+
+/**
+ * Keeps the normal Mushaf page fitted, but lets the explicit accessibility scale enlarge it.
+ * The page is scrollable, so a larger size must not be silently reduced just to preserve the
+ * printed-page fit contract.
+ */
+internal fun scaledMushafFontSize(
+    fittedBaseSize: Float,
+    textScale: Float,
+    minSp: Int,
+    maxSp: Int,
+): Float = (fittedBaseSize * textScale)
+    .coerceAtLeast(minSp * textScale)
+    .coerceAtMost(maxSp * textScale)
 
 /** Height (incl. spacing) of the gilt headpiece that opens a surah starting on this page. */
 private val SURAH_HEADER_TOTAL = 64.dp
@@ -110,16 +134,25 @@ private fun segmentsOf(detail: QuranSectionDetail): List<PageSegment> {
 }
 
 /** One segment as a justified paragraph with gilt ayah-end markers; [ranges] map characters back to ayahs. */
-private fun buildSegmentText(segment: PageSegment, currentGlobal: Int, gilt: Color, highlight: Color): Pair<AnnotatedString, List<IntRange>> {
+private fun buildSegmentText(
+    segment: PageSegment,
+    currentGlobal: Int,
+    selectedGlobal: Int,
+    gilt: Color,
+    highlight: Color,
+    selectionHighlight: Color,
+): Pair<AnnotatedString, List<IntRange>> {
     val ranges = ArrayList<IntRange>(segment.ayahs.size)
     val text = buildAnnotatedString {
         segment.ayahs.forEach { ayah ->
             val start = length
-            if (ayah.globalNumber == currentGlobal) {
-                withStyle(SpanStyle(background = highlight)) { append(ayah.arabicText) }
-            } else {
-                append(ayah.arabicText)
+            val background = when (ayah.globalNumber) {
+                currentGlobal -> highlight
+                selectedGlobal -> selectionHighlight
+                else -> null
             }
+            if (background != null) withStyle(SpanStyle(background = background)) { append(ayah.arabicText) }
+            else append(ayah.arabicText)
             append(" ")
             withStyle(SpanStyle(color = gilt, fontWeight = FontWeight.Bold)) {
                 append("﴿${toArabicIndicNumerals(ayah.numberInSurah)}﴾")
@@ -145,8 +178,9 @@ private fun buildSegmentText(segment: PageSegment, currentGlobal: Int, gilt: Col
 internal fun MushafPageText(
     detail: QuranSectionDetail,
     page: Int,
-    showTranslation: Boolean,
+    readingView: MushafReadingView,
     currentAyah: Ayah?,
+    selectedAyahGlobal: Int?,
     favorites: Set<String>,
     wide: Boolean,
     onAyahTap: (Ayah) -> Unit,
@@ -155,11 +189,20 @@ internal fun MushafPageText(
     onPlaySurahStart: (Ayah) -> Unit,
 ) {
     val appLanguage by AppContainer.preferences.appLanguage.collectAsState()
+    val textSize by AppContainer.preferences.textSize.collectAsState()
+    val highContrast by AppContainer.preferences.highContrast.collectAsState()
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
+    val reducedMotion by AppContainer.preferences.reducedMotion.collectAsState()
+    val textScale = textSize.scale
     val ink = inkColor()
     val gilt = giltColor()
-    val meal = translationInk()
+    val meal = if (highContrast) {
+        if (ink == Color.White) Color(0xFFBFE7FF) else Color(0xFF005A9C)
+    } else translationInk()
     val highlight = gilt.copy(alpha = 0.30f)
+    val selectionHighlight = gilt.copy(alpha = 0.14f)
     val currentGlobal = currentAyah?.globalNumber ?: -1
+    val selectedGlobal = selectedAyahGlobal ?: -1
 
     val latestTap by rememberUpdatedState(onAyahTap)
     val latestLongPress by rememberUpdatedState(onAyahLongPress)
@@ -167,9 +210,11 @@ internal fun MushafPageText(
 
     val segments = remember(detail) { segmentsOf(detail) }
     // Unhighlighted texts: used for measuring (highlighting never changes metrics) and for the ranges.
-    val plain = remember(detail, gilt) { segments.map { buildSegmentText(it, -1, gilt, Color.Transparent) } }
-    val shown = remember(detail, gilt, highlight, currentGlobal) {
-        segments.map { buildSegmentText(it, currentGlobal, gilt, highlight).first }
+    val plain = remember(detail, gilt) {
+        segments.map { buildSegmentText(it, -1, -1, gilt, Color.Transparent, Color.Transparent) }
+    }
+    val shown = remember(detail, gilt, highlight, selectionHighlight, currentGlobal, selectedGlobal) {
+        segments.map { buildSegmentText(it, currentGlobal, selectedGlobal, gilt, highlight, selectionHighlight).first }
     }
     val layouts = remember(detail) { arrayOfNulls<TextLayoutResult>(segments.size) }
     val segmentCoords = remember(detail) { arrayOfNulls<LayoutCoordinates>(segments.size) }
@@ -187,8 +232,17 @@ internal fun MushafPageText(
     val baseStyle = MaterialTheme.typography.headlineSmall.copy(fontFamily = arabicFont, textAlign = TextAlign.Justify)
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val horizontalPadding = if (wide) 48.dp else 28.dp
-        val verticalPadding = if (wide) 40.dp else 30.dp
+        val horizontalPadding = when {
+            wide -> 48.dp
+            maxWidth < 340.dp -> 12.dp
+            maxWidth < 420.dp -> 16.dp
+            else -> 22.dp
+        }
+        val verticalPadding = when {
+            wide -> 40.dp
+            maxHeight < 560.dp -> 12.dp
+            else -> 22.dp
+        }
         val pageNumberReserve = 40.dp
         val measurer = rememberTextMeasurer()
         val density = LocalDensity.current
@@ -197,21 +251,21 @@ internal fun MushafPageText(
         val textHeightPx = with(density) { (maxHeight - verticalPadding * 2 - pageNumberReserve).roundToPx() } - headersPx
         val maxSp = if (wide) MAX_PAGE_FONT_SP_WIDE else MAX_PAGE_FONT_SP
         val minSp = if (wide) MIN_PAGE_FONT_SP_WIDE else MIN_PAGE_FONT_SP
-        val fittedSize = remember(plain, textWidthPx, textHeightPx, showTranslation, arabicFont, wide) {
-            if (showTranslation) {
-                if (wide) FIXED_PAGE_FONT_SP_WIDE else FIXED_PAGE_FONT_SP
-            } else {
-                // Largest size (in 1sp steps) whose laid-out paragraphs still fit the frame.
-                (maxSp downTo minSp).firstOrNull { sp ->
-                    val style = baseStyle.copy(fontSize = sp.sp, lineHeight = (sp * LINE_HEIGHT_RATIO).sp)
-                    val total = plain.sumOf { (text, _) ->
-                        measurer.measure(text = text, style = style, constraints = Constraints(maxWidth = textWidthPx)).size.height
-                    }
-                    total <= textHeightPx
-                } ?: minSp
-            }
+        val fittedBaseSize = remember(plain, textWidthPx, textHeightPx, arabicFont, wide) {
+            // Largest normal-profile size (in 1sp steps) whose paragraphs fit the frame.
+            (maxSp downTo minSp).firstOrNull { sp ->
+                val style = baseStyle.copy(fontSize = sp.sp, lineHeight = (sp * LINE_HEIGHT_RATIO).sp)
+                val total = plain.sumOf { (text, _) ->
+                    measurer.measure(text = text, style = style, constraints = Constraints(maxWidth = textWidthPx)).size.height
+                }
+                total <= textHeightPx
+            }?.toFloat() ?: minSp.toFloat()
         }
-        val fits = !showTranslation
+        val fittedSize = if (readingView == MushafReadingView.READING) {
+            (if (wide) FIXED_PAGE_FONT_SP_WIDE else FIXED_PAGE_FONT_SP) * textScale
+        } else {
+            scaledMushafFontSize(fittedBaseSize, textScale, minSp, maxSp)
+        }
         val scrollState = rememberScrollState()
         val arabicStyle = baseStyle.copy(
             fontSize = fittedSize.sp,
@@ -220,8 +274,8 @@ internal fun MushafPageText(
         )
 
         // Keep the reciting ayah in view while the meal makes the page scroll.
-        LaunchedEffect(currentGlobal, showTranslation, detail) {
-            if (!showTranslation || currentGlobal < 0) return@LaunchedEffect
+        LaunchedEffect(currentGlobal, readingView, detail) {
+            if (readingView != MushafReadingView.READING || currentGlobal < 0) return@LaunchedEffect
             val segmentIndex = segments.indexOfFirst { segment -> segment.ayahs.any { it.globalNumber == currentGlobal } }
             if (segmentIndex < 0) return@LaunchedEffect
             val ayahIndex = segments[segmentIndex].ayahs.indexOfFirst { it.globalNumber == currentGlobal }
@@ -236,7 +290,7 @@ internal fun MushafPageText(
             val height = viewport.size.height.toFloat()
             if (y < height * 0.08f || y > height * 0.7f) {
                 val target = (scrollState.value + y - height * 0.2f).roundToInt().coerceIn(0, scrollState.maxValue)
-                scrollState.animateScrollTo(target)
+                if (reducedMotion) scrollState.scrollTo(target) else scrollState.animateScrollTo(target)
             }
         }
 
@@ -244,7 +298,10 @@ internal fun MushafPageText(
             modifier = Modifier
                 .fillMaxSize()
                 .onGloballyPositioned { viewportCoords[0] = it }
-                .then(if (fits) Modifier else Modifier.verticalScroll(scrollState))
+                // Keep the illuminated-page composition, but never clip a long page on a small
+                // phone. When it fits, the scroll is inert; when it does not, the reader can move
+                // through it without losing the footer or the final ayah.
+                .verticalScroll(scrollState)
                 .padding(horizontal = horizontalPadding, vertical = verticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
@@ -256,60 +313,50 @@ internal fun MushafPageText(
                         surahNumber = segment.ayahs.first().surahNumber,
                         gilt = gilt,
                         ink = ink,
+                        largeTouchTargets = largeTouchTargets,
                         onPlay = { onPlaySurahStart(segment.ayahs.first()) },
                     )
                 }
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Text(
-                        shown[index],
-                        color = ink,
-                        style = arabicStyle,
-                        onTextLayout = { layouts[index] = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onGloballyPositioned { segmentCoords[index] = it }
-                            .pointerInput(detail, index) {
-                                detectTapGestures(
-                                    onDoubleTap = { latestToggleChrome() },
-                                    onLongPress = { position -> ayahAt(index, position)?.let { latestLongPress(it) } },
-                                    onTap = { position -> ayahAt(index, position)?.let { latestTap(it) } },
-                                )
-                            },
-                    )
-                }
-            }
-
-            if (showTranslation) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = gilt.copy(alpha = 0.45f))
-                segments.forEachIndexed { index, segment ->
-                    if (index > 0 || segment.startsSurah) {
+                if (readingView == MushafReadingView.MUSHAF) {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                         Text(
-                            localizedSurahName(segment.ayahs.first().surahNumber, segment.ayahs.first().surahName, appLanguage),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = gilt,
-                            modifier = Modifier.fillMaxWidth().padding(top = if (index > 0) 12.dp else 0.dp, bottom = 8.dp),
+                            shown[index],
+                            color = ink,
+                            style = arabicStyle,
+                            onTextLayout = { layouts[index] = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onGloballyPositioned { segmentCoords[index] = it }
+                                .pointerInput(detail, index) {
+                                    detectTapGestures(
+                                        onDoubleTap = { latestToggleChrome() },
+                                        onLongPress = { position -> ayahAt(index, position)?.let { latestLongPress(it) } },
+                                        onTap = { position -> ayahAt(index, position)?.let { latestTap(it) } },
+                                    )
+                                },
                         )
                     }
+                } else {
                     segment.ayahs.forEach { ayah ->
-                        if (ayah.translationText.isNotBlank()) {
-                            TranslationRow(
-                                ayah = ayah,
-                                isCurrent = ayah.globalNumber == currentGlobal,
-                                isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
-                                meal = meal,
-                                gilt = gilt,
-                                wide = wide,
-                                onClick = { latestTap(ayah) },
-                                onLongClick = { latestLongPress(ayah) },
-                            )
-                        }
+                        ReadingAyahRow(
+                            ayah = ayah,
+                            arabicStyle = arabicStyle,
+                            ink = ink,
+                            isCurrent = ayah.globalNumber == currentGlobal,
+                            isSelected = ayah.globalNumber == selectedGlobal,
+                            isFavorite = "${ayah.surahNumber}:${ayah.numberInSurah}" in favorites,
+                            meal = meal,
+                            gilt = gilt,
+                            wide = wide,
+                            textScale = textScale,
+                            largeTouchTargets = largeTouchTargets,
+                            onClick = { latestTap(ayah) },
+                            onLongClick = { latestLongPress(ayah) },
+                        )
                     }
                 }
-                Spacer(Modifier.height(16.dp))
-            } else {
-                Spacer(Modifier.weight(1f))
             }
+            if (readingView == MushafReadingView.MUSHAF) Spacer(Modifier.weight(1f)) else Spacer(Modifier.height(16.dp))
             Text(
                 toArabicIndicNumerals(page),
                 color = gilt,
@@ -325,26 +372,36 @@ internal fun MushafPageText(
 private fun TranslationRow(
     ayah: Ayah,
     isCurrent: Boolean,
+    isSelected: Boolean,
     isFavorite: Boolean,
     meal: Color,
     gilt: Color,
     wide: Boolean,
+    textScale: Float,
+    largeTouchTargets: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(10.dp)
     val textStyle = if (wide) {
-        MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 30.sp)
+        MaterialTheme.typography.bodyLarge.copy(fontSize = (19f * textScale).sp, lineHeight = (30f * textScale).sp)
     } else {
-        MaterialTheme.typography.bodyLarge.copy(fontSize = 16.5.sp, lineHeight = 26.sp)
+        MaterialTheme.typography.bodyLarge.copy(fontSize = (16.5f * textScale).sp, lineHeight = (26f * textScale).sp)
     }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 6.dp)
             .clip(shape)
-            .background(if (isCurrent) meal.copy(alpha = 0.13f) else Color.Transparent)
+            .background(
+                when {
+                    isCurrent -> meal.copy(alpha = 0.16f)
+                    isSelected -> gilt.copy(alpha = 0.11f)
+                    else -> Color.Transparent
+                },
+            )
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .heightIn(min = if (largeTouchTargets) 68.dp else 56.dp)
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         Text(
@@ -357,7 +414,7 @@ private fun TranslationRow(
             ayah.translationText,
             modifier = Modifier.weight(1f),
             style = textStyle,
-            color = if (isCurrent) meal else meal.copy(alpha = 0.9f),
+                color = if (isCurrent) meal else meal.copy(alpha = 0.9f),
             fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
         )
         if (isFavorite) {
@@ -371,15 +428,89 @@ private fun TranslationRow(
     }
 }
 
+/** Reading mode keeps each ayah and its meaning together, so neither can visually collide. */
+@Composable
+private fun ReadingAyahRow(
+    ayah: Ayah,
+    arabicStyle: androidx.compose.ui.text.TextStyle,
+    ink: Color,
+    isCurrent: Boolean,
+    isSelected: Boolean,
+    isFavorite: Boolean,
+    meal: Color,
+    gilt: Color,
+    wide: Boolean,
+    textScale: Float,
+    largeTouchTargets: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    val strings = LocalStrings.current
+    val shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+            .clip(shape)
+            .background(
+                when {
+                    isCurrent -> meal.copy(alpha = 0.16f)
+                    isSelected -> gilt.copy(alpha = 0.11f)
+                    else -> Color.Transparent
+                },
+            )
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .semantics {
+                role = androidx.compose.ui.semantics.Role.Button
+                contentDescription = "${strings.ayahWord} ${ayah.numberInSurah}"
+            }
+            .heightIn(min = if (largeTouchTargets) 72.dp else 48.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Text(
+                "${ayah.arabicText}  ﴿${toArabicIndicNumerals(ayah.numberInSurah)}﴾",
+                color = ink,
+                style = arabicStyle,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (ayah.translationText.isNotBlank()) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = gilt.copy(alpha = 0.25f))
+            Text(
+                ayah.translationText,
+                color = meal,
+                style = if (wide) {
+                    MaterialTheme.typography.bodyLarge.copy(fontSize = (19f * textScale).sp, lineHeight = (30f * textScale).sp)
+                } else {
+                    MaterialTheme.typography.bodyLarge.copy(fontSize = (16.5f * textScale).sp, lineHeight = (26f * textScale).sp)
+                },
+                fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.fillMaxWidth().heightIn(min = if (largeTouchTargets) 60.dp else 48.dp),
+            )
+        }
+        if (isFavorite) {
+            Icon(Icons.Filled.Favorite, contentDescription = null, tint = gilt, modifier = Modifier.padding(top = 4.dp).size(16.dp))
+        }
+    }
+}
+
 /** The gilt headpiece that opens a surah beginning on this page, with a "recite this surah" button. */
 @Composable
-private fun SurahStartHeader(title: String, surahNumber: Int, gilt: Color, ink: Color, onPlay: () -> Unit) {
+private fun SurahStartHeader(
+    title: String,
+    surahNumber: Int,
+    gilt: Color,
+    ink: Color,
+    largeTouchTargets: Boolean,
+    onPlay: () -> Unit,
+) {
     val shape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .height(SURAH_HEADER_TOTAL - 12.dp)
+            .height(if (largeTouchTargets) SURAH_HEADER_TOTAL else SURAH_HEADER_TOTAL - 12.dp)
             .clip(shape)
             .background(gilt.copy(alpha = 0.10f))
             .border(1.2.dp, gilt.copy(alpha = 0.7f), shape)
@@ -405,13 +536,14 @@ private fun SurahStartHeader(title: String, surahNumber: Int, gilt: Color, ink: 
         Spacer(Modifier.width(12.dp))
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(48.dp)
                 .clip(RoundedCornerShape(50))
                 .background(gilt.copy(alpha = 0.18f))
-                .clickable(onClick = onPlay),
+                .clickable(onClick = onPlay)
+                .semantics { role = androidx.compose.ui.semantics.Role.Button },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = gilt, modifier = Modifier.size(22.dp))
+            Icon(Icons.Filled.PlayArrow, contentDescription = "Surahı oynat", tint = gilt, modifier = Modifier.size(22.dp))
         }
     }
 }
@@ -510,10 +642,11 @@ internal fun AyahActionsDialog(
 
 @Composable
 private fun AyahActionRow(icon: ImageVector, label: String, onClick: () -> Unit) {
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .heightIn(min = if (largeTouchTargets) 64.dp else 48.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp),

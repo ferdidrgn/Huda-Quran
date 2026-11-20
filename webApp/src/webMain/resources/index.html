@@ -1,293 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <!-- Firebase Hosting rewrites every path ("**") to this same index.html so client-side
-         routing works on refresh/direct links — but the browser still resolves this file's own
-         relative asset URLs (styles.css, webApp.js, favicon, etc.) against whatever path is in
-         the address bar, not against "/". Without this <base>, opening /surah/27 directly (or
-         clicking one of the crawlable links in #seo-footer below) tried to load
-         /surah/styles.css and /surah/webApp.js — both 404 — so the real app's CSS and Kotlin/Wasm
-         bundle never loaded there, leaving only the static SEO fallback content visible forever
-         instead of the actual app. This makes every relative reference below resolve against the
-         site root regardless of which path served this file. -->
-    <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Huda Qur'an</title>
-    <meta name="description" content="Kur'an-ı Kerim'i çevrimiçi okuyun, dinleyin ve öğrenin. Meal, hatim takibi, ezan vakitleri ve tecvid dersleri tek uygulamada.">
-    <meta name="theme-color" content="#1b0c1a">
-    <meta name="google-site-verification" content="hqPdE3siEv3BoFe1Hj3ZjfEdeiUojVJZH9Dxfca4U0Q">
-    <meta name="google-site-verification" content="dThOkoY8BCfJr98YgolTsf4P25g9wzOwKTz5YrTda8A">
-    <link rel="canonical" href="https://hudaquran.web.app/">
-    <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="app-icon-512.png">
-    <link type="text/css" rel="stylesheet" href="styles.css">
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Huda Qur'an">
-    <meta property="og:description" content="Kur'an-ı Kerim'i çevrimiçi okuyun, dinleyin ve öğrenin.">
-    <meta property="og:image" content="https://hudaquran.web.app/app-icon-512.png">
-    <meta property="og:url" content="https://hudaquran.web.app/">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Huda Qur'an">
-    <meta name="twitter:description" content="Kur'an-ı Kerim'i çevrimiçi okuyun, dinleyin ve öğrenin.">
-    <meta name="twitter:image" content="https://hudaquran.web.app/app-icon-512.png">
-
-    <!-- Google AdSense "Auto ads" is intentionally NOT included here. That mode (just this
-         script tag, no explicit ad slots) lets Google place ads anywhere it decides, including
-         full-screen interstitial/vignette formats between navigations — but this page's real
-         content is a <canvas> Google's crawler can't read, so Auto ads has nothing sane to place
-         ads around and tends to produce exactly the disruptive, seemingly-unrelated ad
-         experience users report. If web ads come back, they should be specific, manually placed
-         <ins class="adsbygoogle"> units (with a real data-ad-slot from the AdSense dashboard)
-         inside #seo-header/#seo-footer, which are real DOM Google can actually read. -->
-
-    <!-- Firebase Web SDK (compat build — exposes the global `firebase` object that
-         AppAnalytics.js.kt / AppAnalytics.wasmJs.kt call into via JS interop). -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyD4nOwx3m7djveuXsB1lO_53oPvxlZ7Qtk",
-            authDomain: "huda-kuran.firebaseapp.com",
-            projectId: "huda-kuran",
-            storageBucket: "huda-kuran.firebasestorage.app",
-            messagingSenderId: "1013548164586",
-            appId: "1:1013548164586:web:dcff630c5df7cbf9c77e93",
-            measurementId: "G-KW6QHQ75LK"
-        };
-        if (window.firebase) {
-            window.firebase.initializeApp(firebaseConfig);
-        }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080909" />
+  <meta name="description" content="Huda Quran — Kur'an, vakitler ve günlük ibadet için sakin bir okuma masası." />
+  <meta name="google-adsense-account" content="ca-pub-5779807348211992" />
+  <!-- AdSense site verification/Auto ads. Actual serving starts only after Google marks the site Ready. -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5779807348211992" crossorigin="anonymous"></script>
+  <link rel="icon" href="app-icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="install.css" />
+  <style>
+    /* The Compose app owns the only scroll surface in app mode. */
+    html.app-mode,
+    html.app-mode body {
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+    html.app-mode body { overflow-x: hidden; }
+    html.app-mode #compose-target {
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+  </style>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.pathname !== '/' || params.has('app')) document.documentElement.classList.add('app-mode');
+  </script>
 </head>
 <body>
-    <!--
-        Huda Qur'an is a Kotlin/Wasm + Compose Multiplatform app: the interactive experience
-        below (#compose-target) renders entirely to a <canvas>, which carries no crawlable text
-        of its own. Without real markup somewhere on the page, every route on this site (Firebase
-        Hosting rewrites every path to this same index.html) looks like an empty "still loading"
-        screen to anything that isn't a full browser — which is exactly what AdSense's content
-        review flags as "screens without publisher content". The header and footer below are
-        genuine, always-rendered HTML: a short header visible the instant the page paints (before
-        the app has even booted), and a longer footer describing the app and linking every real
-        surah page. Real content for crawlers and reviewers, and for a human who scrolls, not a
-        cloaking trick — nothing here is hidden or display:none.
-    -->
-    <header id="seo-header">
-        <h1>Huda Qur'an</h1>
-        <p>Kur'an-ı Kerim'i sesli dinleyin, Türkçe ve 7 farklı dilde mealiyle okuyun, tecvid derslerini öğrenin ve namaz vakitlerini takip edin.</p>
+  <main class="web-shell" id="web-shell">
+    <header class="site-nav">
+      <a class="brand" href="/" aria-label="Huda Quran ana sayfa"><span class="brand-mark">هُدى</span><span>Huda Quran</span></a>
+      <nav class="desktop-nav" aria-label="Ana menü">
+        <a href="/?app=1">Oku</a><a href="/mushaf">Mushaf</a><a href="/hadith">Hadisler</a><a href="/prayer">Vakitler</a>
+      </nav>
+      <div class="nav-actions"><button class="icon-button" data-menu-toggle aria-expanded="false" aria-label="Menüyü aç">☰</button><a class="nav-cta" href="/?app=1">Uygulamayı aç <span>↗</span></a></div>
     </header>
 
-    <div id="compose-target">
-        <svg id="seo-loading-spinner" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
-            <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
-            <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
-                    stroke-dasharray="90 125">
-                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
-                                  repeatCount="indefinite"/>
-            </circle>
-        </svg>
+    <section class="hero reveal">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse-dot"></span> Her gün için sakin bir başlangıç</p>
+        <h1>Okumaya<br /><em>kaldığın yerden</em> başla.</h1>
+        <p class="hero-lede">Kur’an’ı, vakitleri ve faydalı ilimleri tek bir masada buluşturan; gözü yormayan, kalbi acele ettirmeyen bir yol arkadaşı.</p>
+        <div class="hero-actions"><a class="button button-primary" href="/?app=1">Okuma masasına geç <span>→</span></a><button class="text-button" data-copy-link>Bağlantıyı paylaş <span>↗</span></button></div>
+        <p class="quiet-note">Üyelik gerekmez · Türkçe öncelikli · Android ve web</p>
+      </div>
+      <div class="reading-desk" aria-label="Etkileşimli okuma masası">
+        <div class="desk-top"><span>Bugünün sayfası</span><span class="desk-index">01 / 114</span></div>
+        <div class="folio">
+          <div class="folio-meta"><span>الفاتحة</span><span>1. sure · 1–7</span></div>
+          <p class="arabic-line" lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+          <p class="translation-line" data-translation>Rahmân ve Rahîm olan Allah’ın adıyla.</p>
+          <div class="folio-actions"><button class="folio-control is-active" data-reading-toggle aria-pressed="false">Türkçe meali göster</button><button class="folio-control" data-font-toggle aria-pressed="false">A+ Büyük yazı</button></div>
+        </div>
+        <div class="atlas-caption"><span><strong>114</strong> surelik atlas</span><span class="atlas-key"><i></i> Bugünkü okuma</span></div>
+        <svg class="atlas" id="surah-atlas" viewBox="0 0 400 100" role="img" aria-label="114 surelik atlas görselleştirmesi"></svg>
+      </div>
+    </section>
+
+    <section class="today-section reveal" aria-labelledby="today-title">
+      <div class="section-heading"><p class="eyebrow">Şimdi burada</p><h2 id="today-title">Bugünün ritmi</h2><p>Konumunu seçtiğinde vakitlerin ve kıble yönün masanda yerini bulur.</p></div>
+      <div class="today-grid"><a class="today-item featured" href="/?app=1#/prayer"><span class="item-kicker">Vakitler</span><strong>Günün akışını keşfet</strong><span class="item-arrow">→</span></a><a class="today-item" href="/?app=1#/qibla"><span class="item-kicker">Yönünü bul</span><strong>Kıble pusulası</strong><span class="item-arrow">↗</span></a><a class="today-item" href="/?app=1#/duas"><span class="item-kicker">Kısa bir mola</span><strong>Dualar ve zikir</strong><span class="item-arrow">↗</span></a></div>
+    </section>
+
+    <section class="library-section reveal" aria-labelledby="library-title">
+      <div class="section-heading split"><div><p class="eyebrow">Derinleşmek için</p><h2 id="library-title">Tek masada, geniş bir kütüphane.</h2></div><a class="text-button" href="/?app=1">Tümünü keşfet <span>→</span></a></div>
+      <div class="library-list">
+        <a href="/mushaf" class="library-row"><span class="row-number">01</span><span class="row-title">Mushaf <small>Okuma ve ayet takibi</small></span><span class="row-symbol">۞</span><span class="row-arrow">→</span></a>
+        <a href="/reciters" class="library-row"><span class="row-number">02</span><span class="row-title">Kıraat <small>Dinle, takip et, tekrar et</small></span><span class="row-symbol">◌</span><span class="row-arrow">→</span></a>
+        <a href="/hadith" class="library-row"><span class="row-number">03</span><span class="row-title">Hadisler <small>Güvenilir kaynaklarda ara</small></span><span class="row-symbol">✦</span><span class="row-arrow">→</span></a>
+        <a href="/tafsir" class="library-row"><span class="row-number">04</span><span class="row-title">Meal ve tefsir <small>Anlamı farklı pencerelerden oku</small></span><span class="row-symbol">◒</span><span class="row-arrow">→</span></a>
+      </div>
+    </section>
+
+    <section class="install-section reveal" aria-labelledby="install-title">
+      <div class="install-mark" aria-hidden="true"><span>هُدى</span></div>
+      <div class="install-copy"><p class="eyebrow">Yanında taşı</p><h2 id="install-title">Okuma masan cebinde de seninle.</h2><p>Vakitleri takip et, ayetleri dinle, dualarını kaydet. Huda Quran’ın Android uygulamasını Google Play’den indirebilirsin.</p></div>
+      <a class="play-badge" href="https://play.google.com/store/apps/details?id=org.ferdidrgn.hudaquran" target="_blank" rel="noopener noreferrer" aria-label="Huda Quran uygulamasını Google Play'den indir"><span class="play-icon">▶</span><span><small>Şuradan indirin</small><strong>Google Play</strong></span><span class="badge-arrow">↗</span></a>
+    </section>
+
+    <section class="route-rail reveal"><div><p class="eyebrow">Huda Quran dünyası</p><h2>Az eşya, çok anlam.</h2></div><p>Okuma geçmişin, favorilerin ve ayarların aynı sakin akışın içinde. İhtiyacın olanı bul; gerisi sessiz kalsın.</p><a class="button button-outline" href="/?app=1">Uygulamaya devam et <span>↗</span></a></section>
+    <footer class="site-footer"><a class="brand" href="/"><span class="brand-mark">هُدى</span><span>Huda Quran</span></a><p>Kur’an’ı anlamaya, yaşamaya ve paylaşmaya eşlik eden açık bir okuma alanı.</p><div><a href="/?app=1">Uygulama</a><a href="/?app=1#/settings">Ayarlar</a><a href="/?app=1#/about">Hakkında</a></div></footer>
+  </main>
+  <main id="seo-route-content" class="seo-route-content" aria-labelledby="seo-route-title">
+    <p class="eyebrow">Huda Quran web kütüphanesi</p>
+    <h1 id="seo-route-title">Kur’an’ı oku, dinle ve anlamını keşfet.</h1>
+    <p class="seo-lede">Huda Quran; Türkçe öncelikli meal ve tefsir seçenekleri, sayfa sayfa Mushaf görünümü, kıraat dinleme, hadisler, dualar, Esmâ-ül Hüsnâ ve namaz vakitlerini tek bir açık okuma alanında buluşturur.</p>
+    <div class="seo-route-grid">
+      <a href="/?app=1#/mushaf"><strong>Mushaf modu</strong><span>Sayfa sayfa oku; yaşlı kullanıcılar için büyük yazı ve kaydırmalı görünüm kullan.</span></a>
+      <a href="/?app=1#/hadith"><strong>Hadisler</strong><span>Türkçe hadisleri kaynak, açıklama ve favori akışıyla incele.</span></a>
+      <a href="/?app=1#/tafsir"><strong>Meal ve tefsir</strong><span>Ayetleri farklı diller ve açıklama kaynaklarıyla karşılaştır.</span></a>
+      <a href="/?app=1#/reciters"><strong>Kıraat</strong><span>Uygun kıraatçıyı seç, ayetleri takip ederek dinle.</span></a>
+      <a href="/?app=1#/prayer"><strong>Namaz vakitleri</strong><span>Şehir seçimine göre vakitleri, hatırlatmaları ve günlük akışı gör.</span></a>
+      <a href="/?app=1#/duas"><strong>Dualar ve zikir</strong><span>Kaynak bilgili duaları ara, favorile ve paylaş.</span></a>
     </div>
-
-    <footer id="seo-footer">
-        <section>
-            <h2>Huda Kur'an Hakkında</h2>
-            <p>
-                Huda Kur'an, Kur'an-ı Kerim'i cebinizde taşımanızı sağlayan ücretsiz bir okuma ve
-                dinleme uygulamasıdır. Seçtiğiniz hafızdan ayet ayet veya sure sure sesli dinleyebilir,
-                Türkçe başta olmak üzere Arapça, İngilizce, Almanca, Fransızca, Özbekçe, Kırgızca ve
-                Türkmence mealleriyle okuyabilirsiniz.
-            </p>
-            <p>
-                Uygulama; Elif-Ba'dan başlayan sıralı tecvid dersleri, gerçek bir Mushaf gibi sayfa
-                sayfa okuma modu, günün ayeti, favori ayetleriniz, sure/cüz/sayfa/rükû/hizb çeyreği
-                bazında gezinme, secde ayetleri listesi ve konumunuza göre güncellenen namaz vakti
-                bildirimleri sunar.
-            </p>
-        </section>
-
-        <section>
-            <h2>Kur'an-ı Kerim'in 114 Suresi</h2>
-            <p>Herhangi bir sureye doğrudan gitmek için aşağıdaki listeden seçin:</p>
-            <ol id="seo-surah-list">
-                <li><a href="/surah/1">1. Fâtiha</a></li>
-                        <li><a href="/surah/2">2. Bakara</a></li>
-                        <li><a href="/surah/3">3. Âl-i İmrân</a></li>
-                        <li><a href="/surah/4">4. Nisâ</a></li>
-                        <li><a href="/surah/5">5. Mâide</a></li>
-                        <li><a href="/surah/6">6. En'âm</a></li>
-                        <li><a href="/surah/7">7. A'râf</a></li>
-                        <li><a href="/surah/8">8. Enfâl</a></li>
-                        <li><a href="/surah/9">9. Tevbe</a></li>
-                        <li><a href="/surah/10">10. Yûnus</a></li>
-                        <li><a href="/surah/11">11. Hûd</a></li>
-                        <li><a href="/surah/12">12. Yûsuf</a></li>
-                        <li><a href="/surah/13">13. Ra'd</a></li>
-                        <li><a href="/surah/14">14. İbrâhim</a></li>
-                        <li><a href="/surah/15">15. Hicr</a></li>
-                        <li><a href="/surah/16">16. Nahl</a></li>
-                        <li><a href="/surah/17">17. İsrâ</a></li>
-                        <li><a href="/surah/18">18. Kehf</a></li>
-                        <li><a href="/surah/19">19. Meryem</a></li>
-                        <li><a href="/surah/20">20. Tâhâ</a></li>
-                        <li><a href="/surah/21">21. Enbiyâ</a></li>
-                        <li><a href="/surah/22">22. Hac</a></li>
-                        <li><a href="/surah/23">23. Mü'minûn</a></li>
-                        <li><a href="/surah/24">24. Nûr</a></li>
-                        <li><a href="/surah/25">25. Furkân</a></li>
-                        <li><a href="/surah/26">26. Şuarâ</a></li>
-                        <li><a href="/surah/27">27. Neml</a></li>
-                        <li><a href="/surah/28">28. Kasas</a></li>
-                        <li><a href="/surah/29">29. Ankebût</a></li>
-                        <li><a href="/surah/30">30. Rûm</a></li>
-                        <li><a href="/surah/31">31. Lokman</a></li>
-                        <li><a href="/surah/32">32. Secde</a></li>
-                        <li><a href="/surah/33">33. Ahzâb</a></li>
-                        <li><a href="/surah/34">34. Sebe'</a></li>
-                        <li><a href="/surah/35">35. Fâtır</a></li>
-                        <li><a href="/surah/36">36. Yâsîn</a></li>
-                        <li><a href="/surah/37">37. Sâffât</a></li>
-                        <li><a href="/surah/38">38. Sâd</a></li>
-                        <li><a href="/surah/39">39. Zümer</a></li>
-                        <li><a href="/surah/40">40. Mü'min</a></li>
-                        <li><a href="/surah/41">41. Fussilet</a></li>
-                        <li><a href="/surah/42">42. Şûrâ</a></li>
-                        <li><a href="/surah/43">43. Zuhruf</a></li>
-                        <li><a href="/surah/44">44. Duhân</a></li>
-                        <li><a href="/surah/45">45. Câsiye</a></li>
-                        <li><a href="/surah/46">46. Ahkâf</a></li>
-                        <li><a href="/surah/47">47. Muhammed</a></li>
-                        <li><a href="/surah/48">48. Fetih</a></li>
-                        <li><a href="/surah/49">49. Hucurât</a></li>
-                        <li><a href="/surah/50">50. Kâf</a></li>
-                        <li><a href="/surah/51">51. Zâriyât</a></li>
-                        <li><a href="/surah/52">52. Tûr</a></li>
-                        <li><a href="/surah/53">53. Necm</a></li>
-                        <li><a href="/surah/54">54. Kamer</a></li>
-                        <li><a href="/surah/55">55. Rahmân</a></li>
-                        <li><a href="/surah/56">56. Vâkıa</a></li>
-                        <li><a href="/surah/57">57. Hadîd</a></li>
-                        <li><a href="/surah/58">58. Mücâdele</a></li>
-                        <li><a href="/surah/59">59. Haşr</a></li>
-                        <li><a href="/surah/60">60. Mümtehine</a></li>
-                        <li><a href="/surah/61">61. Saf</a></li>
-                        <li><a href="/surah/62">62. Cum'a</a></li>
-                        <li><a href="/surah/63">63. Münâfikûn</a></li>
-                        <li><a href="/surah/64">64. Tegâbün</a></li>
-                        <li><a href="/surah/65">65. Talâk</a></li>
-                        <li><a href="/surah/66">66. Tahrîm</a></li>
-                        <li><a href="/surah/67">67. Mülk</a></li>
-                        <li><a href="/surah/68">68. Kalem</a></li>
-                        <li><a href="/surah/69">69. Hâkka</a></li>
-                        <li><a href="/surah/70">70. Meâric</a></li>
-                        <li><a href="/surah/71">71. Nûh</a></li>
-                        <li><a href="/surah/72">72. Cin</a></li>
-                        <li><a href="/surah/73">73. Müzzemmil</a></li>
-                        <li><a href="/surah/74">74. Müddessir</a></li>
-                        <li><a href="/surah/75">75. Kıyâme</a></li>
-                        <li><a href="/surah/76">76. İnsân</a></li>
-                        <li><a href="/surah/77">77. Mürselât</a></li>
-                        <li><a href="/surah/78">78. Nebe'</a></li>
-                        <li><a href="/surah/79">79. Nâziât</a></li>
-                        <li><a href="/surah/80">80. Abese</a></li>
-                        <li><a href="/surah/81">81. Tekvîr</a></li>
-                        <li><a href="/surah/82">82. İnfitâr</a></li>
-                        <li><a href="/surah/83">83. Mutaffifîn</a></li>
-                        <li><a href="/surah/84">84. İnşikâk</a></li>
-                        <li><a href="/surah/85">85. Bürûc</a></li>
-                        <li><a href="/surah/86">86. Târık</a></li>
-                        <li><a href="/surah/87">87. A'lâ</a></li>
-                        <li><a href="/surah/88">88. Gâşiye</a></li>
-                        <li><a href="/surah/89">89. Fecr</a></li>
-                        <li><a href="/surah/90">90. Beled</a></li>
-                        <li><a href="/surah/91">91. Şems</a></li>
-                        <li><a href="/surah/92">92. Leyl</a></li>
-                        <li><a href="/surah/93">93. Duhâ</a></li>
-                        <li><a href="/surah/94">94. İnşirâh</a></li>
-                        <li><a href="/surah/95">95. Tîn</a></li>
-                        <li><a href="/surah/96">96. Alak</a></li>
-                        <li><a href="/surah/97">97. Kadir</a></li>
-                        <li><a href="/surah/98">98. Beyyine</a></li>
-                        <li><a href="/surah/99">99. Zilzâl</a></li>
-                        <li><a href="/surah/100">100. Âdiyât</a></li>
-                        <li><a href="/surah/101">101. Kâria</a></li>
-                        <li><a href="/surah/102">102. Tekâsür</a></li>
-                        <li><a href="/surah/103">103. Asr</a></li>
-                        <li><a href="/surah/104">104. Hümeze</a></li>
-                        <li><a href="/surah/105">105. Fil</a></li>
-                        <li><a href="/surah/106">106. Kureyş</a></li>
-                        <li><a href="/surah/107">107. Mâûn</a></li>
-                        <li><a href="/surah/108">108. Kevser</a></li>
-                        <li><a href="/surah/109">109. Kâfirûn</a></li>
-                        <li><a href="/surah/110">110. Nasr</a></li>
-                        <li><a href="/surah/111">111. Tebbet</a></li>
-                        <li><a href="/surah/112">112. İhlâs</a></li>
-                        <li><a href="/surah/113">113. Felak</a></li>
-                        <li><a href="/surah/114">114. Nâs</a></li>
-            </ol>
-        </section>
-
-        <section>
-            <h2>Diğer Bölümler</h2>
-            <ul id="seo-nav-list">
-                <li><a href="/juz">Cüzler</a></li>
-                <li><a href="/mushaf">Sayfalar (Mushaf modu)</a></li>
-                <li><a href="/manzil">Menziller</a></li>
-                <li><a href="/ruku">Rükûlar</a></li>
-                <li><a href="/hizbQuarter">Hizb Çeyrekleri</a></li>
-                <li><a href="/sajda">Secde Ayetleri</a></li>
-                <li><a href="/qibla">Kıble Pusulası</a></li>
-                <li><a href="/reciters">Hafızlar</a></li>
-                <li><a href="/lessons">Tecvid Dersleri</a></li>
-                <li><a href="/search">Ayet Arama</a></li>
-                <li><a href="/privacy.html">Gizlilik Politikası</a></li>
-                <li><a href="/terms.html">Kullanım Şartları</a></li>
-            </ul>
-        </section>
-
-        <p id="seo-copyright">© Huda Kur'an — Kur'an-ı Kerim okuma, dinleme ve öğrenme uygulaması.</p>
-    </footer>
-
-    <script type="application/javascript" src="webApp.js"></script>
-    <script>
-        // The SEO header/footer above and below #compose-target are always in the DOM (see the
-        // comment at the top of <body> for why) — but a real user should only ever see them for
-        // the instant before the app paints, not permanently. ComposeViewport injects a <canvas>
-        // into #compose-target once it successfully mounts; watch for that and only then push
-        // the fallback content off-screen (.seo-fallback--dismissed, not display:none — see the
-        // comment on that class in styles.css for why it has to stay that way for crawlers).
-        // If the canvas never appears (an unsupported browser, a load failure, ...) this simply
-        // never fires and the fallback content stays visible and readable, which is the correct
-        // behavior for that case too.
-        (function () {
-            var target = document.getElementById('compose-target');
-            if (!target) return;
-
-            function dismissFallback() {
-                var header = document.getElementById('seo-header');
-                var footer = document.getElementById('seo-footer');
-                if (header) header.classList.add('seo-fallback--dismissed');
-                if (footer) footer.classList.add('seo-fallback--dismissed');
-                // #compose-target's height reserves space for #seo-header (see styles.css); once
-                // the header is pushed off-screen, reclaim that space for the app.
-                document.documentElement.style.setProperty('--seo-header-height', '0px');
-            }
-
-            if (target.querySelector('canvas')) {
-                dismissFallback();
-                return;
-            }
-
-            var observer = new MutationObserver(function () {
-                if (target.querySelector('canvas')) {
-                    dismissFallback();
-                    observer.disconnect();
-                }
-            });
-            observer.observe(target, { childList: true });
-        })();
-    </script>
+    <section class="seo-reading-note"><h2>Sakin, erişilebilir ve kaynakları görünür bir okuma deneyimi</h2><p>Huda Quran’ın web yüzü; düşük dikkat yükü, yüksek kontrast, klavye erişimi, mobil uyum ve reduced-motion desteğiyle tasarlanır. Uygulama içindeki kişisel ayarlar cihazda tutulur. İçerik sağlayıcısı, dil bilgisi ve lisans durumu mümkün olduğu ölçüde açıkça gösterilir.</p><p>Android uygulamasını Google Play’den indirerek okuma geçmişini, favorilerini, kıraat ayarlarını ve bildirimlerini telefonunda kullanabilirsin.</p><a class="button button-outline" href="https://play.google.com/store/apps/details?id=org.ferdidrgn.hudaquran" target="_blank" rel="noopener noreferrer">Android uygulamasını indir <span>↗</span></a></section>
+    <p class="seo-links"><a href="/privacy.html">Gizlilik politikası</a><a href="/terms.html">Kullanım şartları</a><a href="/">Ana sayfaya dön</a></p>
+  </main>
+  <section id="compose-target" aria-label="Huda Quran uygulaması"></section>
+  <noscript>Huda Quran’ı kullanmak için JavaScript’i etkinleştirin.</noscript>
+  <script src="web.js"></script>
+  <script src="webApp.js"></script>
 </body>
 </html>

@@ -1,11 +1,6 @@
 {
   "applinks": {
     "apps": [],
-    "details": [
-      {
-        "appID": "TEAMID.org.ferdidrgn.hudaquran",
-        "paths": ["/*"]
-      }
-    ]
+    "details": []
   }
 }

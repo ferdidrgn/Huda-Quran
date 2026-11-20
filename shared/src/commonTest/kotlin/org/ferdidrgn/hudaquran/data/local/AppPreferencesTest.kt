@@ -33,6 +33,27 @@ class AppPreferencesTest {
     }
 
     @Test
+    fun contentFavoriteNamespacesStayIndependent() {
+        val prefs = newPreferences()
+
+        prefs.toggleFavorite(1, 1)
+        prefs.toggleHadithFavorite("1")
+        prefs.toggleDuaFavorite("1")
+        prefs.toggleEsmaFavorite(1)
+
+        assertTrue(prefs.isFavorite(1, 1))
+        assertTrue(prefs.isHadithFavorite("1"))
+        assertTrue(prefs.hadithFavorites.value == setOf("1"))
+        assertTrue(prefs.duaFavorites.value == setOf("1"))
+        assertTrue(prefs.esmaFavorites.value == setOf(1))
+
+        prefs.toggleHadithFavorite(" 1 ")
+        assertFalse(prefs.isHadithFavorite("1"))
+        assertTrue(prefs.isFavorite(1, 1))
+        assertTrue(prefs.duaFavorites.value.contains("1"))
+    }
+
+    @Test
     fun lastReadStartsNullAndPersistsAfterSave() {
         val prefs = newPreferences()
         assertEquals(null, prefs.lastRead.value)

@@ -11,52 +11,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.*
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.ui.components.IlluminatedFrame
 import org.ferdidrgn.hudaquran.ui.components.OrnamentRule
 import org.ferdidrgn.hudaquran.ui.components.ShamsaRosette
 import org.ferdidrgn.hudaquran.ui.components.eightPointStarPath
-import org.ferdidrgn.hudaquran.ui.mushaf.translationInk
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
-
-/** The postcard is laid out as a fixed 360 x 450 dp (4:5) card. */
-private const val CARD_WIDTH_DP = 360f
-private const val CARD_HEIGHT_DP = 450f
-
-/** Capture density: 3 px per dp makes a crisp 1080 x 1350 px image on every platform. */
-private const val CAPTURE_DENSITY = 3f
 
 /**
  * On-screen preview of the share postcard that also records it into [captureLayer] so the caller
@@ -68,62 +47,26 @@ private const val CAPTURE_DENSITY = 3f
 fun AyahPostcardPreview(
     data: AyahShareData,
     captureLayer: GraphicsLayer,
+    options: ShareCardOptions = ShareCardOptions(),
     modifier: Modifier = Modifier,
 ) {
-    val baseDensity = LocalDensity.current
-    val captureDensity = remember { Density(density = CAPTURE_DENSITY, fontScale = 1f) }
-    BoxWithConstraints(modifier = modifier) {
-        val displayWidthPx = with(baseDensity) { maxWidth.toPx() }
-        val scale = displayWidthPx / (CARD_WIDTH_DP * CAPTURE_DENSITY)
-        val displayHeight = maxWidth * (CARD_HEIGHT_DP / CARD_WIDTH_DP)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(displayHeight)
-                .clip(RoundedCornerShape(18.dp))
-                .clipToBounds(),
-        ) {
-            CompositionLocalProvider(
-                LocalDensity provides captureDensity,
-                LocalLayoutDirection provides LayoutDirection.Ltr,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.TopStart, unbounded = true)
-                        .requiredSize(CARD_WIDTH_DP.dp, CARD_HEIGHT_DP.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            transformOrigin = TransformOrigin(0f, 0f)
-                        }
-                        .drawWithContent {
-                            captureLayer.record { this@drawWithContent.drawContent() }
-                            drawLayer(captureLayer)
-                        },
-                ) {
-                    AyahPostcard(data)
-                }
-            }
-        }
+    ShareCardPreviewFrame(captureLayer = captureLayer, options = options, modifier = modifier) {
+        AyahPostcard(data, options)
     }
 }
 
 /**
- * The postcard itself: an illuminated-manuscript page in the current theme — a radial paper tone,
+ * The postcard itself: an illuminated-manuscript page in the current theme — a stable paper tone,
  * a faint field of eight-point stars, a gilt double frame, the surah and reference on top, the
  * Arabic large, a gilt rule, the reader's translation, and the app wordmark with the website at
- * the foot. Static on purpose (no animation) so it can be rasterised. Sized for [CARD_WIDTH_DP]
- * x [CARD_HEIGHT_DP] dp; use [AyahPostcardPreview] to show and capture it.
+ * the foot. Static on purpose (no animation) so it can be rasterised. The selected
+ * [ShareCardFormat] determines the fixed capture canvas.
  */
 @Composable
-fun AyahPostcard(data: AyahShareData, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    val gilt = colors.primary
-    val translationColor = translationInk()
-    val paper = Brush.radialGradient(
-        colors = listOf(lerp(colors.surface, colors.surfaceVariant, 0.35f), colors.background),
-    )
-    Box(modifier = modifier.fillMaxSize().background(paper)) {
+fun AyahPostcard(data: AyahShareData, options: ShareCardOptions = ShareCardOptions(), modifier: Modifier = Modifier) {
+    val colors = shareCardColors(options.theme)
+    val gilt = colors.accent
+    Box(modifier = modifier.fillMaxSize().background(colors.background)) {
         // Faint star field.
         Canvas(modifier = Modifier.fillMaxSize()) {
             val step = 46.dp.toPx()
@@ -149,8 +92,12 @@ fun AyahPostcard(data: AyahShareData, modifier: Modifier = Modifier) {
         // Gilt double frame with star corners.
         IlluminatedFrame(modifier = Modifier.fillMaxSize(), color = gilt)
 
+        val layout = shareCardLayoutSpec(options.format)
         Column(
-            modifier = Modifier.fillMaxSize().padding(start = 34.dp, end = 34.dp, top = 32.dp, bottom = 26.dp),
+            modifier = Modifier.fillMaxSize().padding(
+                horizontal = layout.horizontalPaddingDp.dp,
+                vertical = layout.verticalPaddingDp.dp,
+            ),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -158,36 +105,39 @@ fun AyahPostcard(data: AyahShareData, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = gilt,
-                maxLines = 1,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
             Text(
                 data.reference,
                 style = MaterialTheme.typography.labelLarge,
-                color = colors.onSurface.copy(alpha = 0.7f),
+                color = colors.secondaryText,
                 textAlign = TextAlign.Center,
             )
             OrnamentRule(modifier = Modifier.padding(top = 6.dp), centered = true, color = gilt)
 
             BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val fitted = rememberFittedStyles(
-                    arabic = data.arabic,
-                    translation = data.translation,
+                    arabic = if (options.showArabic) data.arabic else "",
+                    translation = if (options.showTranslation) data.translation else "",
                     widthDp = maxWidth.value,
                     heightDp = maxHeight.value,
+                    sizeMultiplier = options.fontScale,
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(
+                    if (options.showArabic) Text(
                         data.arabic,
-                        style = fitted.arabic.copy(color = colors.onSurface, fontFamily = LocalArabicFontFamily.current),
+                        style = fitted.arabic.copy(color = colors.text, fontFamily = LocalArabicFontFamily.current),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    if (data.translation.isNotBlank()) {
+                    if (options.showTranslation && data.translation.isNotBlank()) {
                         OrnamentRule(modifier = Modifier.padding(vertical = 6.dp), centered = true, color = gilt)
                         Text(
                             data.translation,
-                            style = fitted.translation.copy(color = translationColor),
+                            style = fitted.translation.copy(color = colors.secondaryText, textDirection = TextDirection.ContentOrLtr),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -195,18 +145,18 @@ fun AyahPostcard(data: AyahShareData, modifier: Modifier = Modifier) {
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Huda Qur'an",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = gilt,
-            )
-            Text(
-                SHARE_SITE_HOST,
-                style = MaterialTheme.typography.labelSmall,
-                color = colors.onSurface.copy(alpha = 0.6f),
-            )
+            if (options.showBrand || options.showLink) {
+                Spacer(Modifier.height(layout.footerGapDp.dp))
+                if (options.showBrand) Text("Huda Qur'an", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = gilt)
+                if (options.showLink) {
+                    ShareCardLinkBlock(
+                        label = "Web bağlantısı",
+                        value = ayahLink(data.surahNumber, data.ayahNumber),
+                        colors = colors,
+                        maxLines = layout.linkMaxLines,
+                    )
+                }
+            }
         }
     }
 }
@@ -223,12 +173,13 @@ private fun rememberFittedStyles(
     translation: String,
     widthDp: Float,
     heightDp: Float,
+    sizeMultiplier: Float = 1f,
 ): FittedStyles {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val arabicFont = LocalArabicFontFamily.current
     val ruleDp = 26f
-    return remember(arabic, translation, widthDp, heightDp, arabicFont) {
+    return remember(arabic, translation, widthDp, heightDp, sizeMultiplier, arabicFont, density.density) {
         val widthPx = (widthDp * density.density).toInt().coerceAtLeast(1)
         val budgetPx = heightDp * density.density * 0.94f
         val hasTranslation = translation.isNotBlank()
@@ -236,8 +187,8 @@ private fun rememberFittedStyles(
         var result: FittedStyles? = null
         var i = 0
         while (i < 24 && result == null) {
-            val arabicSp = (28f * scale).coerceAtLeast(9f)
-            val transSp = (14f * scale).coerceAtLeast(7.5f)
+            val arabicSp = (28f * sizeMultiplier * scale).coerceAtLeast(9f)
+            val transSp = (14f * sizeMultiplier * scale).coerceAtLeast(7.5f)
             val arabicStyle = TextStyle(
                 fontFamily = arabicFont,
                 fontSize = arabicSp.sp,
@@ -248,6 +199,7 @@ private fun rememberFittedStyles(
             val transStyle = TextStyle(
                 fontSize = transSp.sp,
                 lineHeight = (transSp * 1.4f).sp,
+                textDirection = TextDirection.ContentOrLtr,
                 textAlign = TextAlign.Center,
             )
             val constraints = Constraints(maxWidth = widthPx)

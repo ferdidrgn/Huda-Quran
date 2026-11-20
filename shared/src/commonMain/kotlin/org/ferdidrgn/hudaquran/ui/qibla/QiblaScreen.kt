@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -32,13 +34,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.cardinalDirectionTr
-import org.ferdidrgn.hudaquran.domain.model.qiblaBearing
+import org.ferdidrgn.hudaquran.domain.model.safeQiblaBearing
 import org.ferdidrgn.hudaquran.sensors.QiblaCompass
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.BackButton
@@ -63,6 +69,7 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val prayerRepository = AppContainer.prayerRepository
     val strings = LocalStrings.current
     val compass = remember { QiblaCompass() }
+    val largeTouchTargets by preferences.largeTouchTargets.collectAsState()
 
     var bearing by remember { mutableStateOf<Double?>(null) }
     var latitude by remember { mutableStateOf<Double?>(null) }
@@ -70,6 +77,7 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var reloadKey by remember { mutableStateOf(0) }
+    var showCalibrationGuide by remember { mutableStateOf(false) }
 
     LaunchedEffect(reloadKey) {
         isLoading = true
@@ -81,7 +89,7 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             val lon = timings.longitude
             latitude = lat
             longitude = lon
-            bearing = if (lat != null && lon != null) qiblaBearing(lat, lon) else null
+            bearing = safeQiblaBearing(lat, lon)
             if (bearing == null) loadError = true
         }.onFailure { loadError = true }
         isLoading = false
@@ -95,6 +103,11 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     }
     val heading by compass.headingDegrees.collectAsState()
     val hasLiveHeading = compass.isAvailable && heading != null
+    val compassState = when {
+        !compass.isAvailable -> CompassState.NO_SENSOR
+        heading == null -> CompassState.LOW_ACCURACY
+        else -> CompassState.READY
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
@@ -134,10 +147,19 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         Spacer(Modifier.height(2.dp))
                     }
                     Box(
-                        modifier = if (hasLiveHeading) {
+                        modifier = (if (hasLiveHeading) {
                             Modifier.graphicsLayer { rotationZ = -(heading ?: 0f) }
                         } else {
                             Modifier
+                        }).semantics {
+                            contentDescription = strings.qiblaBearingTemplate
+                                .replace("{degree}", degree.roundToInt().toString())
+                                .replace("{cardinal}", cardinalDirectionTr(degree))
+                            stateDescription = when (compassState) {
+                                CompassState.NO_SENSOR -> strings.qiblaSensorNoSensor
+                                CompassState.LOW_ACCURACY -> strings.qiblaSensorLowAccuracy
+                                CompassState.READY -> strings.qiblaSensorReady
+                            }
                         },
                     ) {
                         CompassRose(bearingDegrees = degree)
@@ -158,12 +180,74 @@ fun QiblaScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+
+                    Spacer(Modifier.height(18.dp))
+                    CompassConfidenceCard(
+                        state = compassState,
+                        strings = strings,
+                        largeTouchTargets = largeTouchTargets,
+                        showCalibrationGuide = showCalibrationGuide,
+                        onCalibrationClick = { showCalibrationGuide = !showCalibrationGuide },
+                    )
                 }
             }
 
             if (adsSupported && !preferences.isAdFree() && !isLoading) {
                 Spacer(Modifier.height(28.dp))
                 AdBannerCard()
+            }
+        }
+    }
+}
+
+private enum class CompassState {
+    NO_SENSOR,
+    LOW_ACCURACY,
+    READY,
+}
+
+@Composable
+private fun CompassConfidenceCard(
+    state: CompassState,
+    strings: org.ferdidrgn.hudaquran.ui.localization.Strings,
+    largeTouchTargets: Boolean,
+    showCalibrationGuide: Boolean,
+    onCalibrationClick: () -> Unit,
+) {
+    val containerColor = when (state) {
+        CompassState.NO_SENSOR -> MaterialTheme.colorScheme.surfaceVariant
+        CompassState.LOW_ACCURACY -> MaterialTheme.colorScheme.tertiaryContainer
+        CompassState.READY -> MaterialTheme.colorScheme.primaryContainer
+    }
+    val title = when (state) {
+        CompassState.NO_SENSOR -> strings.qiblaSensorNoSensor
+        CompassState.LOW_ACCURACY -> strings.qiblaSensorLowAccuracy
+        CompassState.READY -> strings.qiblaSensorReady
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(containerColor, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        if (state == CompassState.LOW_ACCURACY) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onCalibrationClick,
+                modifier = Modifier.heightIn(min = if (largeTouchTargets) 60.dp else 48.dp),
+            ) {
+                Text(if (showCalibrationGuide) strings.qiblaCalibrationHideAction else strings.qiblaCalibrationAction)
+            }
+            if (showCalibrationGuide) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    strings.qiblaCalibrationInstructions,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
             }
         }
     }

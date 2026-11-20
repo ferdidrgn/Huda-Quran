@@ -41,7 +41,12 @@ actual class AudioPlayer actual constructor() {
         element.addEventListener("timeupdate", { update() })
         element.addEventListener("loadedmetadata", { update() })
         audio = element
-        element.play()
+        // A rejected play() promise is otherwise invisible to the state machine and leaves
+        // the UI spinning in LOADING until the watchdog timeout.
+        element.play().catch {
+            update(PlaybackStatus.ERROR)
+            null
+        }
     }
 
     actual fun pause() {
@@ -49,7 +54,10 @@ actual class AudioPlayer actual constructor() {
     }
 
     actual fun resume() {
-        audio?.play()
+        audio?.play()?.catch {
+            if (audio != null) _state.value = _state.value.copy(status = PlaybackStatus.ERROR)
+            null
+        }
     }
 
     actual fun stop() {

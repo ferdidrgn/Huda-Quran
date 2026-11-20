@@ -7,6 +7,12 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      { "source": "/mushaf", "destination": "/mushaf.html" },
+      { "source": "/hadith", "destination": "/hadith.html" },
+      { "source": "/tafsir", "destination": "/tafsir.html" },
+      { "source": "/dua", "destination": "/dua.html" },
+      { "source": "/prayer", "destination": "/prayer.html" },
+      { "source": "/reciters", "destination": "/reciters.html" },
       {
         "source": "**",
         "destination": "/index.html"

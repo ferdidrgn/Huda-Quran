@@ -16,7 +16,7 @@ actual class PageTurnChime actual constructor() {
             val element = document.createElement("audio") as HTMLAudioElement
             element.src = uri
             element.volume = 0.55
-            element.play()
+            element.play().catch { }
         }
     }
 

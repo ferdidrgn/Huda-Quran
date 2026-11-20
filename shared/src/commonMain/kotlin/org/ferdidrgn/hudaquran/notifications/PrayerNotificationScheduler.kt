@@ -4,11 +4,21 @@ import kotlinx.serialization.Serializable
 
 /** One local notification to fire at [atEpochMillis]. [id] is stable so re-planning replaces it. */
 @Serializable
+enum class ReminderKind {
+    PRAYER_PRE,
+    PRAYER_AT_TIME,
+    PRAYER_WIDGET,
+    OCCASION,
+}
+
+@Serializable
 data class Reminder(
     val id: Int,
     val atEpochMillis: Long,
     val title: String,
     val body: String,
+    val kind: ReminderKind = ReminderKind.OCCASION,
+    val scheduleNotification: Boolean = true,
 )
 
 /**
@@ -18,4 +28,5 @@ data class Reminder(
 expect class PrayerNotificationScheduler() {
     fun schedule(reminders: List<Reminder>)
     fun cancelAll()
+    fun preview(title: String, body: String)
 }

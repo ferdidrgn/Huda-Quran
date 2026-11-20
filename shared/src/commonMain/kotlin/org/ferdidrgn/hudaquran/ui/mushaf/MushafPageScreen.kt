@@ -1,6 +1,8 @@
 package org.ferdidrgn.hudaquran.ui.mushaf
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -15,6 +17,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,10 +27,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -88,7 +94,14 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -103,6 +116,7 @@ import org.ferdidrgn.hudaquran.audio.PlaybackEvent
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.data.local.TextSizeOption
 import org.ferdidrgn.hudaquran.domain.model.Ayah
 import org.ferdidrgn.hudaquran.domain.model.QuranSectionDetail
 import org.ferdidrgn.hudaquran.domain.model.SectionKind
@@ -129,7 +143,9 @@ private val PAGE_MAX_WIDTH_WIDE = 1080.dp
 /** Window width from which the page switches to the wide folio and larger type. */
 internal val WIDE_PAGE_BREAKPOINT = 840.dp
 
-private const val PAGE_TURN_ANIM_MS = 650
+// A deliberate, readable page turn: long enough to communicate direction, short enough not to
+// make routine navigation feel slow.
+private const val PAGE_TURN_ANIM_MS = 420
 
 // A fixed warm paper tone, independent of the app's accent theme — the same way a physical
 // mushaf's page color doesn't change with the cover.
@@ -148,13 +164,28 @@ internal fun toArabicIndicNumerals(number: Int): String = number.toString().map 
 private fun isDarkCanvas(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
 @Composable
-internal fun paperColor(): Color = if (isDarkCanvas()) PaperDark else PaperLight
+internal fun paperColor(): Color {
+    val highContrast by AppContainer.preferences.highContrast.collectAsState()
+    return if (highContrast) {
+        if (isDarkCanvas()) Color.Black else Color.White
+    } else if (isDarkCanvas()) PaperDark else PaperLight
+}
 
 @Composable
-internal fun inkColor(): Color = if (isDarkCanvas()) InkDark else InkLight
+internal fun inkColor(): Color {
+    val highContrast by AppContainer.preferences.highContrast.collectAsState()
+    return if (highContrast) {
+        if (isDarkCanvas()) Color.White else Color.Black
+    } else if (isDarkCanvas()) InkDark else InkLight
+}
 
 @Composable
-internal fun giltColor(): Color = if (isDarkCanvas()) GiltDark else GiltLight
+internal fun giltColor(): Color {
+    val highContrast by AppContainer.preferences.highContrast.collectAsState()
+    return if (highContrast) {
+        if (isDarkCanvas()) Color(0xFFFFD54F) else Color(0xFF704800)
+    } else if (isDarkCanvas()) GiltDark else GiltLight
+}
 
 /** Loads one page's ayahs for the page-synced recitation (memoised in the repository). */
 private suspend fun loadMushafAyahs(page: Int): List<Ayah> {
@@ -203,11 +234,23 @@ fun MushafPageScreen(
     val currentPage = pagerState.currentPage + 1
 
     val showTranslation by preferences.mushafShowTranslation.collectAsState()
+    val textSize by preferences.textSize.collectAsState()
+    val largeTouchTargets by preferences.largeTouchTargets.collectAsState()
+    val reducedMotion by preferences.reducedMotion.collectAsState()
     val favorites by preferences.favorites.collectAsState()
     // Tapping the page margins (or double-tapping the text) hides the bars for distraction-free reading.
     var chromeVisible by remember { mutableStateOf(true) }
+    var readingView by remember {
+        mutableStateOf(if (showTranslation) MushafReadingView.READING else MushafReadingView.MUSHAF)
+    }
+    LaunchedEffect(showTranslation) {
+        readingView = if (showTranslation) MushafReadingView.READING else MushafReadingView.MUSHAF
+    }
     var showJumpDialog by remember { mutableStateOf(false) }
     var actionAyah by remember { mutableStateOf<Ayah?>(null) }
+    // Separate immediate selection feedback from the playback cursor, which can arrive later
+    // while the audio URL is loading.
+    var selectedAyahGlobal by remember { mutableStateOf<Int?>(null) }
     // A small "page N" seal that pops up when the recitation turns the page by itself.
     var turnedPageBadge by remember { mutableStateOf<Int?>(null) }
     var badgeKey by remember { mutableIntStateOf(0) }
@@ -230,6 +273,15 @@ fun MushafPageScreen(
     }
     val isLoadingHere = audioOnThisPage && status == PlaybackStatus.LOADING
     val anyAyahAudio = currentAyah != null
+    val chromeEnter = if (reducedMotion) EnterTransition.None else expandVertically() + fadeIn()
+    val chromeExit = if (reducedMotion) ExitTransition.None else shrinkVertically() + fadeOut()
+    val controlEnter = if (reducedMotion) EnterTransition.None else fadeIn() + scaleIn()
+    val controlExit = if (reducedMotion) ExitTransition.None else fadeOut() + scaleOut()
+    val textSizeDescription = when (textSize) {
+        TextSizeOption.NORMAL -> strings.textSizeNormal
+        TextSizeOption.LARGE -> strings.textSizeLarge
+        TextSizeOption.EXTRA_LARGE -> strings.textSizeExtraLarge
+    }
 
     // External page changes (the jump dialog, a browser back/forward, a deep link) move the pager.
     LaunchedEffect(pageNumber) {
@@ -250,10 +302,9 @@ fun MushafPageScreen(
 
     fun goTo(page: Int) {
         scope.launch {
-            pagerState.animateScrollToPage(
-                page.coerceIn(1, TOTAL_MUSHAF_PAGES) - 1,
-                animationSpec = tween(PAGE_TURN_ANIM_MS, easing = FastOutSlowInEasing),
-            )
+            val target = page.coerceIn(1, TOTAL_MUSHAF_PAGES) - 1
+            if (reducedMotion) pagerState.scrollToPage(target)
+            else pagerState.animateScrollToPage(target, animationSpec = tween(PAGE_TURN_ANIM_MS, easing = FastOutSlowInEasing))
         }
     }
 
@@ -276,6 +327,7 @@ fun MushafPageScreen(
 
     fun onAyahTap(detail: QuranSectionDetail, ayah: Ayah) {
         playback.resetAutoTurns()
+        selectedAyahGlobal = ayah.globalNumber
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         if (flow != null && currentAyah?.globalNumber == ayah.globalNumber) {
             playback.togglePlayPause()
@@ -292,7 +344,8 @@ fun MushafPageScreen(
                     val target = event.page - 1
                     if (pagerState.currentPage != target) {
                         launch {
-                            pagerState.animateScrollToPage(target, animationSpec = tween(PAGE_TURN_ANIM_MS, easing = FastOutSlowInEasing))
+                            if (reducedMotion) pagerState.scrollToPage(target)
+                            else pagerState.animateScrollToPage(target, animationSpec = tween(PAGE_TURN_ANIM_MS, easing = FastOutSlowInEasing))
                         }
                     }
                     if (event.automatic) {
@@ -334,7 +387,8 @@ fun MushafPageScreen(
                         runCatching { loadMushafAyahs(event.page) }.onSuccess { ayahs ->
                             if (ayahs.isNotEmpty()) {
                                 playback.playPageFlow(ayahs, 0, preferences.selectedReciter) { page -> loadMushafAyahs(page) }
-                                pagerState.animateScrollToPage(event.page - 1)
+                                if (reducedMotion) pagerState.scrollToPage(event.page - 1)
+                                else pagerState.animateScrollToPage(event.page - 1)
                             }
                         }
                     }
@@ -412,7 +466,7 @@ fun MushafPageScreen(
             .focusable(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            AnimatedVisibility(visible = chromeVisible, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            AnimatedVisibility(visible = chromeVisible, enter = chromeEnter, exit = chromeExit) {
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
@@ -420,7 +474,18 @@ fun MushafPageScreen(
                     ) {
                         BackButton(onBack = onBack)
                         val currentDetail = loadedPages[currentPage]
-                        Column(modifier = Modifier.weight(1f).clickable { showJumpDialog = true }.padding(horizontal = 4.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 56.dp)
+                                .clickable { showJumpDialog = true }
+                                .semantics {
+                                    role = Role.Button
+                                    contentDescription = "${strings.sectionSingular(SectionKind.PAGE)} $currentPage"
+                                }
+                                .padding(horizontal = 8.dp),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
                             Text(
                                 "${strings.sectionSingular(SectionKind.PAGE)} $currentPage",
                                 style = MaterialTheme.typography.titleLarge,
@@ -438,15 +503,104 @@ fun MushafPageScreen(
                                 )
                             }
                         }
-                        IconButton(onClick = { preferences.setMushafShowTranslation(!showTranslation) }) {
+                    }
+                    // Controls have their own thumb-scroll row. The page title stays visible on a
+                    // narrow phone while view, text-size and audio controls remain reachable.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconButton(
+                            onClick = { preferences.setMushafShowTranslation(!showTranslation) },
+                            modifier = Modifier.size(if (largeTouchTargets) 56.dp else 48.dp),
+                        ) {
                             Icon(
                                 Icons.Filled.Translate,
                                 contentDescription = strings.toggleTranslationLabel,
                                 tint = if (showTranslation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        AnimatedVisibility(visible = anyAyahAudio, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
-                            IconButton(onClick = { playback.stop() }) {
+                        TextButton(
+                            onClick = {
+                                readingView = MushafReadingView.MUSHAF
+                                preferences.setMushafShowTranslation(false)
+                            },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+                            modifier = Modifier
+                                .heightIn(min = if (largeTouchTargets) 60.dp else 48.dp)
+                                .semantics {
+                                    role = Role.Button
+                                    contentDescription = strings.mushafViewLabel
+                                    stateDescription = if (readingView == MushafReadingView.MUSHAF) "Seçili" else "Seçili değil"
+                                },
+                        ) {
+                            Text(
+                                strings.mushafViewLabel,
+                                fontWeight = if (readingView == MushafReadingView.MUSHAF) FontWeight.Bold else FontWeight.Normal,
+                                color = if (readingView == MushafReadingView.MUSHAF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                readingView = MushafReadingView.READING
+                                preferences.setMushafShowTranslation(true)
+                            },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+                            modifier = Modifier
+                                .heightIn(min = if (largeTouchTargets) 60.dp else 48.dp)
+                                .semantics {
+                                    role = Role.Button
+                                    contentDescription = strings.readingViewLabel
+                                    stateDescription = if (readingView == MushafReadingView.READING) "Seçili" else "Seçili değil"
+                                },
+                        ) {
+                            Text(
+                                strings.readingViewLabel,
+                                fontWeight = if (readingView == MushafReadingView.READING) FontWeight.Bold else FontWeight.Normal,
+                                color = if (readingView == MushafReadingView.READING) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                val next = when (textSize) {
+                                    TextSizeOption.NORMAL -> TextSizeOption.NORMAL
+                                    TextSizeOption.LARGE -> TextSizeOption.NORMAL
+                                    TextSizeOption.EXTRA_LARGE -> TextSizeOption.LARGE
+                                }
+                                preferences.setTextSize(next)
+                            },
+                            enabled = textSize != TextSizeOption.NORMAL,
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                            modifier = Modifier
+                                .heightIn(min = if (largeTouchTargets) 60.dp else 48.dp)
+                                .semantics {
+                                    contentDescription = strings.decreaseTextSizeLabel
+                                    stateDescription = "${strings.textSizeLabel}: $textSizeDescription"
+                                },
+                        ) { Text("A−", fontWeight = FontWeight.Bold) }
+                        TextButton(
+                            onClick = {
+                                val next = when (textSize) {
+                                    TextSizeOption.NORMAL -> TextSizeOption.LARGE
+                                    TextSizeOption.LARGE -> TextSizeOption.EXTRA_LARGE
+                                    TextSizeOption.EXTRA_LARGE -> TextSizeOption.EXTRA_LARGE
+                                }
+                                preferences.setTextSize(next)
+                            },
+                            enabled = textSize != TextSizeOption.EXTRA_LARGE,
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                            modifier = Modifier
+                                .heightIn(min = if (largeTouchTargets) 60.dp else 48.dp)
+                                .semantics {
+                                    contentDescription = strings.increaseTextSizeLabel
+                                    stateDescription = "${strings.textSizeLabel}: $textSizeDescription"
+                                },
+                        ) { Text("A+", fontWeight = FontWeight.Bold) }
+                        AnimatedVisibility(visible = anyAyahAudio, enter = controlEnter, exit = controlExit) {
+                            IconButton(onClick = { playback.stop() }, modifier = Modifier.size(if (largeTouchTargets) 56.dp else 48.dp)) {
                                 Icon(Icons.Filled.Stop, contentDescription = strings.mushafStopAction, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
@@ -484,16 +638,17 @@ fun MushafPageScreen(
                                 // tilts on its spine, shrinks a touch and dims.
                                 modifier = Modifier.graphicsLayer {
                                     val offset = ((pagerState.currentPage - index) + pagerState.currentPageOffsetFraction).coerceIn(-1f, 1f)
-                                    val amount = abs(offset)
-                                    alpha = 1f - 0.35f * amount
-                                    scaleX = 1f - 0.07f * amount
-                                    scaleY = 1f - 0.035f * amount
-                                    rotationY = offset * 14f
+                                    val amount = if (reducedMotion) 0f else abs(offset)
+                                    alpha = 1f - 0.22f * amount
+                                    scaleX = 1f - 0.035f * amount
+                                    scaleY = 1f - 0.018f * amount
+                                    rotationY = if (reducedMotion) 0f else offset * 7f
                                     cameraDistance = 14f * density
                                     transformOrigin = TransformOrigin(if (offset > 0f) 0f else 1f, 0.5f)
                                 },
-                                showTranslation = showTranslation,
+                                readingView = readingView,
                                 currentAyah = currentAyah,
+                                selectedAyahGlobal = selectedAyahGlobal,
                                 favorites = favorites,
                                 strings = strings,
                                 cached = loadedPages[index + 1],
@@ -511,6 +666,7 @@ fun MushafPageScreen(
                                 onAyahTap = { detail, ayah -> onAyahTap(detail, ayah) },
                                 onAyahLongPress = { ayah ->
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    selectedAyahGlobal = ayah.globalNumber
                                     actionAyah = ayah
                                 },
                                 onPlaySurahStart = { detail, ayah -> onAyahTap(detail, ayah) },
@@ -523,8 +679,8 @@ fun MushafPageScreen(
                 androidx.compose.animation.AnimatedVisibility(
                     visible = turnedPageBadge != null,
                     modifier = Modifier.align(Alignment.TopCenter).padding(top = 18.dp),
-                    enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.85f),
-                    exit = fadeOut(tween(300)),
+                    enter = if (reducedMotion) EnterTransition.None else fadeIn(tween(220)) + scaleIn(initialScale = 0.85f),
+                    exit = if (reducedMotion) ExitTransition.None else fadeOut(tween(300)),
                 ) {
                     val gilt = giltColor()
                     Text(
@@ -546,8 +702,8 @@ fun MushafPageScreen(
             val playingPage = currentAyah?.page
             AnimatedVisibility(
                 visible = flow != null && playingPage != null && playingPage != currentPage,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut(),
+                enter = chromeEnter,
+                exit = chromeExit,
             ) {
                 Box(modifier = Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) {
                     TextButton(onClick = { playingPage?.let { goTo(it) } }) {
@@ -556,7 +712,7 @@ fun MushafPageScreen(
                 }
             }
 
-            AnimatedVisibility(visible = chromeVisible, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            AnimatedVisibility(visible = chromeVisible, enter = chromeEnter, exit = chromeExit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     MushafPageFooter(
                         page = currentPage,
@@ -648,8 +804,9 @@ fun MushafPageScreen(
 private fun MushafPage(
     page: Int,
     modifier: Modifier,
-    showTranslation: Boolean,
+    readingView: MushafReadingView,
     currentAyah: Ayah?,
+    selectedAyahGlobal: Int?,
     favorites: Set<String>,
     strings: Strings,
     cached: QuranSectionDetail?,
@@ -684,11 +841,20 @@ private fun MushafPage(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         val wide = maxWidth >= WIDE_PAGE_BREAKPOINT
+        var pageWidthPx by remember(page) { mutableIntStateOf(1) }
         Box(
             modifier = Modifier
                 .widthIn(max = if (wide) PAGE_MAX_WIDTH_WIDE else PAGE_MAX_WIDTH)
                 .fillMaxSize()
-                .padding(horizontal = if (wide) 24.dp else 14.dp, vertical = 12.dp)
+                .padding(
+                    horizontal = when {
+                        wide -> 24.dp
+                        maxWidth < 340.dp -> 8.dp
+                        maxWidth < 420.dp -> 12.dp
+                        else -> 14.dp
+                    },
+                    vertical = if (wide) 12.dp else 8.dp,
+                )
                 .shadow(
                     elevation = 14.dp,
                     shape = PAGE_SHAPE,
@@ -697,12 +863,13 @@ private fun MushafPage(
                 )
                 .clip(PAGE_SHAPE)
                 .background(paperColor())
-                .pointerInput(Unit) {
+                .onSizeChanged { pageWidthPx = it.width.coerceAtLeast(1) }
+                .pointerInput(pageWidthPx) {
                     detectTapGestures { offset ->
                         currentOnTapZone(
                             when {
-                                offset.x < size.width * 0.28f -> TapZone.LEFT
-                                offset.x > size.width * 0.72f -> TapZone.RIGHT
+                                offset.x < pageWidthPx * 0.28f -> TapZone.LEFT
+                                offset.x > pageWidthPx * 0.72f -> TapZone.RIGHT
                                 else -> TapZone.CENTER
                             },
                         )
@@ -713,8 +880,9 @@ private fun MushafPage(
                 detail != null -> MushafPageText(
                     detail = detail,
                     page = page,
-                    showTranslation = showTranslation,
+                    readingView = readingView,
                     currentAyah = currentAyah,
+                    selectedAyahGlobal = selectedAyahGlobal,
                     favorites = favorites,
                     wide = wide,
                     onAyahTap = { ayah -> onAyahTap(detail, ayah) },
@@ -789,17 +957,19 @@ private fun MushafPageOrnamentBorder(modifier: Modifier = Modifier, color: Color
 @Composable
 private fun MushafPageFooter(page: Int, onPrevious: () -> Unit, onNext: () -> Unit, onCenterClick: () -> Unit) {
     val strings = LocalStrings.current
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onPrevious, enabled = page > 1) {
+            IconButton(onClick = onPrevious, enabled = page > 1, modifier = Modifier.size(if (largeTouchTargets) 56.dp else 48.dp)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = strings.cdPrevious)
             }
             Box(
                 modifier = Modifier
+                    .heightIn(min = if (largeTouchTargets) 60.dp else 48.dp)
                     .clip(RoundedCornerShape(50))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onCenterClick),
@@ -813,7 +983,7 @@ private fun MushafPageFooter(page: Int, onPrevious: () -> Unit, onNext: () -> Un
                     style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr),
                 )
             }
-            IconButton(onClick = onNext, enabled = page < TOTAL_MUSHAF_PAGES) {
+            IconButton(onClick = onNext, enabled = page < TOTAL_MUSHAF_PAGES, modifier = Modifier.size(if (largeTouchTargets) 56.dp else 48.dp)) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = strings.cdNext)
             }
         }

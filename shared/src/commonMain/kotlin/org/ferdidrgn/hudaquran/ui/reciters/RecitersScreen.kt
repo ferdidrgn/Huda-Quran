@@ -1,7 +1,6 @@
 package org.ferdidrgn.hudaquran.ui.reciters
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,11 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.withTimeoutOrNull
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
 import org.ferdidrgn.hudaquran.di.AppContainer
@@ -72,22 +72,38 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var query by remember { mutableStateOf("") }
     var selectedReciter by remember { mutableStateOf(preferences.selectedReciter) }
     var reloadKey by remember { mutableStateOf(0) }
+    var unavailableReciters by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val nowPlaying by playback.nowPlaying.collectAsState()
     val playerState by playback.playerState.collectAsState()
+    val lastFailure by playback.lastFailure.collectAsState()
+    val largeTouchTargets by preferences.largeTouchTargets.collectAsState()
     val strings = LocalStrings.current
 
     LaunchedEffect(reloadKey) {
         isLoading = true
         loadError = false
-        runCatching { repository.getReciters() }
+        runCatching {
+            withTimeoutOrNull(15_000L) { repository.getReciters() }
+                ?: error("reciter catalogue timeout")
+        }
             .onSuccess { reciters = it }
             .onFailure { loadError = true }
         isLoading = false
     }
 
-    val filtered = remember(reciters, query) {
-        if (query.isBlank()) reciters else reciters.filter { it.displayName.contains(query, ignoreCase = true) }
+    val filtered = remember(reciters, query, unavailableReciters) {
+        reciters.filter { it.identifier !in unavailableReciters }.let { available ->
+            if (query.isBlank()) available else available.filter { it.displayName.contains(query, ignoreCase = true) }
+        }
+    }
+
+    LaunchedEffect(lastFailure) {
+        val failedId = lastFailure?.reciterId
+        if (failedId != null && reciters.any { it.identifier == failedId }) {
+            unavailableReciters = unavailableReciters + failedId
+            playback.clearLastFailure()
+        }
     }
 
     Box(modifier = modifier.fillMaxSize().screenBackground()) {
@@ -129,6 +145,16 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                if (unavailableReciters.isNotEmpty()) {
+                    item(key = "audio_warning") {
+                        Text(
+                            "Bazı kıraatçıların örnek sesi erişilemediği için listeden çıkarıldı. Başka bir kıraatçı deneyebilirsiniz.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                        )
+                    }
+                }
                 itemsIndexed(filtered, key = { _, reciter -> reciter.identifier }) { index, reciter ->
                     val isThisPreviewing = nowPlaying?.mode == PlaybackMode.WHOLE_SURAH &&
                         nowPlaying?.reciterId == reciter.identifier &&
@@ -138,6 +164,7 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         isSelected = selectedReciter == reciter.identifier,
                         isPreviewPlaying = isThisPreviewing && playerState.status == PlaybackStatus.PLAYING,
                         isPreviewLoading = isThisPreviewing && playerState.status == PlaybackStatus.LOADING,
+                        largeTouchTargets = largeTouchTargets,
                         strings = strings,
                         onSelect = {
                             selectedReciter = reciter.identifier
@@ -172,6 +199,7 @@ private fun ReciterRow(
     isSelected: Boolean,
     isPreviewPlaying: Boolean,
     isPreviewLoading: Boolean,
+    largeTouchTargets: Boolean,
     strings: Strings,
     onSelect: () -> Unit,
     onPreviewToggle: () -> Unit,
@@ -219,17 +247,13 @@ private fun ReciterRow(
                 Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                 Box(modifier = Modifier.size(8.dp))
             }
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clickable(onClick = onPreviewToggle),
-                contentAlignment = Alignment.Center,
+            IconButton(
+                onClick = onPreviewToggle,
+                modifier = Modifier.size(if (largeTouchTargets) 60.dp else 48.dp),
             ) {
                 when {
                     isPreviewLoading -> CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(if (largeTouchTargets) 24.dp else 20.dp),
                         strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
@@ -237,13 +261,13 @@ private fun ReciterRow(
                         Icons.Filled.Pause,
                         contentDescription = strings.cdPause,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(if (largeTouchTargets) 24.dp else 20.dp),
                     )
                     else -> Icon(
                         Icons.Filled.PlayArrow,
                         contentDescription = strings.cdPlay,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(if (largeTouchTargets) 24.dp else 20.dp),
                     )
                 }
             }

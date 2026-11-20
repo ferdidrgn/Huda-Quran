@@ -38,6 +38,14 @@ class QiblaTest {
     }
 
     @Test
+    fun malformedCoordinatesDoNotProduceAFalseDirection() {
+        assertEquals(null, safeQiblaBearing(null, 28.9784))
+        assertEquals(null, safeQiblaBearing(91.0, 28.9784))
+        assertEquals(null, safeQiblaBearing(41.0082, Double.NaN))
+        assertTrue(safeQiblaBearing(41.0082, 28.9784)!!.isFinite())
+    }
+
+    @Test
     fun cardinalDirectionSnapsToNearestOfSixteenPoints() {
         assertEquals("K", cardinalDirectionTr(0.0))
         assertEquals("K", cardinalDirectionTr(359.9))

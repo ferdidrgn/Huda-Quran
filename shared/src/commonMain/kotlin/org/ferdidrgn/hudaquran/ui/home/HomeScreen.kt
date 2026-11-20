@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -52,10 +53,12 @@ import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ImportContacts
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.ViewModule
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
@@ -84,6 +87,10 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.Clock
@@ -92,6 +99,10 @@ import kotlinx.datetime.toLocalDateTime
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.LastRead
 import org.ferdidrgn.hudaquran.data.repository.DailyAyah
+import org.ferdidrgn.hudaquran.data.repository.HadithRepository
+import org.ferdidrgn.hudaquran.domain.model.DuaContent
+import org.ferdidrgn.hudaquran.domain.model.Hadith
+import org.ferdidrgn.hudaquran.domain.model.duaList
 import org.ferdidrgn.hudaquran.data.repository.nextPrayer
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.EsmaName
@@ -125,6 +136,8 @@ import org.ferdidrgn.hudaquran.ui.components.screenBackground
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
 import org.ferdidrgn.hudaquran.ui.localization.Strings
 import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
+import org.ferdidrgn.hudaquran.ui.travel.TravelModeStatusCard
+import org.ferdidrgn.hudaquran.ui.travel.TravelModeStore
 
 private val popularSurahNumbers = listOf(1, 2, 18, 36, 55, 56, 67, 112)
 
@@ -148,8 +161,10 @@ fun HomeScreen(
     onOpenEsmaulHusna: () -> Unit,
     onOpenEsmaulHusnaDetail: (Int) -> Unit,
     onOpenDuaList: () -> Unit,
+    onOpenHadith: () -> Unit,
     onOpenZakatCalculator: () -> Unit,
     onOpenIslamicCalendar: () -> Unit,
+    onOpenWorshipTracker: () -> Unit,
 ) {
     val preferences = AppContainer.preferences
     val repository = AppContainer.repository
@@ -175,9 +190,16 @@ fun HomeScreen(
     var prayerTimes by remember { mutableStateOf<PrayerTimes?>(null) }
     var meta by remember { mutableStateOf<QuranMeta?>(null) }
     var surahReloadKey by remember { mutableStateOf(0) }
+    var dailyHadith by remember { mutableStateOf<Hadith?>(null) }
+    var dailyDua by remember { mutableStateOf<DuaContent?>(null) }
+    var isLoadingTodayContent by remember { mutableStateOf(true) }
+    val hadithRepository = remember { HadithRepository() }
 
-    val city = preferences.prayerCity
-    val country = preferences.prayerCountry
+    val travelMode by TravelModeStore.state.collectAsState()
+    val travelCity = travelMode.destinationCity
+    val travelCountry = travelMode.destinationCountry
+    val city = if (travelMode.enabled && travelCity != null) travelCity else preferences.prayerCity
+    val country = if (travelMode.enabled && travelCountry != null) travelCountry else preferences.prayerCountry
     val locationDisplayName =
         PrayerLocations.all.firstOrNull { it.city == city && it.country == country }
             ?.displayName ?: "$city, $country"
@@ -211,6 +233,19 @@ fun HomeScreen(
             isLoadingDaily = false
         }
     }
+    LaunchedEffect(appLanguage) {
+        isLoadingTodayContent = true
+        val dayIndex = (Clock.System.now().toEpochMilliseconds() / 86_400_000L).toInt()
+        val dua = duaList.getOrNull(((dayIndex % duaList.size) + duaList.size) % duaList.size)
+        dailyDua = dua?.let { DuaContent(it, source = "Huda Quran seçkisi") }
+        dailyHadith = runCatching {
+            val categoryId = hadithRepository.categories("tr").firstOrNull()?.id ?: return@runCatching null
+            val summary = hadithRepository.list("tr", categoryId, page = 1, perPage = 1).items.firstOrNull()
+                ?: return@runCatching null
+            hadithRepository.get(summary.id, "tr")
+        }.getOrNull()
+        isLoadingTodayContent = false
+    }
 
     val popularSurahs = remember(surahs) {
         popularSurahNumbers.mapNotNull { number -> surahs.firstOrNull { it.number == number } }
@@ -235,6 +270,9 @@ fun HomeScreen(
             readingStreak = readingStreak,
             dailyAyah = dailyAyah,
             isLoadingDaily = isLoadingDaily,
+            dailyHadith = dailyHadith,
+            dailyDua = dailyDua,
+            isLoadingTodayContent = isLoadingTodayContent,
             onRefreshDaily = { isLoadingDaily = true },
             onOpenSurah = onOpenSurah,
             onOpenSurahList = onOpenSurahList,
@@ -251,8 +289,10 @@ fun HomeScreen(
             onOpenEsmaulHusna = onOpenEsmaulHusna,
             onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
             onOpenDuaList = onOpenDuaList,
+            onOpenHadith = onOpenHadith,
             onOpenZakatCalculator = onOpenZakatCalculator,
             onOpenIslamicCalendar = onOpenIslamicCalendar,
+            onOpenWorshipTracker = onOpenWorshipTracker,
             showThemeIntro = showThemeIntro,
             onDismissThemeIntro = {
                 preferences.themeIntroSeen = true
@@ -324,6 +364,13 @@ fun HomeScreen(
                         }
                         item {
                             QuickAction(
+                                Icons.Outlined.MenuBook,
+                                "Hadisler",
+                                onClick = onOpenHadith,
+                            )
+                        }
+                        item {
+                            QuickAction(
                                 Icons.Outlined.ConfirmationNumber,
                                 strings.hacKuraLabel,
                                 onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
@@ -343,6 +390,13 @@ fun HomeScreen(
                                 onClick = onOpenIslamicCalendar
                             )
                         }
+                        item {
+                            QuickAction(
+                                Icons.Outlined.Timeline,
+                                "İbadet takibi",
+                                onClick = onOpenWorshipTracker,
+                            )
+                        }
                     }
                 }
             }
@@ -353,8 +407,34 @@ fun HomeScreen(
             StaggeredEntrance(2) { PrayerWidget(prayerTimes, locationDisplayName, onOpenSettings) }
         }
 
-        item(span = { GridItemSpan(maxLineSpan) }) {
+        item(span = { GridItemSpan(maxLineSpan) }, key = "today_overview") {
             StaggeredEntrance(3) {
+                TodayOverview(
+                    strings = strings,
+                    lastRead = lastRead,
+                    lastMushafPage = lastMushafPage,
+                    khatmFurthestPage = khatmFurthestPage,
+                    khatmCompletedCount = khatmCompletedCount,
+                    appLanguage = appLanguage,
+                    dailyAyah = dailyAyah,
+                    isLoadingDaily = isLoadingDaily,
+                    shareDaily = shareDaily,
+                    dailyHadith = dailyHadith,
+                    dailyDua = dailyDua,
+                    isLoadingTodayContent = isLoadingTodayContent,
+                    onShareDaily = { shareDaily = true },
+                    onRetryDaily = { isLoadingDaily = true },
+                    onDismissShare = { shareDaily = false },
+                    onOpenSurah = onOpenSurah,
+                    onOpenMushafMode = onOpenMushafMode,
+                    onOpenHadith = onOpenHadith,
+                    onOpenDuaList = onOpenDuaList,
+                )
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StaggeredEntrance(4) {
                 FeaturedSurahsSection(
                     popularSurahs = popularSurahs,
                     loadError = loadError,
@@ -366,36 +446,7 @@ fun HomeScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(4) {
-                ReadingProgressCard(
-                    lastRead = lastRead,
-                    lastMushafPage = lastMushafPage,
-                    khatmFurthestPage = khatmFurthestPage,
-                    khatmCompletedCount = khatmCompletedCount,
-                    appLanguage = appLanguage,
-                    onOpenSurah = onOpenSurah,
-                    onOpenMushafMode = onOpenMushafMode,
-                )
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
             StaggeredEntrance(5) {
-                DailyAyahSection(
-                    dailyAyah = dailyAyah,
-                    isLoadingDaily = isLoadingDaily,
-                    shareDaily = shareDaily,
-                    appLanguage = appLanguage,
-                    onShare = { shareDaily = true },
-                    onRetry = { isLoadingDaily = true },
-                    onDismissShare = { shareDaily = false },
-                    onOpenSurah = onOpenSurah,
-                )
-            }
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            StaggeredEntrance(6) {
                 EsmaulHusnaSection(
                     onOpenEsmaulHusna = onOpenEsmaulHusna,
                     onOpenEsmaulHusnaDetail = onOpenEsmaulHusnaDetail,
@@ -720,6 +771,9 @@ private fun WebHomeContent(
     readingStreak: Int,
     dailyAyah: DailyAyah?,
     isLoadingDaily: Boolean,
+    dailyHadith: Hadith?,
+    dailyDua: DuaContent?,
+    isLoadingTodayContent: Boolean,
     onRefreshDaily: () -> Unit,
     onOpenSurah: (Int, Int?) -> Unit,
     onOpenSurahList: () -> Unit,
@@ -736,8 +790,10 @@ private fun WebHomeContent(
     onOpenEsmaulHusna: () -> Unit,
     onOpenEsmaulHusnaDetail: (Int) -> Unit,
     onOpenDuaList: () -> Unit,
+    onOpenHadith: () -> Unit,
     onOpenZakatCalculator: () -> Unit,
     onOpenIslamicCalendar: () -> Unit,
+    onOpenWorshipTracker: () -> Unit,
     locationDisplayName: String,
     showThemeIntro: Boolean,
     onDismissThemeIntro: () -> Unit,
@@ -797,6 +853,13 @@ private fun WebHomeContent(
                     }
                     item {
                         QuickAction(
+                            Icons.Outlined.MenuBook,
+                            "Hadisler",
+                            onClick = onOpenHadith,
+                        )
+                    }
+                    item {
+                        QuickAction(
                             Icons.Outlined.ConfirmationNumber,
                             strings.hacKuraLabel,
                             onClick = { uriHandler.openUri("https://hacumre.diyanet.gov.tr/") },
@@ -814,6 +877,13 @@ private fun WebHomeContent(
                             Icons.Outlined.Event,
                             strings.islamicCalendarTitle,
                             onClick = onOpenIslamicCalendar
+                        )
+                    }
+                    item {
+                        QuickAction(
+                            Icons.Outlined.Timeline,
+                            "İbadet takibi",
+                            onClick = onOpenWorshipTracker,
                         )
                     }
                 }
@@ -846,6 +916,15 @@ private fun WebHomeContent(
                 appLanguage = appLanguage,
                 onRefresh = onRefreshDaily,
                 onOpenSurah = onOpenSurah,
+            )
+
+            TodayContentCards(
+                strings = strings,
+                dailyHadith = dailyHadith,
+                dailyDua = dailyDua,
+                isLoading = isLoadingTodayContent,
+                onOpenHadith = onOpenHadith,
+                onOpenDuaList = onOpenDuaList,
             )
 
             EsmaulHusnaSection(
@@ -1483,6 +1562,7 @@ private fun PrayerWidget(
 ) {
     val strings = LocalStrings.current
     val colors = MaterialTheme.colorScheme
+    val largeTouchTargets by AppContainer.preferences.largeTouchTargets.collectAsState()
     GlassSurface(modifier = Modifier.fillMaxWidth()) {
         if (prayerTimes == null) {
             Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
@@ -1506,6 +1586,10 @@ private fun PrayerWidget(
                         indication = LocalIndication.current,
                         onClick = onOpenSettings
                     )
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = "$locationDisplayName. ${strings.selectLocationTitle}"
+                    }
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -1540,6 +1624,9 @@ private fun PrayerWidget(
 
             HorizontalDivider(color = colors.onSurface.copy(alpha = 0.14f))
             Spacer(Modifier.height(10.dp))
+
+            TravelModeStatusCard()
+            Spacer(Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1589,6 +1676,7 @@ private fun PrayerWidget(
                     Column(
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = if (largeTouchTargets) 68.dp else 56.dp)
                             .pressScale(rowSource, 0.94f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (isNext) colors.primaryContainer else Color.Transparent)
@@ -1597,12 +1685,16 @@ private fun PrayerWidget(
                                 indication = LocalIndication.current,
                                 onClick = onOpenSettings
                             )
+                            .semantics(mergeDescendants = true) {
+                                role = Role.Button
+                                contentDescription = "${prayer.label} ${prayer.time}"
+                            }
                             .padding(horizontal = 2.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
                             prayer.label,
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             color = labelColor,
                             fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
                             maxLines = 1,
@@ -1610,7 +1702,7 @@ private fun PrayerWidget(
                         )
                         Text(
                             prayer.time,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = if (isNext) FontWeight.Bold else FontWeight.SemiBold,
                             color = timeColor,
                         )
@@ -1666,6 +1758,171 @@ private fun FeaturedSurahsSection(
                         SurahPreviewCard(surah) { onOpenSurah(surah.number) }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * A single, predictable reading order for the most useful parts of the home screen:
+ * prayer context first, then the user's own reading goal, then small daily discoveries.
+ * Keeping this grouping in one column also makes the same hierarchy work on narrow phones.
+ */
+@Composable
+private fun TodayOverview(
+    strings: Strings,
+    lastRead: LastRead?,
+    lastMushafPage: Int?,
+    khatmFurthestPage: Int,
+    khatmCompletedCount: Int,
+    appLanguage: AppLanguage,
+    dailyAyah: DailyAyah?,
+    isLoadingDaily: Boolean,
+    shareDaily: Boolean,
+    dailyHadith: Hadith?,
+    dailyDua: DuaContent?,
+    isLoadingTodayContent: Boolean,
+    onShareDaily: () -> Unit,
+    onRetryDaily: () -> Unit,
+    onDismissShare: () -> Unit,
+    onOpenSurah: (Int, Int?) -> Unit,
+    onOpenMushafMode: (Int) -> Unit,
+    onOpenHadith: () -> Unit,
+    onOpenDuaList: () -> Unit,
+) {
+    Column {
+        SectionHeader(strings.todayTitle)
+        Spacer(Modifier.height(10.dp))
+        ReadingProgressCard(
+            lastRead = lastRead,
+            lastMushafPage = lastMushafPage,
+            khatmFurthestPage = khatmFurthestPage,
+            khatmCompletedCount = khatmCompletedCount,
+            appLanguage = appLanguage,
+            onOpenSurah = onOpenSurah,
+            onOpenMushafMode = onOpenMushafMode,
+        )
+        Spacer(Modifier.height(12.dp))
+        DailyAyahSection(
+            dailyAyah = dailyAyah,
+            isLoadingDaily = isLoadingDaily,
+            shareDaily = shareDaily,
+            appLanguage = appLanguage,
+            onShare = onShareDaily,
+            onRetry = onRetryDaily,
+            onDismissShare = onDismissShare,
+            onOpenSurah = onOpenSurah,
+        )
+        Spacer(Modifier.height(12.dp))
+        TodayContentCards(
+            strings = strings,
+            dailyHadith = dailyHadith,
+            dailyDua = dailyDua,
+            isLoading = isLoadingTodayContent,
+            onOpenHadith = onOpenHadith,
+            onOpenDuaList = onOpenDuaList,
+        )
+    }
+}
+
+@Composable
+private fun TodayContentCards(
+    strings: Strings,
+    dailyHadith: Hadith?,
+    dailyDua: DuaContent?,
+    isLoading: Boolean,
+    onOpenHadith: () -> Unit,
+    onOpenDuaList: () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val stacked = maxWidth < 520.dp
+        if (stacked) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                TodayContentCard(
+                    icon = Icons.Outlined.MenuBook,
+                    title = strings.todayHadithTitle,
+                    body = dailyHadith?.text ?: strings.todayNoContent,
+                    actionLabel = strings.todayOpenHadith,
+                    isLoading = isLoading,
+                    onClick = onOpenHadith,
+                )
+                TodayContentCard(
+                    icon = Icons.Outlined.VolunteerActivism,
+                    title = strings.todayDuaTitle,
+                    body = dailyDua?.dua?.meaning ?: strings.todayNoContent,
+                    actionLabel = strings.todayOpenDua,
+                    isLoading = false,
+                    onClick = onOpenDuaList,
+                )
+            }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.weight(1f)) {
+                    TodayContentCard(
+                        icon = Icons.Outlined.MenuBook,
+                        title = strings.todayHadithTitle,
+                        body = dailyHadith?.text ?: strings.todayNoContent,
+                        actionLabel = strings.todayOpenHadith,
+                        isLoading = isLoading,
+                        onClick = onOpenHadith,
+                    )
+                }
+                Box(Modifier.weight(1f)) {
+                    TodayContentCard(
+                        icon = Icons.Outlined.VolunteerActivism,
+                        title = strings.todayDuaTitle,
+                        body = dailyDua?.dua?.meaning ?: strings.todayNoContent,
+                        actionLabel = strings.todayOpenDua,
+                        isLoading = false,
+                        onClick = onOpenDuaList,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayContentCard(
+    icon: ImageVector,
+    title: String,
+    body: String,
+    actionLabel: String,
+    isLoading: Boolean,
+    onClick: () -> Unit,
+) {
+    GlassSurface(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).semantics(mergeDescendants = true) {
+            role = Role.Button
+            contentDescription = "$title. $body. $actionLabel"
+        },
+        contentPadding = PaddingValues(16.dp),
+        onClick = onClick,
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            IconBubble(icon = icon, accent = true)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text = body,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = actionLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
@@ -1753,7 +2010,10 @@ private fun DailyAyahSection(
                     } ${dailyAyah.numberInSurah}",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable {
+                    modifier = Modifier.semantics {
+                        role = Role.Button
+                        contentDescription = "${strings.ayahWord} ${dailyAyah.numberInSurah}"
+                    }.clickable {
                         onOpenSurah(
                             dailyAyah.surahNumber,
                             dailyAyah.numberInSurah
@@ -1787,6 +2047,10 @@ private fun ReadingProgressCard(
         if (lastRead != null) {
             Row(
                 modifier = Modifier.fillMaxWidth()
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = "${strings.continueReading}. ${localizedSurahName(lastRead.surahNumber, lastRead.surahName, appLanguage)}"
+                    }
                     .clickable { onOpenSurah(lastRead.surahNumber, lastRead.numberInSurah) },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1819,7 +2083,12 @@ private fun ReadingProgressCard(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().clickable { onOpenMushafMode(lastMushafPage ?: 1) },
+            modifier = Modifier.fillMaxWidth()
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    contentDescription = strings.mushafModeLabel
+                }
+                .clickable { onOpenMushafMode(lastMushafPage ?: 1) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconBubble(icon = Icons.Outlined.AutoStories, accent = true)
@@ -1951,7 +2220,7 @@ private fun StatBento(
 @Composable
 private fun QuickAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     GlassSurface(
-        modifier = Modifier.width(92.dp),
+        modifier = Modifier.width(92.dp).heightIn(min = 72.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 6.dp),
         onClick = onClick,
     ) {

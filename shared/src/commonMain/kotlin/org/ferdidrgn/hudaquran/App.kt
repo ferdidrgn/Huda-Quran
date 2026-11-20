@@ -72,6 +72,10 @@ import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaDetailScreen
 import org.ferdidrgn.hudaquran.ui.esmaulhusna.EsmaulHusnaScreen
 import org.ferdidrgn.hudaquran.ui.favorites.FavoritesScreen
 import org.ferdidrgn.hudaquran.ui.home.HomeScreen
+import org.ferdidrgn.hudaquran.ui.khatm.KhatmJourneyScreen
+import org.ferdidrgn.hudaquran.ui.memorization.MemorizationScreen
+import org.ferdidrgn.hudaquran.ui.hadith.HadithDetailScreen
+import org.ferdidrgn.hudaquran.ui.hadith.HadithListScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonDetailScreen
 import org.ferdidrgn.hudaquran.ui.learn.TajwidLessonListScreen
 import org.ferdidrgn.hudaquran.ui.localization.LocalStrings
@@ -86,6 +90,7 @@ import org.ferdidrgn.hudaquran.ui.navigation.Screen
 import org.ferdidrgn.hudaquran.ui.navigation.observeBrowserNavigation
 import org.ferdidrgn.hudaquran.ui.navigation.syncBrowserUrl
 import org.ferdidrgn.hudaquran.ui.onboarding.OnboardingScreen
+import org.ferdidrgn.hudaquran.ui.offline.OfflineContentScreen
 import org.ferdidrgn.hudaquran.ui.qibla.QiblaScreen
 import org.ferdidrgn.hudaquran.ui.reciters.RecitersScreen
 import org.ferdidrgn.hudaquran.ui.sajda.SajdaAyahsScreen
@@ -96,6 +101,7 @@ import org.ferdidrgn.hudaquran.ui.settings.EditionPickerScreen
 import org.ferdidrgn.hudaquran.ui.settings.PickerItem
 import org.ferdidrgn.hudaquran.ui.settings.SettingsScreen
 import org.ferdidrgn.hudaquran.ui.splash.SplashScreen
+import org.ferdidrgn.hudaquran.ui.student.StudentModeScreen
 import org.ferdidrgn.hudaquran.ui.surahdetail.SurahDetailScreen
 import org.ferdidrgn.hudaquran.ui.surahlist.SurahListScreen
 import org.ferdidrgn.hudaquran.ui.tafsir.TafsirScreen
@@ -105,6 +111,9 @@ import org.ferdidrgn.hudaquran.ui.theme.rememberArabicFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
 import org.ferdidrgn.hudaquran.ui.theme.syncLauncherIcon
 import org.ferdidrgn.hudaquran.ui.zakat.ZakatCalculatorScreen
+import org.ferdidrgn.hudaquran.ui.zikr.PostPrayerDhikrScreen
+import org.ferdidrgn.hudaquran.ui.travel.TravelModeScreen
+import org.ferdidrgn.hudaquran.ui.tracker.WorshipTrackerScreen
 
 private const val APP_TITLE = "Huda Qur'an"
 
@@ -133,7 +142,11 @@ private fun isReadingScreen(screen: Screen): Boolean = when (screen) {
     is Screen.Settings, is Screen.ReciterPicker, is Screen.TranslationPicker, is Screen.TafsirPicker,
     is Screen.PrayerLocationPicker, is Screen.LanguagePicker, is Screen.TajwidLessonDetail,
     is Screen.Qibla, is Screen.EsmaulHusnaDetail, is Screen.ZakatCalculator, is Screen.DuaList,
+    is Screen.HadithList, is Screen.HadithDetail,
+    is Screen.PostPrayerDhikr,
     is Screen.IslamicCalendar,
+    is Screen.WorshipTracker, is Screen.KhatmJourney, is Screen.Memorization,
+    is Screen.StudentMode, is Screen.OfflineContent,
     -> true
     else -> false
 }
@@ -462,8 +475,10 @@ private fun AppDestinationContent(
             onOpenEsmaulHusna = { navigator.navigate(Screen.EsmaulHusnaList) },
             onOpenEsmaulHusnaDetail = { index -> navigator.navigate(Screen.EsmaulHusnaDetail(index)) },
             onOpenDuaList = { navigator.navigate(Screen.DuaList) },
+            onOpenHadith = { navigator.navigate(Screen.HadithList) },
             onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
             onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
+            onOpenWorshipTracker = { navigator.navigate(Screen.WorshipTracker) },
         )
 
         is Screen.SurahList -> SurahListScreen(
@@ -486,6 +501,7 @@ private fun AppDestinationContent(
             onOpenZakatCalculator = { navigator.navigate(Screen.ZakatCalculator) },
             onOpenDuaList = { navigator.navigate(Screen.DuaList) },
             onOpenIslamicCalendar = { navigator.navigate(Screen.IslamicCalendar) },
+            onOpenOfflineContent = { navigator.navigate(Screen.OfflineContent) },
         )
 
         is Screen.ReciterPicker -> RecitersScreen(
@@ -497,7 +513,18 @@ private fun AppDestinationContent(
             title = strings.selectTranslationTitle,
             selectedId = preferences.selectedTranslation,
             loadItems = {
-                AppContainer.repository.getTranslations().map { PickerItem(it.identifier, it.displayName, it.language) }
+                AppContainer.repository.getTranslations().map {
+                    PickerItem(
+                        id = it.identifier,
+                        label = it.displayName,
+                        sublabel = it.language,
+                        languageCode = it.language,
+                        providerName = it.source,
+                        author = it.author,
+                        licenseNotice = it.licenseNotice,
+                        sourceUrl = it.sourceUrl,
+                    )
+                }
             },
             onSelect = { id ->
                 preferences.selectedTranslation = id
@@ -505,13 +532,25 @@ private fun AppDestinationContent(
             },
             onBack = { navigator.back() },
             modifier = contentModifier,
+            showLanguageFilters = true,
         )
 
         is Screen.TafsirPicker -> EditionPickerScreen(
             title = strings.selectTafsirTitle,
             selectedId = preferences.selectedTafsir,
             loadItems = {
-                AppContainer.repository.getTafsirs().map { PickerItem(it.identifier, it.displayName, it.language) }
+                AppContainer.repository.getTafsirs().map {
+                    PickerItem(
+                        id = it.identifier,
+                        label = it.displayName,
+                        sublabel = it.language,
+                        languageCode = it.language,
+                        providerName = it.source,
+                        author = it.author,
+                        licenseNotice = it.licenseNotice,
+                        sourceUrl = it.sourceUrl,
+                    )
+                }
             },
             onSelect = { id ->
                 preferences.selectedTafsir = id
@@ -519,10 +558,12 @@ private fun AppDestinationContent(
             },
             onBack = { navigator.back() },
             modifier = contentModifier,
+            showLanguageFilters = true,
         )
 
         is Screen.AyahTafsir -> TafsirScreen(
             globalAyahNumber = screen.globalAyahNumber,
+            surahNumber = screen.surahNumber,
             surahName = screen.surahName,
             numberInSurah = screen.numberInSurah,
             arabicText = screen.arabicText,
@@ -568,7 +609,7 @@ private fun AppDestinationContent(
             onBack = { navigator.back() },
             modifier = contentModifier,
             onOpenTafsir = { ayah ->
-                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
+                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
             },
         )
 
@@ -621,7 +662,7 @@ private fun AppDestinationContent(
             onBack = { if (!navigator.back()) navigator.replaceAll(Screen.Home) },
             onPageSettled = { page -> navigator.replaceTop(Screen.MushafPage(page)) },
             onOpenTafsir = { ayah ->
-                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
+                navigator.navigate(Screen.AyahTafsir(ayah.globalNumber, ayah.surahNumber, ayah.surahName, ayah.numberInSurah, ayah.arabicText))
             },
         )
 
@@ -653,9 +694,64 @@ private fun AppDestinationContent(
             onBack = { navigator.back() },
         )
 
+        is Screen.PostPrayerDhikr -> PostPrayerDhikrScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.HadithList -> HadithListScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenDetail = { id -> navigator.navigate(Screen.HadithDetail(id)) },
+        )
+
+        is Screen.HadithDetail -> HadithDetailScreen(
+            id = screen.id,
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
         is Screen.IslamicCalendar -> IslamicCalendarScreen(
             modifier = contentModifier,
             onBack = { navigator.back() },
+        )
+
+        is Screen.WorshipTracker -> WorshipTrackerScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenKhatm = { navigator.navigate(Screen.KhatmJourney) },
+            onOpenMemorization = { navigator.navigate(Screen.Memorization) },
+            onOpenMushaf = { page -> navigator.navigate(Screen.MushafPage(page)) },
+        )
+
+        is Screen.KhatmJourney -> KhatmJourneyScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenMushaf = { page -> navigator.navigate(Screen.MushafPage(page)) },
+        )
+
+        is Screen.Memorization -> MemorizationScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.StudentMode -> StudentModeScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenSurah = { number, ayah -> navigator.navigate(Screen.SurahDetail(number, ayah)) },
+        )
+
+        is Screen.OfflineContent -> OfflineContentScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+        )
+
+        is Screen.TravelMode -> TravelModeScreen(
+            modifier = contentModifier,
+            onBack = { navigator.back() },
+            onOpenQibla = { navigator.navigate(Screen.Qibla) },
+            onOpenDuas = { navigator.navigate(Screen.DuaList) },
+            onOpenOffline = { navigator.navigate(Screen.OfflineContent) },
         )
 
     }

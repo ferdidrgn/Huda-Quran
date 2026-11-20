@@ -5,4 +5,23 @@
     <string name="widget_title_placeholder">Kur\'an okumaya başla</string>
     <string name="widget_subtitle_placeholder">Dokunun ve okumaya başlayın</string>
     <string name="widget_description">Kaldığınız yerden okumaya devam edin</string>
+    <string name="prayer_widget_label">NAMAZ VAKİTLERİ</string>
+    <string name="prayer_widget_placeholder">Namaz vakitleri hazır değil</string>
+    <string name="prayer_widget_subtitle_placeholder">Bildirimleri açtığınızda sonraki vakit burada görünür</string>
+    <string name="prayer_widget_description">Bir sonraki namaz vaktini gösterir</string>
+    <string name="time_widget_description">Saat ve günü gösterir</string>
+    <string name="time_widget_accessibility">Saat ve tarihi gösterir. Ayrıntılar için dokunun.</string>
+    <string name="daily_content_widget_description">Her gün çevrim dışı bir ayet gösterir</string>
+    <string name="daily_content_widget_accessibility">Günün ayetini gösterir. Ayrıntılar için dokunun.</string>
+    <string name="dhikr_widget_description">Tek dokunuşla zikir sayacı</string>
+    <string name="dhikr_widget_title">Zikir sayacı</string>
+    <string name="dhikr_widget_increment_accessibility">Zikir sayacını bir artır</string>
+    <string name="dhikr_widget_reset_accessibility">Zikir sayacını sıfırla</string>
+    <string name="dhikr_widget_accessibility">Zikir sayacı. Ayrıntılar için dokunun.</string>
+    <string name="hijri_widget_description">Hicri tarihi ve Ramazan bilgisini gösterir</string>
+    <string name="hijri_widget_title">Hicri takvim</string>
+    <string name="hijri_widget_accessibility">Hicri tarihi ve Ramazan bilgisini gösterir. Ayrıntılar için dokunun.</string>
+    <string name="hijri_widget_ramadan_day">Ramazan’ın %1$d. günü</string>
+    <string name="hijri_widget_until_ramadan">Ramazan’a %1$d gün</string>
+    <string name="hijri_widget_ramadan_next_year">Ramazan tamamlandı</string>
 </resources>
