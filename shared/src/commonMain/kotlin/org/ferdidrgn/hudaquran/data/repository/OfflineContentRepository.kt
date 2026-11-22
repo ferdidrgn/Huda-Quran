@@ -49,9 +49,14 @@ class OfflineContentRepository(
     fun isPaused(): Boolean = pauseRequested
 
     fun selectedResources(): OfflineDownloadSelection = OfflineDownloadSelection(
-        translationEdition = preferences.selectedTranslation,
-        tafsirEdition = preferences.selectedTafsir,
-        reciterEdition = preferences.selectedReciter,
+        // The offline screen is often the first place these persisted choices are read after an
+        // upgrade. Treat stale or malformed preference values as unset instead of failing during
+        // composition before the user can reach the screen.
+        translationEdition = runCatching { preferences.selectedTranslation }
+            .getOrDefault(org.ferdidrgn.hudaquran.domain.model.QuranEditions.DEFAULT_TRANSLATION),
+        tafsirEdition = runCatching { preferences.selectedTafsir }.getOrDefault(""),
+        reciterEdition = runCatching { preferences.selectedReciter }
+            .getOrDefault(org.ferdidrgn.hudaquran.domain.model.QuranEditions.DEFAULT_RECITER),
     )
 
     fun storageSummary(): OfflineStorageSummary {

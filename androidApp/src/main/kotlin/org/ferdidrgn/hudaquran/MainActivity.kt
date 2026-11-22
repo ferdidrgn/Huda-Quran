@@ -8,9 +8,15 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -18,6 +24,11 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import org.ferdidrgn.hudaquran.ui.navigation.DeepLinkController
+import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.ui.theme.HudaQuranTheme
+import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
+import org.ferdidrgn.hudaquran.ui.tv.TvHomeScreen
+import org.ferdidrgn.hudaquran.ui.tv.TvPlayerScreen
 import org.ferdidrgn.hudaquran.widget.LastReadWidgetProvider
 
 class MainActivity : ComponentActivity() {
@@ -53,7 +64,11 @@ class MainActivity : ComponentActivity() {
         checkForMandatoryUpdate()
 
         setContent {
-            App()
+            if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {
+                TvExperience()
+            } else {
+                App()
+            }
         }
     }
 
@@ -115,4 +130,25 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppAndroidPreview() {
     App()
+}
+
+@Composable
+private fun TvExperience() {
+    val preferences = AppContainer.preferences
+    val themeMode by preferences.themeMode.collectAsState()
+    val appLanguage by preferences.appLanguage.collectAsState()
+    var showingPlayer by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showingPlayer) { showingPlayer = false }
+
+    HudaQuranTheme(
+        themeMode = themeMode,
+        displayFontFamily = rememberDisplayFontFamily(appLanguage),
+    ) {
+        if (showingPlayer) {
+            TvPlayerScreen(onBack = { showingPlayer = false })
+        } else {
+            TvHomeScreen(onOpenPlayer = { showingPlayer = true })
+        }
+    }
 }

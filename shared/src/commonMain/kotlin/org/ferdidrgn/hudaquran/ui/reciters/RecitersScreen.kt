@@ -159,7 +159,8 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                     }
                 }
                 itemsIndexed(filtered, key = { _, reciter -> reciter.identifier }) { index, reciter ->
-                    val isThisPreviewing = nowPlaying?.mode == PlaybackMode.WHOLE_SURAH &&
+                    val isThisPreviewing = (nowPlaying?.mode == PlaybackMode.WHOLE_SURAH ||
+                        (reciter.identifier.startsWith("qf.ayah.") && nowPlaying?.mode == PlaybackMode.AYAH_QUEUE)) &&
                         nowPlaying?.reciterId == reciter.identifier &&
                         nowPlaying?.surahNumber == PREVIEW_SURAH_NUMBER
                     ReciterRow(
@@ -186,6 +187,26 @@ fun RecitersScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                                             PREVIEW_SURAH_NUMBER,
                                             PREVIEW_SURAH_NAME,
                                             url,
+                                            reciter.identifier,
+                                        )
+                                    }.onFailure {
+                                        unavailableReciters = unavailableReciters + reciter.identifier
+                                    }
+                                }
+                            } else if (reciter.identifier.startsWith("qf.ayah.")) {
+                                scope.launch {
+                                    runCatching {
+                                        repository.getSurahDetail(
+                                            PREVIEW_SURAH_NUMBER,
+                                            preferences.selectedTranslation,
+                                            reciter.identifier,
+                                        )
+                                    }.onSuccess { detail ->
+                                        playback.playQueue(
+                                            detail.ayahs,
+                                            0,
+                                            PREVIEW_SURAH_NUMBER,
+                                            PREVIEW_SURAH_NAME,
                                             reciter.identifier,
                                         )
                                     }.onFailure {
@@ -257,7 +278,12 @@ private fun ReciterRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    if (isSelected) strings.selectedReciterLabel else strings.tapToSelectLabel,
+                    when {
+                        reciter.identifier.startsWith("qf.chapter.") -> "Sure bazlı kayıt · Tam sure dinle"
+                        reciter.identifier.startsWith("qf.ayah.") -> "Ayet ayet kıraat · Tam sureyi sırayla dinle"
+                        isSelected -> strings.selectedReciterLabel
+                        else -> strings.tapToSelectLabel
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )

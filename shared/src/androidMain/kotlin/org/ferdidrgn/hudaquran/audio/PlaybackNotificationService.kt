@@ -2,13 +2,15 @@ package org.ferdidrgn.hudaquran.audio
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
-import android.os.IBinder
+import android.os.Bundle
 import android.os.SystemClock
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaBrowserServiceCompat
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -22,8 +24,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.local.ThemeMode
 import org.ferdidrgn.hudaquran.di.AppContainer
+import org.ferdidrgn.hudaquran.domain.model.Reciter
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.notifications.notificationAccentFor
 import org.ferdidrgn.hudaquran.notifications.notificationIconRes
@@ -41,7 +45,7 @@ import kotlin.math.abs
  * own text, so both must be kept current for the controls to show the right ayah, the elapsed /
  * total time and a working seek bar.
  */
-class PlaybackNotificationService : Service() {
+class PlaybackNotificationService : MediaBrowserServiceCompat() {
 
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var mediaSession: MediaSessionCompat? = null
@@ -54,6 +58,8 @@ class PlaybackNotificationService : Service() {
     private var lastReportedSpeed = Float.NaN
     private var lastSessionActivityKey: String? = null
     private val reciterNames = mutableMapOf<String, String>()
+    private var reciters: List<Reciter> = emptyList()
+    private var surahs: List<org.ferdidrgn.hudaquran.domain.model.Surah> = emptyList()
     private var cachedArtworkTheme: ThemeMode? = null
     private var cachedArtwork: Bitmap? = null
 
@@ -67,6 +73,19 @@ class PlaybackNotificationService : Service() {
     companion object {
         private const val CHANNEL_ID = "huda_quran_playback"
         private const val NOTIFICATION_ID = 1001
+        private const val ROOT_ID = "huda_auto_root"
+        private const val SURAHS_ID = "huda_auto_surahs"
+        private const val RECITERS_ID = "huda_auto_reciters"
+        private const val RECENT_ID = "huda_auto_recent"
+        private const val CONTINUE_ID = "huda_auto_continue"
+        private const val SURAH_PREFIX = "huda_auto_surah:"
+        private const val RECITER_PREFIX = "huda_auto_reciter:"
+        private const val LAST_AUDIO_PREFS = "huda_auto_media"
+        private const val LAST_AUDIO_SURAH_KEY = "last_surah"
+        private const val LAST_AUDIO_AYAH_KEY = "last_ayah"
+        private const val LAST_AUDIO_RECITER_KEY = "last_reciter"
+        private const val AUTO_PACKAGE = "com.google.android.projection.gearhead"
+        private const val ASSISTANT_PACKAGE = "com.google.android.googlequicksearchbox"
 
         /** How far the real position may drift from the system's own extrapolation before we resync it. */
         private const val POSITION_RESYNC_THRESHOLD_MS = 1500L
@@ -76,8 +95,6 @@ class PlaybackNotificationService : Service() {
             runCatching { ContextCompat.startForegroundService(context, intent) }
         }
     }
-
-    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -96,15 +113,23 @@ class PlaybackNotificationService : Service() {
                 override fun onSeekTo(pos: Long) = playback.seekTo(pos)
                 override fun onSkipToNext() = playback.skipNext()
                 override fun onSkipToPrevious() = playback.skipPrevious()
+                override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
+                    if (mediaId != null) scope.launch { playFromMediaId(mediaId) }
+                }
+                override fun onPlayFromSearch(query: String?, extras: Bundle?) {
+                    if (!query.isNullOrBlank()) scope.launch { playSearchResult(query) }
+                }
             })
             setSessionActivity(openAppPendingIntent())
             isActive = true
         }
         mediaSession = session
+        setSessionToken(session.sessionToken)
 
         scope.launch {
-            runCatching { AppContainer.repository.getReciters() }.getOrNull()
-                ?.forEach { reciterNames[it.identifier] = it.displayName }
+            reciters = runCatching { AppContainer.repository.getReciters() }.getOrDefault(emptyList())
+            reciters.forEach { reciterNames[it.identifier] = it.displayName }
+            surahs = runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
             // Re-render once names are known so the reciter shows up without waiting for the next state change.
             lastNotificationKey = null
         }
@@ -119,9 +144,9 @@ class PlaybackNotificationService : Service() {
             }.collect { (nowPlaying, state, themeMode) ->
                 if (nowPlaying == null) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
                     return@collect
                 }
+                rememberLastAudio(nowPlaying)
                 updatePlaybackState(nowPlaying, state)
                 val mediaKey = mediaStateKey(nowPlaying)
                 val sessionActivityIntent = if (mediaKey != lastSessionActivityKey) {
@@ -150,6 +175,250 @@ class PlaybackNotificationService : Service() {
             }
         }
     }
+
+    /** Only Android Auto, the system assistant and this app may browse/control the session. */
+    override fun onGetRoot(
+        clientPackageName: String,
+        clientUid: Int,
+        rootHints: Bundle?,
+    ): BrowserRoot? {
+        val packagesForUid = packageManager.getPackagesForUid(clientUid).orEmpty()
+        val isKnownClient = clientPackageName == packageName ||
+            clientPackageName == AUTO_PACKAGE ||
+            clientPackageName == ASSISTANT_PACKAGE
+        if (!isKnownClient || clientPackageName !in packagesForUid) return null
+        return BrowserRoot(ROOT_ID, null)
+    }
+
+    override fun onLoadChildren(
+        parentId: String,
+        result: Result<List<MediaBrowserCompat.MediaItem>>,
+    ) {
+        result.detach()
+        scope.launch {
+            val children = runCatching { loadCarChildren(parentId) }.getOrDefault(emptyList())
+            result.sendResult(children)
+        }
+    }
+
+    override fun onSearch(
+        query: String,
+        extras: Bundle?,
+        result: Result<List<MediaBrowserCompat.MediaItem>>,
+    ) {
+        result.detach()
+        scope.launch {
+            val matches = runCatching { searchSurahs(query) }.getOrDefault(emptyList())
+            result.sendResult(matches)
+        }
+    }
+
+    private suspend fun loadCarChildren(parentId: String): List<MediaBrowserCompat.MediaItem> {
+        val language = AppContainer.preferences.appLanguage.value
+        return when {
+            parentId == ROOT_ID -> buildList {
+                if (hasResumeTarget()) {
+                    add(browseItem(CONTINUE_ID, label(language, "Devam Et", "Continue"), playable = true))
+                    add(browseItem(RECENT_ID, label(language, "Son Dinlenen", "Recently Played"), browsable = true))
+                }
+                add(browseItem(SURAHS_ID, label(language, "Sureler", "Surahs"), browsable = true))
+                add(browseItem(RECITERS_ID, label(language, "Kıraatçılar", "Reciters"), browsable = true))
+            }
+            parentId == SURAHS_ID -> surahItems(AppContainer.preferences.selectedReciter, language)
+            parentId == RECITERS_ID -> {
+                val availableReciters = loadReciters()
+                availableReciters.map { reciter ->
+                    browseItem(RECITER_PREFIX + reciter.identifier, reciter.displayName, browsable = true)
+                }
+            }
+            parentId == RECENT_ID -> lastAudioTarget()?.let { target ->
+                surahItems(target.reciterId, language, onlySurahNumber = target.surahNumber)
+            }.orEmpty()
+            parentId.startsWith(RECITER_PREFIX) -> {
+                val reciterId = parentId.removePrefix(RECITER_PREFIX)
+                if (loadReciters().any { it.identifier == reciterId }) {
+                    surahItems(reciterId, language)
+                } else {
+                    emptyList()
+                }
+            }
+            else -> emptyList()
+        }
+    }
+
+    private suspend fun surahItems(
+        reciterId: String,
+        language: AppLanguage,
+        onlySurahNumber: Int? = null,
+    ): List<MediaBrowserCompat.MediaItem> {
+        val availableSurahs = surahs.ifEmpty {
+            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
+        }
+        val items = availableSurahs
+            .filter { onlySurahNumber == null || it.number == onlySurahNumber }
+            .map { surah ->
+                browseItem(
+                    id = SURAH_PREFIX + surah.number + ":" + reciterId,
+                    title = localizedSurahName(surah.number, surah.name, language),
+                    subtitle = reciterNames[reciterId] ?: reciterId,
+                    playable = true,
+                )
+            }
+        return if (items.isNotEmpty()) items else (1..114)
+            .filter { onlySurahNumber == null || it == onlySurahNumber }
+            .map { number ->
+                browseItem(
+                    id = SURAH_PREFIX + number + ":" + reciterId,
+                    title = localizedSurahName(number, label(language, "Sure", "Surah") + " " + number, language),
+                    subtitle = reciterNames[reciterId] ?: reciterId,
+                    playable = true,
+                )
+            }
+    }
+
+    private fun browseItem(
+        id: String,
+        title: String,
+        subtitle: String? = null,
+        browsable: Boolean = false,
+        playable: Boolean = false,
+    ): MediaBrowserCompat.MediaItem {
+        val description = MediaDescriptionCompat.Builder()
+            .setMediaId(id)
+            .setTitle(title)
+            .setSubtitle(subtitle)
+            .build()
+        val flags = (if (browsable) MediaBrowserCompat.MediaItem.FLAG_BROWSABLE else 0) or
+            (if (playable) MediaBrowserCompat.MediaItem.FLAG_PLAYABLE else 0)
+        return MediaBrowserCompat.MediaItem(description, flags)
+    }
+
+    private suspend fun playFromMediaId(mediaId: String) {
+        when {
+            mediaId == CONTINUE_ID -> resumeCurrentOrLast()
+            mediaId.startsWith(SURAH_PREFIX) -> {
+                val parts = mediaId.removePrefix(SURAH_PREFIX).split(':', limit = 2)
+                val surahNumber = parts.getOrNull(0)?.toIntOrNull() ?: return
+                val requestedReciter = parts.getOrNull(1)
+                val reciterId = loadReciters().firstOrNull { it.identifier == requestedReciter }?.identifier
+                    ?: AppContainer.preferences.selectedReciter
+                playSurah(surahNumber, reciterId)
+            }
+        }
+    }
+
+    private suspend fun resumeCurrentOrLast() {
+        val playback = AppContainer.playbackManager
+        if (playback.nowPlaying.value != null) {
+            if (playback.playerState.value.status != PlaybackStatus.PLAYING) playback.resume()
+            return
+        }
+
+        loadReciters()
+        val target = lastAudioTarget() ?: AppContainer.preferences.lastRead.value?.let { lastRead ->
+            LastAudioTarget(lastRead.surahNumber, AppContainer.preferences.selectedReciter, lastRead.numberInSurah)
+        } ?: return
+        playSurah(target.surahNumber, target.reciterId, target.resumeAyah)
+    }
+
+    private suspend fun playSurah(surahNumber: Int, reciterId: String, resumeAyah: Int = 1) {
+        val surah = (surahs.ifEmpty {
+            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
+        }).firstOrNull { it.number == surahNumber } ?: return
+        val detail = runCatching {
+            AppContainer.repository.getSurahDetail(surahNumber = surahNumber, reciterEdition = reciterId)
+        }.getOrNull() ?: return
+
+        val playback = AppContainer.playbackManager
+        if (reciterId.startsWith("qf.chapter.")) {
+            // Chapter-reciter streams are complete-surah recordings, so ayah-level seeking is unavailable.
+            playback.playWholeSurah(surahNumber, surah.name, detail.surahAudioUrl, reciterId)
+        } else {
+            val startIndex = detail.ayahs.indexOfFirst { it.numberInSurah == resumeAyah }.coerceAtLeast(0)
+            playback.playQueue(detail.ayahs, startIndex, surahNumber, surah.name, reciterId)
+        }
+    }
+
+    private suspend fun playSearchResult(query: String) {
+        val match = searchSurahs(query).firstOrNull() ?: return
+        val mediaId = match.description.mediaId ?: return
+        playFromMediaId(mediaId)
+    }
+
+    private suspend fun searchSurahs(query: String): List<MediaBrowserCompat.MediaItem> {
+        val normalizedQuery = query.trim()
+        if (normalizedQuery.isEmpty()) return emptyList()
+        val availableSurahs = surahs.ifEmpty {
+            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
+        }
+        val language = AppContainer.preferences.appLanguage.value
+        val reciterId = loadReciters()
+            .firstOrNull { it.identifier == AppContainer.preferences.selectedReciter }?.identifier
+            ?: AppContainer.preferences.selectedReciter
+        return availableSurahs.filter { surah ->
+            surah.name.contains(normalizedQuery, ignoreCase = true) ||
+                surah.englishName.contains(normalizedQuery, ignoreCase = true) ||
+                localizedSurahName(surah.number, surah.name, language)
+                    .contains(normalizedQuery, ignoreCase = true)
+        }.map { surah ->
+            browseItem(
+                id = SURAH_PREFIX + surah.number + ":" + reciterId,
+                title = localizedSurahName(surah.number, surah.name, language),
+                subtitle = reciterNames[reciterId] ?: reciterId,
+                playable = true,
+            )
+        }
+    }
+
+    private data class LastAudioTarget(
+        val surahNumber: Int,
+        val reciterId: String,
+        val resumeAyah: Int = 1,
+    )
+
+    private fun lastAudioTarget(): LastAudioTarget? {
+        val preferences = getSharedPreferences(LAST_AUDIO_PREFS, Context.MODE_PRIVATE)
+        val surahNumber = preferences.getInt(LAST_AUDIO_SURAH_KEY, 0).takeIf { it in 1..114 } ?: return null
+        val reciterId = preferences.getString(LAST_AUDIO_RECITER_KEY, null)
+            ?.takeIf { it.isNotBlank() }
+            ?: AppContainer.preferences.selectedReciter
+        val resumeAyah = preferences.getInt(LAST_AUDIO_AYAH_KEY, 1).coerceAtLeast(1)
+        return LastAudioTarget(surahNumber, reciterId, resumeAyah)
+    }
+
+    private fun hasResumeTarget(): Boolean =
+        AppContainer.playbackManager.nowPlaying.value != null ||
+            lastAudioTarget() != null ||
+            AppContainer.preferences.lastRead.value != null
+
+    private fun rememberLastAudio(nowPlaying: NowPlaying) {
+        val resumeAyah = if (nowPlaying.mode == PlaybackMode.AYAH_QUEUE) {
+            nowPlaying.queue.getOrNull(nowPlaying.currentIndex)?.numberInSurah ?: 1
+        } else {
+            1
+        }
+        val preferences = getSharedPreferences(LAST_AUDIO_PREFS, Context.MODE_PRIVATE)
+        if (preferences.getInt(LAST_AUDIO_SURAH_KEY, 0) == nowPlaying.surahNumber &&
+            preferences.getString(LAST_AUDIO_RECITER_KEY, null) == nowPlaying.reciterId &&
+            preferences.getInt(LAST_AUDIO_AYAH_KEY, 1) == resumeAyah
+        ) return
+        preferences.edit()
+            .putInt(LAST_AUDIO_SURAH_KEY, nowPlaying.surahNumber)
+            .putInt(LAST_AUDIO_AYAH_KEY, resumeAyah)
+            .putString(LAST_AUDIO_RECITER_KEY, nowPlaying.reciterId)
+            .apply()
+    }
+
+    private suspend fun loadReciters(): List<Reciter> {
+        if (reciters.isEmpty()) {
+            reciters = runCatching { AppContainer.repository.getReciters() }.getOrDefault(emptyList())
+        }
+        reciters.forEach { reciterNames[it.identifier] = it.displayName }
+        return reciters
+    }
+
+    private fun label(language: AppLanguage, turkish: String, english: String): String =
+        if (language == AppLanguage.TURKISH) turkish else english
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         mediaSession?.let { MediaButtonReceiver.handleIntent(it, intent) }

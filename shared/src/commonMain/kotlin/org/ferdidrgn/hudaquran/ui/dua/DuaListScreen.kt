@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,18 +27,21 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.DuaContent
 import org.ferdidrgn.hudaquran.data.repository.DuaContentRepository
+import org.ferdidrgn.hudaquran.data.local.VaktelyaDuaLocalDataSource
 import org.ferdidrgn.hudaquran.ui.components.AdBannerCard
 import org.ferdidrgn.hudaquran.ui.components.LIST_AD_INTERVAL
 import org.ferdidrgn.hudaquran.ui.components.ListAdCard
@@ -55,7 +59,10 @@ import org.ferdidrgn.hudaquran.ui.theme.LocalArabicFontFamily
 @Composable
 fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val strings = LocalStrings.current
-    val repository = remember { DuaContentRepository() }
+    var repository by remember { mutableStateOf(DuaContentRepository()) }
+    LaunchedEffect(Unit) {
+        repository = DuaContentRepository(vaktelyaDuas = VaktelyaDuaLocalDataSource.load())
+    }
     val favorites by AppContainer.preferences.duaFavorites.collectAsState()
     var showOnlyFavorites by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
@@ -155,6 +162,7 @@ fun DuaListScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 @Composable
 private fun DuaCard(content: DuaContent, isFavorite: Boolean, onToggleFavorite: () -> Unit) {
     var showShare by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
     val dua = content.dua
     GlassSurface(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -178,24 +186,38 @@ private fun DuaCard(content: DuaContent, isFavorite: Boolean, onToggleFavorite: 
                 color = MaterialTheme.colorScheme.primary,
                 fontFamily = LocalArabicFontFamily.current,
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                dua.transliteration,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(6.dp))
+            if (dua.transliteration.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    dua.transliteration,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(6.dp))
+            }
             Text(
                 dua.meaning,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
             )
+            content.reference?.let { reference ->
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Ayet: $reference",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
             Spacer(Modifier.height(6.dp))
+            val sourceUrl = content.sourceUrl
             Text(
                 "Kaynak: ${content.source}",
+                modifier = if (sourceUrl == null) Modifier else Modifier.clickable {
+                    runCatching { uriHandler.openUri(sourceUrl) }
+                },
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (sourceUrl == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
             )
         }
     }

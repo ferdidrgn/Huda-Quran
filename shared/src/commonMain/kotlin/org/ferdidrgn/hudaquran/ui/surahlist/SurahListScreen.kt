@@ -41,8 +41,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.data.local.AppLanguage
+import org.ferdidrgn.hudaquran.data.local.SurahNameSource
+import org.ferdidrgn.hudaquran.data.local.VaktelyaReferenceDataSource
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.Surah
+import org.ferdidrgn.hudaquran.domain.model.localizedSurahMeaning
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.platform.Platform
 import org.ferdidrgn.hudaquran.platform.currentPlatform
@@ -70,6 +73,7 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
     val repository = AppContainer.repository
     val preferences = AppContainer.preferences
     val appLanguage by preferences.appLanguage.collectAsState()
+    val surahNameSource by preferences.surahNameSource.collectAsState()
     val lastRead by preferences.lastRead.collectAsState()
     val strings = LocalStrings.current
     var surahs by remember { mutableStateOf<List<Surah>>(emptyList()) }
@@ -78,6 +82,16 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
     var query by remember { mutableStateOf("") }
     var filter by remember { mutableStateOf(RevelationFilter.ALL) }
     var reloadKey by remember { mutableStateOf(0) }
+    var vaktelyaSurahNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var translatedSurahMeanings by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
+
+    LaunchedEffect(Unit) {
+        vaktelyaSurahNames = VaktelyaReferenceDataSource.load().surahNames
+    }
+
+    LaunchedEffect(appLanguage) {
+        translatedSurahMeanings = repository.getLocalizedSurahMeanings(appLanguage)
+    }
 
     LaunchedEffect(reloadKey) {
         isLoading = true
@@ -88,8 +102,18 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
         isLoading = false
     }
 
-    val filtered = remember(surahs, query, filter, appLanguage) {
+    val filtered = remember(surahs, query, filter, appLanguage, surahNameSource, vaktelyaSurahNames, translatedSurahMeanings) {
         surahs.filter { surah ->
+            val localizedName = localizedSurahName(surah.number, surah.englishName, appLanguage)
+            val displayName = if (
+                appLanguage == AppLanguage.TURKISH && surahNameSource == SurahNameSource.VAKTELYA
+            ) vaktelyaSurahNames.getOrNull(surah.number - 1) ?: localizedName else localizedName
+            val localizedMeaning = localizedSurahMeaning(
+                surah.number,
+                surah.englishNameTranslation,
+                appLanguage,
+                translatedSurahMeanings,
+            )
             val matchesFilter = when (filter) {
                 RevelationFilter.ALL -> true
                 RevelationFilter.MECCAN -> surah.revelationType == "Meccan"
@@ -100,7 +124,8 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                 q.isEmpty() ||
                     surah.englishName.contains(q, ignoreCase = true) ||
                     surah.englishNameTranslation.contains(q, ignoreCase = true) ||
-                    localizedSurahName(surah.number, surah.englishName, appLanguage).contains(q, ignoreCase = true) ||
+                    localizedMeaning.contains(q, ignoreCase = true) ||
+                    displayName.contains(q, ignoreCase = true) ||
                     surah.name.contains(q, ignoreCase = true) ||
                     surah.number.toString() == q
                 )
@@ -177,6 +202,17 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
                                     StaggeredEntrance(index = chunkIndex * LIST_AD_INTERVAL + indexInChunk) {
                                         SurahRow(
                                             surah = surah,
+                                            displayName = if (
+                                                appLanguage == AppLanguage.TURKISH && surahNameSource == SurahNameSource.VAKTELYA
+                                            ) vaktelyaSurahNames.getOrNull(surah.number - 1)
+                                                ?: localizedSurahName(surah.number, surah.englishName, appLanguage)
+                                            else localizedSurahName(surah.number, surah.englishName, appLanguage),
+                                            meaning = localizedSurahMeaning(
+                                                surah.number,
+                                                surah.englishNameTranslation,
+                                                appLanguage,
+                                                translatedSurahMeanings,
+                                            ),
                                             appLanguage = appLanguage,
                                             strings = strings,
                                             isLastRead = lastRead?.surahNumber == surah.number,
@@ -200,6 +236,8 @@ fun SurahListScreen(modifier: Modifier = Modifier, onOpenSurah: (Int) -> Unit) {
 @Composable
 private fun SurahRow(
     surah: Surah,
+    displayName: String,
+    meaning: String,
     appLanguage: AppLanguage,
     strings: Strings,
     isLastRead: Boolean,
@@ -221,7 +259,7 @@ private fun SurahRow(
             Column(modifier = Modifier.weight(1f).padding(start = 14.dp, end = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        localizedSurahName(surah.number, surah.englishName, appLanguage),
+                        displayName,
                         style = MaterialTheme.typography.titleMedium,
                         color = colors.onSurface,
                         maxLines = 1,
@@ -259,7 +297,7 @@ private fun SurahRow(
                     )
                 }
                 Text(
-                    surah.englishNameTranslation,
+                    meaning,
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.onSurface.copy(alpha = 0.5f),
                     maxLines = 1,

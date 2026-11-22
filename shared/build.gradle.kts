@@ -69,6 +69,8 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.media3.exoplayer)
             implementation(libs.androidx.media3.common)
+            implementation(libs.play.services.cast.framework)
+            implementation("com.google.android.gms:play-services-wearable:20.0.1")
             implementation(libs.androidx.activity.compose)
             implementation(libs.play.services.ads)
             // RevenueCat brings its own Play Billing client.

@@ -20,10 +20,12 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,11 +48,12 @@ import org.ferdidrgn.hudaquran.ui.navigation.Screen
 
 internal data class BottomTab(val screen: Screen, val icon: ImageVector, val selectedIcon: ImageVector, val label: String)
 
-private val bottomNavScreens = listOf(Screen.Home, Screen.SurahList, Screen.Favorites, Screen.Settings)
+private val bottomNavScreens = listOf(Screen.Home, Screen.SurahList, Screen.Games, Screen.Favorites, Screen.Settings)
 
 internal fun tabsFor(strings: Strings) = listOf(
     BottomTab(Screen.Home, Icons.Outlined.Home, Icons.Filled.Home, strings.navHome),
     BottomTab(Screen.SurahList, Icons.Outlined.AutoStories, Icons.Filled.AutoStories, strings.navSurahs),
+    BottomTab(Screen.Games, Icons.Outlined.SportsEsports, Icons.Filled.SportsEsports, "Oyunlar"),
     BottomTab(Screen.Favorites, Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite, strings.navFavorites),
     BottomTab(Screen.Settings, Icons.Outlined.Settings, Icons.Filled.Settings, strings.navSettings),
 )

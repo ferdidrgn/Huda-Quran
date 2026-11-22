@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ferdidrgn.hudaquran.audio.PlaybackMode
 import org.ferdidrgn.hudaquran.audio.PlaybackStatus
+import org.ferdidrgn.hudaquran.audio.cast.CastRouteButton
 import org.ferdidrgn.hudaquran.di.AppContainer
 import org.ferdidrgn.hudaquran.domain.model.localizedSurahName
 import org.ferdidrgn.hudaquran.ui.components.GlassSurface
@@ -199,6 +200,26 @@ fun NowPlayingScreen(modifier: Modifier = Modifier, onClose: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        if (playerState.currentUrl?.let {
+                it.startsWith("https://", ignoreCase = true) || it.startsWith("http://", ignoreCase = true)
+            } == true
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                CastRouteButton(
+                    streamUrl = playerState.currentUrl,
+                    title = title,
+                    artist = reciterName,
+                    positionMs = playerState.positionMs,
+                    durationMs = playerState.durationMs,
+                    isPlaying = isPlaying,
+                    modifier = Modifier.size(48.dp),
+                )
+            }
+        }
 
         if (ayah != null && ayah.arabicText.isNotBlank()) {
             Spacer(Modifier.height(16.dp))

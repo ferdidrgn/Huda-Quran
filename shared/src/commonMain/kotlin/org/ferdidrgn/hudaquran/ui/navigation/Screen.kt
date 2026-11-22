@@ -6,6 +6,7 @@ sealed class Screen {
     data object Splash : Screen()
     data object Onboarding : Screen()
     data object Home : Screen()
+    data object Games : Screen()
     data object SurahList : Screen()
     data class SurahDetail(val surahNumber: Int, val scrollToAyah: Int? = null) : Screen()
     data object Favorites : Screen()
@@ -38,4 +39,5 @@ sealed class Screen {
     data object StudentMode : Screen()
     data object OfflineContent : Screen()
     data object TravelMode : Screen()
+    data object AdditiveGuide : Screen()
 }

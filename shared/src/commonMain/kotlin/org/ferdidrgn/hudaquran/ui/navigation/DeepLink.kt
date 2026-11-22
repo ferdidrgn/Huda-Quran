@@ -44,6 +44,7 @@ object DeepLink {
             }
             "favorites" -> Screen.Favorites
             "search" -> Screen.Search
+            "games", "oyunlar" -> Screen.Games
             "settings" -> Screen.Settings
             "reciters" -> Screen.ReciterPicker
             "sajda" -> Screen.SajdaAyahs
@@ -76,6 +77,7 @@ object DeepLink {
             "memorization", "ezber" -> Screen.Memorization
             "student" -> Screen.StudentMode
             "offline" -> Screen.OfflineContent
+            "additives", "food-additives" -> Screen.AdditiveGuide
             "travel", "seferi" -> Screen.TravelMode
             else -> null
         }
@@ -121,6 +123,7 @@ object DeepLink {
         is Screen.Splash -> "/"
         is Screen.Onboarding -> "/"
         is Screen.Home -> "/"
+        is Screen.Games -> "/games"
         is Screen.SurahList -> "/surah"
         is Screen.SurahDetail -> if (screen.scrollToAyah != null) {
             "/surah/${screen.surahNumber}/${screen.scrollToAyah}"
@@ -157,5 +160,6 @@ object DeepLink {
         is Screen.StudentMode -> "/student"
         is Screen.OfflineContent -> "/offline"
         is Screen.TravelMode -> "/travel"
+        is Screen.AdditiveGuide -> "/additives"
     }
 }

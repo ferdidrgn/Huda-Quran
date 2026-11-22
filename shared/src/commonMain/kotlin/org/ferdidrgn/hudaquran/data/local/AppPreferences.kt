@@ -8,6 +8,7 @@ import kotlinx.datetime.Clock
 import org.ferdidrgn.hudaquran.domain.model.QuranEditions
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK, SAKURA }
+enum class SurahNameSource { STANDARD, VAKTELYA }
 
 /** A global text-size multiplier for readers who need larger type — elderly users especially. */
 enum class TextSizeOption(val scale: Float) {
@@ -16,7 +17,7 @@ enum class TextSizeOption(val scale: Float) {
     EXTRA_LARGE(1.3f),
 }
 
-enum class PrayerNotificationSound { SILENT, DEFAULT, ADHAN_1, ADHAN_2, ADHAN_3, BEEP, DOUBLE_BEEP }
+enum class PrayerNotificationSound { SILENT, DEFAULT, ADHAN_1, ADHAN_2, ADHAN_3, NOTIFICATION_TONE, BEEP, DOUBLE_BEEP }
 
 data class LastRead(val surahNumber: Int, val numberInSurah: Int, val surahName: String)
 
@@ -64,6 +65,7 @@ class AppPreferences(private val settings: Settings = createSettings()) {
         private const val KEY_REDUCED_MOTION = "reduced_motion_enabled"
         private const val KEY_MUSHAF_SHOW_TRANSLATION = "mushaf_show_translation"
         private const val KEY_SURAH_SHOW_TRANSLATION = "surah_show_translation"
+        private const val KEY_SURAH_NAME_SOURCE = "surah_name_source"
         private const val KEY_MUSHAF_GESTURE_HINT_SEEN = "mushaf_gesture_hint_seen"
     }
 
@@ -306,6 +308,17 @@ class AppPreferences(private val settings: Settings = createSettings()) {
     fun setSurahShowTranslation(show: Boolean) {
         settings.putBoolean(KEY_SURAH_SHOW_TRANSLATION, show)
         _surahShowTranslation.value = show
+    }
+
+    private val _surahNameSource = MutableStateFlow(
+        runCatching { SurahNameSource.valueOf(settings.getString(KEY_SURAH_NAME_SOURCE, SurahNameSource.STANDARD.name)) }
+            .getOrDefault(SurahNameSource.STANDARD),
+    )
+    val surahNameSource: StateFlow<SurahNameSource> = _surahNameSource.asStateFlow()
+
+    fun setSurahNameSource(source: SurahNameSource) {
+        settings.putString(KEY_SURAH_NAME_SOURCE, source.name)
+        _surahNameSource.value = source
     }
 
     /** The one-time "tap an ayah to listen, hold for actions" hint in Mushaf mode has been shown. */

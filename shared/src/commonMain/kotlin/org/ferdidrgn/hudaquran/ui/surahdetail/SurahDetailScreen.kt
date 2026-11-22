@@ -107,7 +107,10 @@ fun SurahDetailScreen(
     val currentAyah = if (nowPlaying?.mode == PlaybackMode.AYAH_QUEUE) {
         nowPlaying?.queue?.getOrNull(nowPlaying!!.currentIndex)
     } else null
-    val isWholeSurahPlaying = nowPlaying?.mode == PlaybackMode.WHOLE_SURAH && nowPlaying?.surahNumber == surahNumber
+    val isQfAyahQueuePlaying = nowPlaying?.mode == PlaybackMode.AYAH_QUEUE &&
+        nowPlaying?.surahNumber == surahNumber && nowPlaying?.reciterId?.startsWith("qf.ayah.") == true
+    val isWholeSurahPlaying = (nowPlaying?.mode == PlaybackMode.WHOLE_SURAH && nowPlaying?.surahNumber == surahNumber) ||
+        isQfAyahQueuePlaying
 
     LaunchedEffect(surahNumber, reloadKey) {
         isLoading = true
@@ -224,7 +227,12 @@ fun SurahDetailScreen(
                     isLoading = isThisWholeSurahLoading,
                     onClick = {
                         val current = detail ?: return@PlayToggleButton
-                        playback.toggleWholeSurah(surahNumber, current.surah.englishName, current.surahAudioUrl, preferences.selectedReciter)
+                        if (preferences.selectedReciter.startsWith("qf.ayah.")) {
+                            if (isQfAyahQueuePlaying) playback.togglePlayPause()
+                            else playback.playQueue(current.ayahs, 0, surahNumber, current.surah.englishName, preferences.selectedReciter)
+                        } else {
+                            playback.toggleWholeSurah(surahNumber, current.surah.englishName, current.surahAudioUrl, preferences.selectedReciter)
+                        }
                     },
                 )
                 Spacer(Modifier.width(8.dp))

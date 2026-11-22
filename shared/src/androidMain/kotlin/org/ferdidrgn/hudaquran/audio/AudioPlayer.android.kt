@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.ferdidrgn.hudaquran.audio.cast.CastPlaybackController
 import org.ferdidrgn.hudaquran.data.local.AppContextHolder
 
 private const val TAG = "HudaQuranAudio"
@@ -26,9 +27,16 @@ actual class AudioPlayer actual constructor() {
     actual val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
     private val player: ExoPlayer by lazy {
-        ExoPlayer.Builder(AppContextHolder.context).build().apply {
+        ExoPlayer.Builder(AppContextHolder.context).build().also { localPlayer ->
+            CastPlaybackController.attachLocalPlayer(
+                player = localPlayer,
+                stateReader = { _state.value },
+                statePublisher = { _state.value = it },
+            )
+        }.apply {
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (CastPlaybackController.isCasting()) return
                     when (playbackState) {
                         Player.STATE_BUFFERING -> {
                             _state.value = _state.value.copy(status = PlaybackStatus.LOADING)
@@ -51,6 +59,7 @@ actual class AudioPlayer actual constructor() {
                 }
 
                 override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                    if (CastPlaybackController.isCasting()) return
                     if (this@apply.playbackState == Player.STATE_READY) {
                         progressJob?.cancel()
                         _state.value = _state.value.copy(
@@ -61,6 +70,7 @@ actual class AudioPlayer actual constructor() {
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
+                    if (CastPlaybackController.isCasting()) return
                     Log.e(TAG, "Playback error (${error.errorCodeName}) for ${_state.value.currentUrl}: ${error.message}", error)
                     progressJob?.cancel()
                     _state.value = _state.value.copy(status = PlaybackStatus.ERROR)
@@ -72,6 +82,7 @@ actual class AudioPlayer actual constructor() {
     actual fun play(url: String) {
         PlaybackNotificationService.start(AppContextHolder.context)
         _state.value = PlaybackState(status = PlaybackStatus.LOADING, currentUrl = url)
+        if (CastPlaybackController.play(url)) return
         try {
             player.setMediaItem(MediaItem.fromUri(url))
             player.prepare()
@@ -83,12 +94,14 @@ actual class AudioPlayer actual constructor() {
     }
 
     actual fun pause() {
+        if (CastPlaybackController.pause()) return
         player.pause()
         progressJob?.cancel()
         _state.value = _state.value.copy(status = PlaybackStatus.PAUSED)
     }
 
     actual fun resume() {
+        if (CastPlaybackController.resume()) return
         player.play()
         _state.value = _state.value.copy(status = PlaybackStatus.PLAYING)
         startProgressLoop()
@@ -96,12 +109,17 @@ actual class AudioPlayer actual constructor() {
 
     actual fun stop() {
         progressJob?.cancel()
+        if (CastPlaybackController.stop()) {
+            _state.value = PlaybackState()
+            return
+        }
         player.stop()
         player.clearMediaItems()
         _state.value = PlaybackState()
     }
 
     actual fun seekTo(positionMs: Long) {
+        if (CastPlaybackController.seekTo(positionMs)) return
         player.seekTo(positionMs)
     }
 

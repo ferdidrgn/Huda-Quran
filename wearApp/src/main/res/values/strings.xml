@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_quran_tile_label">Huda Kur'an</string>
+    <string name="wear_quran_tile_description">Telefondaki Kur'an oynatıcısını saatten açın</string>
+</resources>

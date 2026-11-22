@@ -1,6 +1,6 @@
 # Quran Foundation entegrasyonu
 
-Uygulama tarafında `QuranFoundationApi` hazırlandı ve `AppContainer` içine bağlandı. Chapters, verses, ayet kıraatçıları, sure kıraatçıları, translations, tafsirs, sure ses dosyaları ve Quran Foundation Search API ayrı doğru yollarıyla sunulur. Sure kıraatçı kataloğu Reciters ekranına eklenir; önizleme URL'si sure/kıraatçı kimliğine göre QF uç noktasından çözülür. Eski AlQuranCloud kataloğu yedek olarak korunur.
+Uygulama tarafında `QuranFoundationApi` hazırlandı ve `AppContainer` içine bağlandı. Chapters, verses, ayet kıraatçıları, sure kıraatçıları, translations, tafsirs, sure ses dosyaları ve Quran Foundation Search API ayrı doğru yollarıyla sunulur. Ayet kıraatçıları listesi `/resources/recitations` üzerinden gelir; `qf.ayah.*` ve `qf.chapter.*` kimlikleri farklı oynatma uçlarına yönlendirilir. Sure kıraatçı kataloğu tam sure URL'siyle, ayet kıraatçıları ise ayet ses URL'leriyle çalınır. Eski AlQuranCloud kataloğu yedek olarak korunur.
 
 ## Backend proxy
 
@@ -22,7 +22,7 @@ Proxy canlı değildir; bu depoda henüz API hesabı/üretim erişimi, Firebase 
 3. Quran Foundation dokümanına göre yeni backend hesabı granular izinler alıyorsa varsayılan `QF_CONTENT_SCOPE_MODE=granular` bırakılır; eski `content` izni kullanan hesapta `QF_CONTENT_SCOPE_MODE=legacy` seçilir. Search için ayrıca `search` kapsamı gerekir.
 4. Gerekirse `QF_ENVIRONMENT` parametresi `prelive` olarak bırakılır; production için erişim onayı alındıktan sonra `production` yapılır.
 5. Functions ve Hosting deploy edilir. Öncesinde yerel Emulator Suite ile proxy kontrol edilir.
-6. `/api/qf/content/api/v4/chapters?language=tr`, `/api/qf/content/api/v4/resources/chapter_reciters?language=tr` ve `/api/qf/search/api/v1/search?mode=quick&query=fatiha` canlı erişimle doğrulanır.
+6. `/api/qf/content/api/v4/chapters?language=tr`, `/api/qf/content/api/v4/resources/recitations?language=tr`, `/api/qf/content/api/v4/resources/chapter_reciters?language=tr`, sesli `/verses/by_chapter/{chapter}?audio={recitation_id}` ve `/api/qf/search/api/v1/search?mode=quick&query=fatiha` canlı erişimle doğrulanır.
 7. Hata/boş yanıt mevcut AlQuranCloud ve yerel içerik yedeklerini etkilemez.
 
 Bu dosya resmi API'nin kullanım rehberine göre hazırlanmıştır; Quran.com arayüzünün veya içeriğinin izinsiz toplu kopyası değildir.

@@ -18,9 +18,10 @@ class DuaContentRepository(
             tags = listOf(dua.category),
         )
     },
+    private val vaktelyaDuas: List<DuaContent> = emptyList(),
 ) {
     fun getAll(language: String = "tr"): List<DuaContent> =
-        builtIn.filter { it.language == language }
+        (builtIn + vaktelyaDuas).filter { it.language == language }.distinctBy { it.dua.id }
 
     fun getById(id: String, language: String = "tr"): DuaContent? =
         getAll(language).firstOrNull { it.dua.id == id }

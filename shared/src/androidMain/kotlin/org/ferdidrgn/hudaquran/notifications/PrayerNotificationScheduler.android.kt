@@ -7,10 +7,12 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.ferdidrgn.hudaquran.data.local.AppContextHolder
@@ -52,7 +54,26 @@ actual class PrayerNotificationScheduler actual constructor() {
     }
 
     actual fun preview(title: String, body: String) {
-        ensureChannel(context)
+        val channelId = ensureChannel(context)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val channelBlocked = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            manager.getNotificationChannel(channelId)?.importance == NotificationManager.IMPORTANCE_NONE
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled() || channelBlocked) {
+            val settingsIntent = if (channelBlocked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    .putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            } else {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", context.packageName, null))
+            }
+            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runCatching { context.startActivity(settingsIntent) }
+            return
+        }
         postNotification(context, -42, title, body)
     }
 }
@@ -111,34 +132,17 @@ private fun ensureChannel(context: Context): String {
     val prefs = AppPreferences()
     val channel = NotificationChannel(id, "Namaz vakti ve hatırlatmalar", NotificationManager.IMPORTANCE_DEFAULT).apply {
         description = "Namazdan önce ve mübarek günlerde yumuşak bir çan sesiyle hatırlatır."
-        val soundName = when (prefs.prayerNotificationSound.value) {
-            PrayerNotificationSound.ADHAN_1 -> "azan_1"
-            PrayerNotificationSound.ADHAN_2 -> "azan_2"
-            PrayerNotificationSound.ADHAN_3 -> "azan_3"
-            PrayerNotificationSound.BEEP -> "noti_beep"
-            PrayerNotificationSound.DOUBLE_BEEP -> "noti_beep_beep"
-            else -> "huda_chime_soft"
-        }
-        val requestedSoundId = context.resources.getIdentifier(soundName, "raw", context.packageName)
-        val fallbackSoundId = context.resources.getIdentifier("huda_chime_soft", "raw", context.packageName)
-        val soundId = when {
-            prefs.prayerNotificationSound.value == PrayerNotificationSound.SILENT -> 0
-            requestedSoundId != 0 -> requestedSoundId
-            fallbackSoundId != 0 -> fallbackSoundId
-            else -> 0
-        }
-        if (soundId != 0) {
-            setSound(
-                Uri.parse("android.resource://${context.packageName}/$soundId"),
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build(),
-            )
-        }
+        val soundUri = selectedSoundUri(context, prefs.prayerNotificationSound.value)
+        if (soundUri != null) setSound(
+            soundUri,
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build(),
+        )
         // If neither the selected file nor the bundled fallback exists, explicitly silence the
         // channel instead of allowing Android to substitute the user's default alert sound.
-        if (soundId == 0) setSound(null, null)
+        if (soundUri == null) setSound(null, null)
         enableVibration(prefs.prayerNotificationVibration.value)
         vibrationPattern = if (prefs.prayerNotificationVibration.value) longArrayOf(0, 60, 140, 60) else longArrayOf(0)
         lightColor = NOTIFICATION_ACCENT_COLOR
@@ -148,16 +152,40 @@ private fun ensureChannel(context: Context): String {
     return id
 }
 
+private fun selectedSoundUri(context: Context, sound: PrayerNotificationSound): Uri? {
+    val soundName = when (sound) {
+        PrayerNotificationSound.SILENT -> return null
+        PrayerNotificationSound.ADHAN_1 -> "azan_1"
+        PrayerNotificationSound.ADHAN_2 -> "azan_2"
+        PrayerNotificationSound.ADHAN_3 -> "azan_3"
+        PrayerNotificationSound.NOTIFICATION_TONE -> "noti_1"
+        PrayerNotificationSound.BEEP -> "noti_beep"
+        PrayerNotificationSound.DOUBLE_BEEP -> "noti_beep_beep"
+        PrayerNotificationSound.DEFAULT -> "huda_chime_soft"
+    }
+    val requestedSoundId = context.resources.getIdentifier(soundName, "raw", context.packageName)
+    val fallbackSoundId = context.resources.getIdentifier("huda_chime_soft", "raw", context.packageName)
+    val soundId = requestedSoundId.takeIf { it != 0 } ?: fallbackSoundId.takeIf { it != 0 } ?: return null
+    return Uri.parse("android.resource://${context.packageName}/$soundId")
+}
+
 private fun postNotification(context: Context, id: Int, title: String, body: String) {
     val channel = ensureChannel(context)
-    val notification = NotificationCompat.Builder(context, channel)
+    val prefs = AppPreferences()
+    val builder = NotificationCompat.Builder(context, channel)
         .setContentTitle(title).setContentText(body)
         .setStyle(NotificationCompat.BigTextStyle().bigText(body))
         .setSmallIcon(context.notificationIconRes()).setColor(NOTIFICATION_ACCENT_COLOR)
         .setContentIntent(context.openAppPendingIntent(id))
         .setCategory(NotificationCompat.CATEGORY_REMINDER).setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        .setAutoCancel(true).setTimeoutAfter(60 * 60_000L).build()
-    (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.notify(id, notification)
+        .setAutoCancel(true).setTimeoutAfter(60 * 60_000L)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        builder.setSound(selectedSoundUri(context, prefs.prayerNotificationSound.value))
+        builder.setVibrate(
+            if (prefs.prayerNotificationVibration.value) longArrayOf(0, 60, 140, 60) else null,
+        )
+    }
+    (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.notify(id, builder.build())
 }
 
 class PrayerAlarmReceiver : BroadcastReceiver() {

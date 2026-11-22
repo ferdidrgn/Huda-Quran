@@ -6,6 +6,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -14,6 +15,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import org.ferdidrgn.hudaquran.data.local.QuranCache
+import org.ferdidrgn.hudaquran.data.local.AppLanguage
 import org.ferdidrgn.hudaquran.data.remote.QuranApi
 import org.ferdidrgn.hudaquran.data.remote.QuranFoundationApi
 import org.ferdidrgn.hudaquran.data.remote.QuranFoundationProxyConfig
@@ -59,6 +61,7 @@ class QuranRepository(
 ) {
 
     private var cachedSurahList: List<Surah>? = null
+    private val cachedSurahMeanings = mutableMapOf<String, Map<Int, String>>()
 
     suspend fun getSurahList(): List<Surah> {
         cachedSurahList?.let { return it }
@@ -76,22 +79,62 @@ class QuranRepository(
         throw fetched.exceptionOrNull() ?: IllegalStateException("Surah list unavailable")
     }
 
+    /**
+     * Returns translated chapter meanings from Quran Foundation for the selected UI language.
+     * Arabic UI intentionally requests English meanings. Failed/empty responses are not cached so
+     * a later visit can recover; the caller keeps its English fallback for offline use.
+     */
+    suspend fun getLocalizedSurahMeanings(language: AppLanguage): Map<Int, String> {
+        val apiLanguage = if (language == AppLanguage.ARABIC) AppLanguage.ENGLISH.code else language.code
+        cachedSurahMeanings[apiLanguage]?.let { return it }
+
+        val payload = try {
+            withTimeoutOrNull(3_000L) { quranFoundation.chapters(apiLanguage) } ?: return emptyMap()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return emptyMap()
+        }
+
+        val chapters = payload["chapters"] as? JsonArray ?: return emptyMap()
+        val meanings = chapters.mapNotNull { element ->
+            val chapter = element as? JsonObject ?: return@mapNotNull null
+            val number = (chapter["id"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
+            val translatedName = chapter["translated_name"] as? JsonObject ?: return@mapNotNull null
+            val meaning = (translatedName["name"] as? JsonPrimitive)?.content?.trim()
+                ?.takeIf(String::isNotEmpty)
+                ?: return@mapNotNull null
+            number to meaning
+        }.toMap()
+
+        if (meanings.isNotEmpty()) cachedSurahMeanings[apiLanguage] = meanings
+        return meanings
+    }
+
     suspend fun getSurahDetail(
         surahNumber: Int,
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): SurahDetail {
+        // Quran Foundation chapter reciters provide complete-surah recordings. AlQuran Cloud
+        // remains the ayah-by-ayah source so selecting one never sends a chapter ID as an edition.
+        val ayahAudioEdition = reciterEdition.takeUnless { it.startsWith("qf.") }
+            ?: QuranEditions.DEFAULT_RECITER
         val fetched = runCatching {
             val editions = retryOnce {
                 api.getSurahWithEditions(
                     surahNumber,
-                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, ayahAudioEdition),
                 )
             }
             val arabicEdition = editions[0]
             val translationEditionData = editions[1]
             val audioEdition = editions[2]
 
+            val qfAyahAudio = getQuranFoundationAyahAudio(
+                reciterEdition,
+                mapOf(surahNumber to (arabicEdition.ayahs.maxOfOrNull { it.numberInSurah } ?: 0)),
+            )
             val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
                 Ayah(
                     surahNumber = arabicEdition.number,
@@ -100,7 +143,8 @@ class QuranRepository(
                     globalNumber = ayahDto.number,
                     arabicText = ayahDto.text,
                     translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
-                    audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
+                    audioUrl = qfAyahAudio["$surahNumber:${ayahDto.numberInSurah}"]
+                        ?: audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
                     juz = ayahDto.juz,
                     page = ayahDto.page,
                     isSajda = ayahDto.sajda,
@@ -117,7 +161,15 @@ class QuranRepository(
                     revelationType = arabicEdition.revelationType,
                 ),
                 ayahs = ayahs,
-                surahAudioUrl = QuranEditions.surahAudioUrl(surahNumber, reciterEdition),
+                surahAudioUrl = when {
+                    reciterEdition.startsWith("qf.chapter.") ->
+                        runCatching { getQuranFoundationChapterAudioUrl(reciterEdition, surahNumber) }
+                            .getOrNull()?.takeIf(String::isNotBlank)
+                            ?: QuranEditions.surahAudioUrl(surahNumber, ayahAudioEdition)
+                    reciterEdition.startsWith("qf.ayah.") ->
+                        QuranEditions.surahAudioUrl(surahNumber, QuranEditions.DEFAULT_RECITER)
+                    else -> QuranEditions.surahAudioUrl(surahNumber, reciterEdition)
+                },
             )
         }
         fetched.getOrNull()?.let { detail ->
@@ -135,18 +187,25 @@ class QuranRepository(
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): QuranSectionDetail {
+        val ayahAudioEdition = reciterEdition.takeUnless { it.startsWith("qf.") }
+            ?: QuranEditions.DEFAULT_RECITER
         val fetched = runCatching {
             val editions = retryOnce {
                 api.getSectionWithEditions(
                     kind.apiPath,
                     number,
-                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition),
+                    listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, ayahAudioEdition),
                 )
             }
             val arabicEdition = editions[0]
             val translationEditionData = editions[1]
             val audioEdition = editions[2]
 
+            val qfAyahAudio = getQuranFoundationAyahAudio(
+                reciterEdition,
+                arabicEdition.ayahs.groupBy { it.surah.number }
+                    .mapValues { (_, rows) -> rows.maxOfOrNull { it.numberInSurah } ?: 0 },
+            )
             val ayahs = arabicEdition.ayahs.mapIndexed { index, ayahDto ->
                 Ayah(
                     surahNumber = ayahDto.surah.number,
@@ -155,7 +214,8 @@ class QuranRepository(
                     globalNumber = ayahDto.number,
                     arabicText = ayahDto.text,
                     translationText = translationEditionData.ayahs.getOrNull(index)?.text.orEmpty(),
-                    audioUrl = audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
+                    audioUrl = qfAyahAudio["${ayahDto.surah.number}:${ayahDto.numberInSurah}"]
+                        ?: audioEdition.ayahs.getOrNull(index)?.audio.orEmpty(),
                     juz = ayahDto.juz,
                     page = ayahDto.page,
                     isSajda = ayahDto.sajda,
@@ -209,13 +269,20 @@ class QuranRepository(
         translationEdition: String = QuranEditions.DEFAULT_TRANSLATION,
         reciterEdition: String = QuranEditions.DEFAULT_RECITER,
     ): List<Ayah> = coroutineScope {
-        val editions = listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, reciterEdition)
+        val ayahAudioEdition = reciterEdition.takeUnless { it.startsWith("qf.") }
+            ?: QuranEditions.DEFAULT_RECITER
+        val editions = listOf(QuranEditions.ARABIC_TEXT_EDITION, translationEdition, ayahAudioEdition)
             .map { edition -> async { retryOnce { api.getSajdaAyahs(edition) } } }
             .awaitAll()
         val arabic = editions[0]
         val translation = editions[1]
         val audio = editions[2]
 
+        val qfAyahAudio = getQuranFoundationAyahAudio(
+            reciterEdition,
+            arabic.ayahs.groupBy { it.surah.number }
+                .mapValues { (_, rows) -> rows.maxOfOrNull { it.numberInSurah } ?: 0 },
+        )
         arabic.ayahs.mapIndexed { index, ayahDto ->
             Ayah(
                 surahNumber = ayahDto.surah.number,
@@ -224,7 +291,8 @@ class QuranRepository(
                 globalNumber = ayahDto.number,
                 arabicText = ayahDto.text,
                 translationText = translation.ayahs.getOrNull(index)?.text.orEmpty(),
-                audioUrl = audio.ayahs.getOrNull(index)?.audio.orEmpty(),
+                audioUrl = qfAyahAudio["${ayahDto.surah.number}:${ayahDto.numberInSurah}"]
+                    ?: audio.ayahs.getOrNull(index)?.audio.orEmpty(),
                 juz = ayahDto.juz,
                 page = ayahDto.page,
                 isSajda = true,
@@ -248,38 +316,36 @@ class QuranRepository(
 
     private var cachedReciters: List<Reciter>? = null
     private var cachedTranslations: List<Translation>? = null
-    private val reciterAvailability = mutableMapOf<String, Boolean?>()
 
     suspend fun getReciters(): List<Reciter> {
         cachedReciters?.let { return it }
-        val loaded = runCatching {
-            val editions = arabicRecitationEditions(api.getEditions(format = "audio", type = "versebyverse"))
-            coroutineScope {
-                editions.map { edition ->
-                    async {
-                        val available = reciterAvailability[edition.identifier]
-                            ?: api.isAudioUrlReachable(QuranEditions.surahAudioUrl(1, edition.identifier))
-                                .also { reciterAvailability[edition.identifier] = it }
-                        // Only a confirmed HTTP failure removes an edition. A timeout/offline
-                        // device leaves the catalogue intact so it cannot collapse to two items.
-                        if (available != false) Reciter(edition.identifier, edition.englishName.ifBlank { edition.name }) else null
-                    }
-                }.awaitAll().filterNotNull()
-            }.sortedWith(compareBy({ it.identifier != QuranEditions.DEFAULT_RECITER }, { it.displayName }))
-        }.getOrElse {
-            coroutineScope {
-                QuranEditions.reciters.map { reciter ->
-                    async {
-                        val available = reciterAvailability[reciter.identifier]
-                            ?: api.isAudioUrlReachable(QuranEditions.surahAudioUrl(1, reciter.identifier))
-                                .also { reciterAvailability[reciter.identifier] = it }
-                        if (available != false) reciter else null
-                    }
-                }.awaitAll().filterNotNull()
-            }
-        }
-        // Chapter-reciter IDs and ayah-by-ayah IDs have different audio URL formats. Keep
-        // QF chapter reciters explicitly tagged so the UI resolves their chapter audio endpoint.
+        // Keep the curated catalogue visible even when an audio CDN blocks HEAD/range probes.
+        // Preflighting every voice here made the picker shrink to only one or two items on some
+        // networks; playback itself reports a genuinely unavailable recording when previewed.
+        val apiReciters = runCatching {
+            arabicRecitationEditions(api.getEditions(format = "audio", type = "versebyverse"))
+                .map { edition -> Reciter(edition.identifier, edition.englishName.ifBlank { edition.name }) }
+        }.getOrDefault(emptyList())
+        val loaded = (apiReciters + QuranEditions.reciters)
+            .distinctBy(Reciter::identifier)
+            .sortedWith(compareBy({ it.identifier != QuranEditions.DEFAULT_RECITER }, { it.displayName }))
+        // Chapter-reciter and ayah-by-ayah IDs are separate catalogs in Quran Foundation.
+        val qfAyahReciters = withTimeoutOrNull(2_500L) {
+            runCatching {
+                val payload = quranFoundation.recitations("tr")
+                (payload["recitations"] as? JsonArray).orEmpty().mapNotNull { item ->
+                    val recitation = item as? JsonObject ?: return@mapNotNull null
+                    val id = (recitation["id"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
+                    val translatedName = (recitation["translated_name"] as? JsonObject)?.get("name")
+                        ?.jsonPrimitive?.content
+                    val baseName = translatedName?.takeIf(String::isNotBlank)
+                        ?: recitation["reciter_name"]?.jsonPrimitive?.content?.takeIf(String::isNotBlank)
+                        ?: return@mapNotNull null
+                    val style = recitation["style"]?.jsonPrimitive?.content?.takeIf(String::isNotBlank)
+                    Reciter("qf.ayah.$id", listOfNotNull(baseName, style).joinToString(" · "))
+                }
+            }.getOrDefault(emptyList())
+        }.orEmpty()
         val chapterReciters = withTimeoutOrNull(2_500L) {
             runCatching {
                 val payload = quranFoundation.chapterReciters("tr")
@@ -296,7 +362,7 @@ class QuranRepository(
                 }
             }.getOrDefault(emptyList())
         }.orEmpty()
-        val combined = (loaded + chapterReciters).distinctBy(Reciter::identifier)
+        val combined = (loaded + qfAyahReciters + chapterReciters).distinctBy(Reciter::identifier)
         cachedReciters = combined
         return combined
     }
@@ -307,6 +373,47 @@ class QuranRepository(
         val payload = quranFoundation.chapterAudio(id, chapter)
         return (payload["audio_file"] as? JsonObject)?.get("audio_url")?.jsonPrimitive?.content
             ?: payload["audio_file"]?.jsonPrimitive?.content
+    }
+
+    private suspend fun getQuranFoundationAyahAudio(
+        reciterIdentifier: String,
+        chapterMaxVerseNumbers: Map<Int, Int>,
+    ): Map<String, String> {
+        val recitationId = reciterIdentifier.removePrefix("qf.ayah.").toIntOrNull() ?: return emptyMap()
+        val chapters = chapterMaxVerseNumbers.filter { (chapter, maxVerse) -> chapter in 1..114 && maxVerse > 0 }
+        if (chapters.isEmpty()) return emptyMap()
+        return withTimeoutOrNull(8_000L) {
+            runCatching {
+                coroutineScope {
+                    chapters.flatMap { (chapter, maxVerse) ->
+                        (1..((maxVerse + 49) / 50)).map { page ->
+                            async {
+                                runCatching {
+                                    quranFoundation.verses(
+                                        chapter = chapter,
+                                        language = "tr",
+                                        page = page,
+                                        perPage = 50,
+                                        audioRecitationId = recitationId,
+                                    )
+                                }.getOrNull()
+                            }
+                        }
+                    }.awaitAll().flatMap { payload ->
+                        (payload?.get("verses") as? JsonArray).orEmpty().mapNotNull { item ->
+                            val verse = item as? JsonObject ?: return@mapNotNull null
+                            val verseKey = verse["verse_key"]?.jsonPrimitive?.content
+                                ?: return@mapNotNull null
+                            val audio = verse["audio"] as? JsonObject
+                            val url = audio?.get("url")?.jsonPrimitive?.content
+                                ?: verse["audio_url"]?.jsonPrimitive?.content
+                                ?: return@mapNotNull null
+                            verseKey to url
+                        }
+                    }.toMap()
+                }
+            }.getOrDefault(emptyMap())
+        }.orEmpty()
     }
 
     suspend fun getTranslations(languageCode: String? = null): List<Translation> {

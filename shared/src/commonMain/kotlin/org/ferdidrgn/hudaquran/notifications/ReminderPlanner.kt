@@ -50,7 +50,11 @@ object ReminderPlanner {
         val reminders = mutableListOf<Reminder>()
         for (dayIndex in 0 until DAYS_OF_PRAYERS) {
             val date = today.plus(dayIndex, DateTimeUnit.DAY)
-            val timings = runCatching { repository.getTimings(city, country, date) }.getOrNull() ?: continue
+            // Do not replace a valid alarm plan with a partial or empty plan when the prayer API
+            // is temporarily unavailable. Settings changes (including sound selection) call this
+            // method too; a transient network error must not silently cancel every reminder.
+            val timings = runCatching { repository.getTimings(city, country, date) }.getOrNull()
+                ?: return
             reminders += prayerReminders(
                 timings = timings,
                 date = date,
@@ -62,7 +66,8 @@ object ReminderPlanner {
             )
         }
         if (preferences.occasionRemindersEnabled.value) {
-            val occasions = runCatching { repository.getUpcomingIslamicOccasions(today) }.getOrNull().orEmpty()
+            val occasions = runCatching { repository.getUpcomingIslamicOccasions(today) }.getOrNull()
+                ?: return
             reminders += occasionReminders(occasions, strings, zone)
         }
 

@@ -30,3 +30,21 @@ fun localizedSurahName(surahNumber: Int, fallbackName: String, language: AppLang
         AppLanguage.TURKISH -> turkishSurahNames.getOrNull(surahNumber - 1) ?: fallbackName
         else -> fallbackName
     }
+
+/**
+ * Uses the language-specific translated chapter title supplied by Quran Foundation when
+ * available. Arabic UI intentionally keeps the familiar English meaning under the Arabic title,
+ * as requested; all missing/offline translations fall back to AlQuran Cloud's English value.
+ */
+fun localizedSurahMeaning(
+    surahNumber: Int,
+    englishFallback: String,
+    language: AppLanguage,
+    translatedMeanings: Map<Int, String>,
+): String {
+    if (language == AppLanguage.ARABIC) return englishFallback
+    return translatedMeanings[surahNumber]
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
+        ?: englishFallback
+}

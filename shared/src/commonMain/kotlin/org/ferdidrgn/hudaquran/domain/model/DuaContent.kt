@@ -8,6 +8,7 @@ data class DuaContent(
     val dua: Dua,
     val source: String,
     val sourceUrl: String? = null,
+    val reference: String? = null,
     val language: String = "tr",
     val tags: List<String> = emptyList(),
     val isVerified: Boolean = true,

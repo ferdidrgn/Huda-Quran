@@ -21,7 +21,7 @@ Bu belge, `C:\Users\ferdi\Downloads\Vaktelya-Pro-1.4.1-debug.apk` üzerinde REA 
 | Esmaü’l-Hüsna toplu ses kaydı | `files/vaktelya_asma-ul-husna.ogg`, `ui/esmaulhusna/EsmaulHusnaDetailScreen.kt` | Bağlandı; ekran içi oynat/duraklat mevcut. |
 | Türkçe hadis snapshot’ı (HadeethEnc) | `files/vaktelya_hadith_tr.json`, `HadithLocalDataSource.kt`, `HadithRepository.kt` | Bağlandı; remote öncelikli, Türkçe offline/fallback kaynak aktif. |
 | Hadis açıklama, derece, referans ve kaynak URL’si | `HadithDtos.kt`, `domain/model/Hadith.kt`, `ui/hadith`, `ui/share/HadithPostcard.kt` | Ayrı alanlar korunuyor; görsel paylaşımda metin blokları ayrıştırılmış. |
-| Dini takvim ve Türkçe içerik JSON’ları | `files/vaktelya_religious_calendar.json`, `files/vaktelya_content_tr.json` | Dosyalar taşındı; repository/UI bağlantısı ayrıca tamamlanmalı. |
+| Local calendar and Turkish reference data | `VaktelyaCalendarRepository`, `VaktelyaDuaLocalDataSource`, `VaktelyaReferenceDataSource`, `IslamicCalendarScreen`, `DuaListScreen`, Esma catalog, Additive Guide, Surah list settings | Calendar, 43 duas, 99 Esma records, 601 additive records, and 114 Turkish surah names are connected to visible app flows with source attribution and user options. |
 | `flutter_local_notifications` receiver’ları | `notifications/PrayerNotificationScheduler.*`, `ReminderPlanner.kt`, Android notification channels | Ortak zamanlama ve Android/iOS karşılıkları mevcut; kaynak payload’ı runtime ile karşılaştırılmalı. |
 | `AdhanAlarms.schedule/restore/clear` | `ReminderPlanner`, `PrayerNotificationScheduler.android.kt`, `AppPreferences` | İş mantığı karşılığı var. Kaynakta `vaktelya_adhan/alarms` SharedPreferences ve exact alarm kullanılıyor; hedefte mimariye uygun uyarlama var. |
 | Bildirim/ezan sesleri | `AppPreferences.PrayerNotificationSound`, `PrayerNotificationScheduler`, Android raw resources | Hedefte 3 ezan, kısa bip ve titreşim seçimi var; gerçek cihaz ses testi açık. |
@@ -42,8 +42,13 @@ Bu belge, `C:\Users\ferdi\Downloads\Vaktelya-Pro-1.4.1-debug.apk` üzerinde REA 
 
 ## Açık doğrulama maddeleri
 
-1. `vaktelya_content_tr.json` ve `vaktelya_religious_calendar.json` için hedef repository/UI tüketimi.
-2. Kaynak APK’nın tam Flutter route listesi ve ekran callback’leri için runtime/ekran keşfi.
-3. Gerçek Android cihazda bildirim sesi, exact alarm, widget tıklaması, audio focus ve kıble sensörü.
-4. Vaktelya ile Huda Quran arasında lisans/atıf metinlerinin son release kontrolü.
-5. Release reklam ortamının debug/test birimleriyle karışmadığının imzalı build üzerinde doğrulanması.
+1. The Flutter debug APK has `kernel_blob.bin` but no `libapp.so`; extracting its exact API call graph needs a Dart kernel parser or runtime capture.
+2. Inspect the complete Flutter route list and screen callbacks at runtime.
+3. Verify notification sounds, exact alarms, widget taps, audio focus, and Qibla sensors on a physical Android device.
+4. Complete the Vaktelya/Huda Quran license and attribution review before release.
+5. Confirm release ad units do not use debug/test IDs in a signed build.
+
+## Follow-up status
+The debug APK contains `assets/flutter_assets/kernel_blob.bin` and no `lib/<ABI>/libapp.so`; REA's Dart AOT inspector reports no AOT payload. Static endpoint extraction remains incomplete.
+
+Settings now exposes the Vaktelya Esma catalog, the searchable 601-entry additive guide, and a saved surah-name source choice for the Turkish surah list. The additive guide states that an E-code alone does not determine halal/haram status.

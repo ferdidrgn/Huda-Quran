@@ -23,6 +23,7 @@ androidx-media = "1.7.0"
 media3 = "1.4.1"
 kotlinx-datetime = "0.8.0-0.6.x-compat"
 playServicesAds = "23.6.0"
+playServicesCast = "23.0.0"
 billing = "8.0.0"
 purchases-kmp = "3.10.1"
 appUpdate = "2.1.0"
@@ -67,6 +68,7 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
+play-services-cast-framework = { module = "com.google.android.gms:play-services-cast-framework", version.ref = "playServicesCast" }
 android-billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
 purchases-kmp-core = { module = "com.revenuecat.purchases:purchases-kmp-core", version.ref = "purchases-kmp" }
 android-appUpdate = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
