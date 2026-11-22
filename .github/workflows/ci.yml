@@ -150,7 +150,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           # Public RevenueCat SDK key (goog_…); purchases stay off while this secret is unset.
           REVENUECAT_GOOGLE_KEY: ${{ secrets.REVENUECAT_GOOGLE_KEY }}
-        run: ./gradlew :androidApp:bundlePhoneRelease :androidApp:bundleTvRelease :automotiveApp:bundleRelease :wearApp:bundleRelease --stacktrace
+        run: ./gradlew :androidApp:bundlePhoneRelease :androidApp:bundleTvRelease :automotiveApp:bundleRelease :wearApp:bundleRelease --no-configuration-cache --stacktrace
 
       - name: Verify all device App Bundle signatures
         env:
