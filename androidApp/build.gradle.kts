@@ -26,6 +26,13 @@ val releaseKeystorePath: String? = System.getenv("ANDROID_KEYSTORE_PATH")
 val releaseKeystorePassword: String? = System.getenv("ANDROID_KEYSTORE_PASSWORD")
 val releaseKeyAlias: String? = System.getenv("ANDROID_KEY_ALIAS")
 val releaseKeyPassword: String? = System.getenv("ANDROID_KEY_PASSWORD")
+val ciRunNumber = providers.environmentVariable("GITHUB_RUN_NUMBER").orNull?.toLongOrNull()
+if (ciRunNumber != null) {
+    require(ciRunNumber in 1..524_999_999) { "GITHUB_RUN_NUMBER is outside Android's supported versionCode range." }
+}
+val ciVersionCodeBase = ciRunNumber?.times(4)
+val phoneCiVersionCode = ciVersionCodeBase?.plus(1)?.toInt() ?: 30
+val tvCiVersionCode = ciVersionCodeBase?.plus(2)?.toInt() ?: 32
 val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
     !releaseKeystorePassword.isNullOrBlank() &&
     !releaseKeyAlias.isNullOrBlank() &&
@@ -50,7 +57,7 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 30
+        versionCode = phoneCiVersionCode
         versionName = "1.21.5"
         // Public RevenueCat SDK key (goog_…), from the REVENUECAT_GOOGLE_KEY environment variable
         // (a CI secret) or `revenuecatGoogleKey` in ~/.gradle/gradle.properties. Blank = purchases off.
@@ -64,11 +71,12 @@ android {
         create("phone") {
             dimension = "device"
             buildConfigField("boolean", "IS_TV_BUILD", "false")
+            versionCode = phoneCiVersionCode
         }
         create("tv") {
             dimension = "device"
             buildConfigField("boolean", "IS_TV_BUILD", "true")
-            versionCode = 32
+            versionCode = tvCiVersionCode
         }
     }
     packaging {

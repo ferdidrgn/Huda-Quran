@@ -14,6 +14,11 @@ val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
 val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
 val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
 val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val ciRunNumber = providers.environmentVariable("GITHUB_RUN_NUMBER").orNull?.toLongOrNull()
+if (ciRunNumber != null) {
+    require(ciRunNumber in 1..524_999_999) { "GITHUB_RUN_NUMBER is outside Android's supported versionCode range." }
+}
+val automotiveCiVersionCode = ciRunNumber?.times(4)?.plus(3)?.toInt() ?: 33
 val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
     !releaseKeystorePassword.isNullOrBlank() &&
     !releaseKeyAlias.isNullOrBlank() &&
@@ -46,8 +51,8 @@ android {
         applicationId = "org.ferdidrgn.hudaquran"
         minSdk = 28
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        // Higher than phone (30), Wear (31), and TV (32) artifacts for this package name.
-        versionCode = 33
+        // Reserve four unique version codes per CI run across this package's device artifacts.
+        versionCode = automotiveCiVersionCode
         versionName = "1.21.5"
     }
 
