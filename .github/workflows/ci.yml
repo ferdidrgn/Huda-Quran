@@ -126,13 +126,13 @@ jobs:
           REVENUECAT_GOOGLE_KEY: ${{ secrets.REVENUECAT_GOOGLE_KEY }}
         run: ./gradlew :androidApp:bundleRelease --stacktrace
 
-      - name: Upload to Google Play (production)
+      - name: Upload to Google Play (internal testing)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.ferdidrgn.hudaquran
           releaseFiles: androidApp/build/outputs/bundle/release/androidApp-release.aab
-          track: production
+          track: internal
           status: completed
 
   build-ios:
