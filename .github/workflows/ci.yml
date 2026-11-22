@@ -163,7 +163,7 @@ jobs:
               echo "::error::Bundle $bundle is not signed with the existing Play upload certificate. Expected $expected, got ${actual:-unavailable}."
               exit 1
             fi
-            echo "Verified $bundle uses the existing Play upload certificate."
+            echo "Verified $bundle uses the configured Android upload certificate $expected."
           done
 
       - name: Save phone and Android Auto bundle
