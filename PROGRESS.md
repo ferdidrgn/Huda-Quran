@@ -63,8 +63,8 @@ Hedef: ortak Kuran/medya mantığını paylaş, her Android form faktörüne yal
   - Doğrulama: `:wearApp:assembleDebug` ve `:wearApp:minifyReleaseWithR8` başarılı. Telefon ve TV release R8 görevleri ile `:automotiveApp:minifyReleaseWithR8` da başarılı. R8 Kotlin metadata uyumsuzluğu uyarıları verdi; detay HUDA-550. Kaynak küçültme ve gerçek AAB indirme boyutu CI bundle adımında ölçülecek.
 - [ ] HUDA-547 — İmzalı dört cihaz AAB'sini CI'da üret ve ayırt et
   - Durum: IN PROGRESS
-  - Sonuç: CI telefon, TV, Automotive OS ve Wear release bundle'larını üretip hepsinin mevcut Kotlin upload sertifikası `3E:93:…:41:BE` ile imzalandığını doğrulayacak. Dört AAB de Actions artefaktı olarak saklanır; yalnız telefon AAB'si mevcut Internal test adımına gönderilir.
-  - Açık kapı: Workflow henüz GitHub Actions'ta çalıştırılmadı; AAB imza/parmak izi ve release boyutları CI çıktısında doğrulanmalı.
+  - Sonuç: GitHub Actions release job'ı dört cihaz AAB'sini ve PEM sertifikasını üretecek şekilde çalışıyor; imzalı bundle doğrulaması configuration-cache engeline takılınca Android release görevinde cache kapatıldı. İlk başarılı CI denemesi AAB'leri `95:03:…:F1:7F` Flutter sertifikasıyla üretti; bu parmak izi Play'de kayıtlı `3E:93:…:41:BE` ile eşleşmediğinden Play yüklemesi atlandı. Kullanıcı talebiyle `ANDROID_KEYSTORE_BASE64`, `_mykey/key_store.jks` içeriğiyle güncellendi.
+  - Açık kapı: Yeni JKS için mevcut Actions parola/alias değerleri doğrulanmalı; bir sonraki CI imzayı ve doğru PEM'i üretecek. Play upload-key reset isteği kullanıcı tarafından onaylandı, ancak Play Console'daki reset formu henüz gönderilmedi. Reset sonrası beklenen parmak izi güncellenip phone AAB'si Internal test'e yüklenmeli.
 - [ ] HUDA-548 — Cihaz testleri ve Play form faktörü yayın kapıları
   - Durum: TODO
   - Kapsam: Telefon/DHU, Android TV, Android Automotive OS ve eşleşmiş Wear emülatör/cihazında ana akışlar; Play Console'da doğru form faktörü kanalları ve eski reddedilmiş sürümler 1/25'in kapsam dışına alınması.
