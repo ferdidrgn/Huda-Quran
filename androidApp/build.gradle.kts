@@ -26,13 +26,18 @@ val releaseKeystorePath: String? = System.getenv("ANDROID_KEYSTORE_PATH")
 val releaseKeystorePassword: String? = System.getenv("ANDROID_KEYSTORE_PASSWORD")
 val releaseKeyAlias: String? = System.getenv("ANDROID_KEY_ALIAS")
 val releaseKeyPassword: String? = System.getenv("ANDROID_KEY_PASSWORD")
+// Version code 25 is the last published phone release. Start the next four form-factor
+// bundles at 26; reserve one unique code per form factor on each subsequent CI run.
+// Run 104 used the old, incorrect `runNumber * 4` formula and produced 417–420.
 val ciRunNumber = providers.environmentVariable("GITHUB_RUN_NUMBER").orNull?.toLongOrNull()
-if (ciRunNumber != null) {
-    require(ciRunNumber in 1..524_999_999) { "GITHUB_RUN_NUMBER is outside Android's supported versionCode range." }
-}
-val ciVersionCodeBase = ciRunNumber?.times(4)
-val phoneCiVersionCode = ciVersionCodeBase?.plus(1)?.toInt() ?: 30
-val tvCiVersionCode = ciVersionCodeBase?.plus(2)?.toInt() ?: 32
+val versionCodeBatch = ciRunNumber?.let { runNumber ->
+    require(runNumber >= 105) { "The corrected Android version-code sequence starts at CI run 105." }
+    val batch = 26L + (runNumber - 105L) * 4L
+    require(batch + 3L <= 2_100_000_000L) { "GITHUB_RUN_NUMBER exceeds Android's supported versionCode range." }
+    batch.toInt()
+} ?: 26
+val phoneCiVersionCode = versionCodeBatch
+val tvCiVersionCode = versionCodeBatch + 1
 val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
     !releaseKeystorePassword.isNullOrBlank() &&
     !releaseKeyAlias.isNullOrBlank() &&
@@ -103,9 +108,12 @@ android {
     }
     buildTypes {
         debug {
-            // RevenueCat Test Store key — debug builds ONLY (never shipped; release reads the real
-            // goog_… key from the environment / gradle property above).
-            buildConfigField("String", "REVENUECAT_GOOGLE_KEY", "\"test_FZbXAoHhWzdZpQKvlnraKRilWDb\"")
+            // Keep the RevenueCat Test Store key out of source control. Debug purchases stay off
+            // unless a developer supplies REVENUECAT_GOOGLE_TEST_KEY or revenuecatGoogleTestKey.
+            val revenueCatTestKey = providers.environmentVariable("REVENUECAT_GOOGLE_TEST_KEY")
+                .orElse(providers.gradleProperty("revenuecatGoogleTestKey"))
+                .getOrElse("")
+            buildConfigField("String", "REVENUECAT_GOOGLE_KEY", "\"$revenueCatTestKey\"")
         }
         release {
             // A release without the existing Play upload key must fail, never produce a
@@ -156,3 +164,4 @@ configurations.configureEach {
         exclude(group = "com.revenuecat.purchases")
     }
 }
+

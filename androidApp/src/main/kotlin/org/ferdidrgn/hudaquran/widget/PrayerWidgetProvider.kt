@@ -232,7 +232,7 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             AppContainer.prayerRepository.getTimings(location.city, location.country, localDate)
         }.getOrNull()
         val times = fetched ?: return null
-        if (fetched != null) preferences.edit().putString(key, encodeTimes(times)).apply()
+        preferences.edit().putString(key, encodeTimes(times)).apply()
         return PrayerWidgetData(times, calendar)
     }
 
@@ -423,3 +423,4 @@ internal object PrayerWidgetLogic {
         return desired.coerceAtLeast(now + 1_000L)
     }
 }
+

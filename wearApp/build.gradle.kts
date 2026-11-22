@@ -8,10 +8,13 @@ val releaseKeystorePassword: String? = System.getenv("ANDROID_KEYSTORE_PASSWORD"
 val releaseKeyAlias: String? = System.getenv("ANDROID_KEY_ALIAS")
 val releaseKeyPassword: String? = System.getenv("ANDROID_KEY_PASSWORD")
 val ciRunNumber = providers.environmentVariable("GITHUB_RUN_NUMBER").orNull?.toLongOrNull()
-if (ciRunNumber != null) {
-    require(ciRunNumber in 1..524_999_999) { "GITHUB_RUN_NUMBER is outside Android's supported versionCode range." }
-}
-val wearCiVersionCode = ciRunNumber?.times(4)?.plus(4)?.toInt() ?: 31
+val versionCodeBatch = ciRunNumber?.let { runNumber ->
+    require(runNumber >= 105) { "The corrected Android version-code sequence starts at CI run 105." }
+    val batch = 26L + (runNumber - 105L) * 4L
+    require(batch + 3L <= 2_100_000_000L) { "GITHUB_RUN_NUMBER exceeds Android's supported versionCode range." }
+    batch.toInt()
+} ?: 26
+val wearCiVersionCode = versionCodeBatch + 3
 val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
     !releaseKeystorePassword.isNullOrBlank() &&
     !releaseKeyAlias.isNullOrBlank() &&
@@ -36,7 +39,6 @@ android {
         minSdk = 30
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         applicationId = "org.ferdidrgn.hudaquran"
-        // Reserve four unique version codes per CI run across this package's device artifacts.
         versionCode = wearCiVersionCode
         versionName = "1.21.5"
     }
@@ -83,3 +85,4 @@ dependencies {
     implementation("androidx.wear.protolayout:protolayout:1.4.2")
     implementation("androidx.wear.protolayout:protolayout-material3:1.4.2")
 }
+
