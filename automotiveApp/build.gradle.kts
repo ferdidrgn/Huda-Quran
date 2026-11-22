@@ -49,7 +49,7 @@ android {
 
     defaultConfig {
         applicationId = "org.ferdidrgn.hudaquran"
-        minSdk = 28
+        minSdk = 29
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         // Reserve four unique version codes per CI run across this package's device artifacts.
         versionCode = automotiveCiVersionCode
@@ -88,6 +88,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.car.app)
+    implementation(libs.androidx.car.app.automotive)
+    implementation(libs.androidx.media)
     // The AAOS media-only artifact doesn't need phone monetization, Wear Data Layer, or Firebase.
     // Cast UI/provider metadata is not registered; the shared AudioPlayer currently links the Cast
     // runtime, so retain that SDK until the shared player is split behind a platform interface.
