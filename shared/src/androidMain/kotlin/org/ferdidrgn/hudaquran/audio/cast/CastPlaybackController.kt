@@ -61,6 +61,7 @@ internal object CastPlaybackController {
         override fun onSessionStartFailed(session: CastSession, error: Int) = Unit
         override fun onSessionEnding(session: CastSession) = Unit
         override fun onSessionEnded(session: CastSession, error: Int) = finishRemotePlayback()
+        override fun onSessionSuspended(session: CastSession, reason: Int) = Unit
         override fun onSessionResuming(session: CastSession, sessionId: String) = Unit
         override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) = beginRemotePlayback(session)
         override fun onSessionResumeFailed(session: CastSession, error: Int) = finishRemotePlayback()
