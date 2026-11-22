@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_prayer_location_placeholder">Namaz vakitleri</string>
+    <string name="widget_prayer_unavailable">Vakitler henüz hazır değil</string>
+    <string name="widget_prayer_a11y_unavailable">%1$s için namaz vakitleri henüz hazır değil. Ayrıntıları açmak için dokunun.</string>
+    <string name="widget_prayer_a11y_next">%1$s konumunda sonraki namaz %2$s, saat %3$s. %4$s</string>
+    <string name="widget_prayer_remaining_minutes">%1$d dk kaldı</string>
+    <string name="widget_prayer_remaining_hours">%1$d sa %2$d dk kaldı</string>
+    <string name="widget_hijri_gregorian_date">Miladi %1$s</string>
+    <string name="widget_dhikr_progress">%1$d / %2$d</string>
+    <string name="widget_dhikr_increment_accessibility_label">%1$s sayacını artır. Şu an %2$d / %3$d.</string>
+    <string name="widget_dhikr_reset_accessibility_label">%1$s sayacını sıfırla.</string>
+    <string name="hijri_widget_month_fallback">Hicri tarih</string>
+</resources>

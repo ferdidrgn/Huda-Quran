@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_palette_sakura">Sakura dusk</string>
+    <string name="widget_palette_emerald">Emerald garden</string>
+    <string name="widget_palette_parchment">Mushaf paper</string>
+    <string name="widget_palette_azure">Azure night</string>
+    <string name="widget_palette_rose">Rosewood</string>
+    <string name="widget_config_title">Widget settings</string>
+    <string name="widget_config_intro">Choose what you want to see and make it fit your home screen.</string>
+    <string name="widget_config_palette">Color palette</string>
+    <string name="widget_config_text_size">Text size</string>
+    <string name="widget_config_text_size_value">%1$d%%</string>
+    <string name="widget_config_spacing">Spacing</string>
+    <string name="widget_config_compact">Compact</string>
+    <string name="widget_config_comfortable">Balanced</string>
+    <string name="widget_config_roomy">Roomy</string>
+    <string name="widget_config_content">Daily content</string>
+    <string name="widget_config_ayah">Ayah of the day</string>
+    <string name="widget_config_dua">Dua of the day</string>
+    <string name="widget_config_hadith">Hadith of the day</string>
+    <string name="widget_config_show_arabic">Show Arabic</string>
+    <string name="widget_config_show_translation">Show translation</string>
+    <string name="widget_config_location">Location</string>
+    <string name="widget_config_app_location">Use app location</string>
+    <string name="widget_config_change">Change</string>
+    <string name="widget_config_choose_location">Choose a city</string>
+    <string name="widget_config_search_location">Search cities</string>
+    <string name="widget_config_dhikr">Dhikr</string>
+    <string name="widget_config_dhikr_text">Dhikr text</string>
+    <string name="widget_config_dhikr_goal">Target count</string>
+    <string name="widget_config_save">Save widget</string>
+    <string name="widget_config_cancel">Cancel</string>
+</resources>

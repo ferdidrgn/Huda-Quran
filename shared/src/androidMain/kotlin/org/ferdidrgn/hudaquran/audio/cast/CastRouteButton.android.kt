@@ -26,10 +26,7 @@ actual fun CastRouteButton(
             }
         },
         update = { button ->
-            val isRemoteUrl = streamUrl?.let { value ->
-                value.startsWith("https://", ignoreCase = true) || value.startsWith("http://", ignoreCase = true)
-            } == true
-            button.visibility = if (isRemoteUrl) View.VISIBLE else View.GONE
+            button.visibility = if (CastPlaybackController.canCastUrl(streamUrl)) View.VISIBLE else View.GONE
             CastPlaybackController.updatePendingMedia(
                 streamUrl = streamUrl,
                 title = title,

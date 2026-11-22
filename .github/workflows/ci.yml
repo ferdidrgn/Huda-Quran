@@ -114,7 +114,22 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Decode release keystore
+        # ANDROID_KEYSTORE_BASE64 must contain _mykey/key_store.jks, never flutter_release_key.jks.
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
+      - name: Verify existing Play upload certificate
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          actual="$(keytool -list -v -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" | awk -F': ' '/SHA1: / { print $2; exit }')"
+          expected="3E:93:2B:9B:4B:08:7E:C2:B0:E5:B7:B1:D4:7C:E4:24:97:FA:41:BE"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::GitHub Actions keystore does not match the existing Play upload certificate. Expected $expected, got ${actual:-unavailable}."
+            exit 1
+          fi
+          echo "Keystore matches the existing Play upload certificate."
 
       - name: Build signed release App Bundle
         env:
@@ -124,16 +139,64 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           # Public RevenueCat SDK key (goog_…); purchases stay off while this secret is unset.
           REVENUECAT_GOOGLE_KEY: ${{ secrets.REVENUECAT_GOOGLE_KEY }}
-        run: ./gradlew :androidApp:bundleRelease --stacktrace
+        run: ./gradlew :androidApp:bundlePhoneRelease :androidApp:bundleTvRelease :automotiveApp:bundleRelease :wearApp:bundleRelease --stacktrace
+
+      - name: Verify all device App Bundle signatures
+        run: |
+          expected="3E:93:2B:9B:4B:08:7E:C2:B0:E5:B7:B1:D4:7C:E4:24:97:FA:41:BE"
+          for bundle in androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab androidApp/build/outputs/bundle/tvRelease/androidApp-tv-release.aab automotiveApp/build/outputs/bundle/release/automotiveApp-release.aab wearApp/build/outputs/bundle/release/wearApp-release.aab; do
+            actual="$(keytool -printcert -jarfile "$bundle" | awk -F': ' '/SHA1: / { print $2; exit }')"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error::Bundle $bundle is not signed with the existing Play upload certificate. Expected $expected, got ${actual:-unavailable}."
+              exit 1
+            fi
+            echo "Verified $bundle uses the existing Play upload certificate."
+          done
+
+      - name: Save phone and Android Auto bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-phone-auto-release-aab
+          path: androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload to Google Play (internal testing)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.ferdidrgn.hudaquran
-          releaseFiles: androidApp/build/outputs/bundle/release/androidApp-release.aab
+          releaseFiles: androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab
           track: internal
           status: completed
+
+      - name: Save Wear OS bundle for its dedicated Play track
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wear-os-release-aab
+          path: wearApp/build/outputs/bundle/release/wearApp-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Save TV bundle for its dedicated Play track
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-tv-release-aab
+          path: androidApp/build/outputs/bundle/tvRelease/androidApp-tv-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Save Android Automotive OS bundle for its dedicated Play track
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-automotive-release-aab
+          path: automotiveApp/build/outputs/bundle/release/automotiveApp-release.aab
+          if-no-files-found: error
+          retention-days: 30
 
   build-ios:
     needs: test

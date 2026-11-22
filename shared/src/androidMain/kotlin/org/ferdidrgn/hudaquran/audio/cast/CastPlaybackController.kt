@@ -46,6 +46,7 @@ internal object CastPlaybackController {
     private var currentTrack: Track? = null
     private var casting = false
     private var resumeLocalOnDisconnect = true
+    private var loadGeneration = 0L
 
     private val remoteCallback = object : RemoteMediaClient.Callback() {
         override fun onStatusUpdated() = publishRemoteState()
@@ -61,7 +62,10 @@ internal object CastPlaybackController {
         override fun onSessionStartFailed(session: CastSession, error: Int) = Unit
         override fun onSessionEnding(session: CastSession) = Unit
         override fun onSessionEnded(session: CastSession, error: Int) = finishRemotePlayback()
-        override fun onSessionSuspended(session: CastSession, reason: Int) = Unit
+        // A suspended session can leave RemoteMediaClient callbacks silent for an unbounded
+        // period. Return audio to the phone now; onSessionResumed can hand it back at the
+        // restored position if Cast recovers.
+        override fun onSessionSuspended(session: CastSession, reason: Int) = finishRemotePlayback()
         override fun onSessionResuming(session: CastSession, sessionId: String) = Unit
         override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) = beginRemotePlayback(session)
         override fun onSessionResumeFailed(session: CastSession, error: Int) = finishRemotePlayback()
@@ -104,6 +108,8 @@ internal object CastPlaybackController {
 
     fun isCasting(): Boolean = casting && remoteClient != null
 
+    fun canCastUrl(url: String?): Boolean = url?.let(::isRemoteHttpUrl) == true
+
     fun play(url: String): Boolean {
         val client = remoteClient ?: return false
         if (!isRemoteHttpUrl(url)) return false
@@ -114,11 +120,20 @@ internal object CastPlaybackController {
         return true
     }
 
-    fun pause(): Boolean = remoteClient?.let { it.pause(); true } ?: false
-    fun resume(): Boolean = remoteClient?.let { it.play(); true } ?: false
+    fun pause(): Boolean {
+        val client = remoteClient?.takeIf { currentTrack != null } ?: return false
+        client.pause()
+        return true
+    }
+
+    fun resume(): Boolean {
+        val client = remoteClient?.takeIf { currentTrack != null } ?: return false
+        client.play()
+        return true
+    }
 
     fun stop(): Boolean {
-        val client = remoteClient ?: return false
+        val client = remoteClient?.takeIf { currentTrack != null } ?: return false
         resumeLocalOnDisconnect = false
         currentTrack = null
         client.stop()
@@ -127,7 +142,7 @@ internal object CastPlaybackController {
     }
 
     fun seekTo(positionMs: Long): Boolean {
-        val client = remoteClient ?: return false
+        val client = remoteClient?.takeIf { currentTrack != null } ?: return false
         client.seek(MediaSeekOptions.Builder().setPosition(positionMs.coerceAtLeast(0)).build())
         return true
     }
@@ -151,16 +166,23 @@ internal object CastPlaybackController {
         remoteClient = client
         client.registerCallback(remoteCallback)
         client.addProgressListener(remoteProgressListener, 750L)
-        casting = true
         resumeLocalOnDisconnect = true
-        localPlayer?.pause()
-        if (track != null) load(client, track)
-        else publishRemoteState()
+        if (track != null) {
+            load(client, track)
+        } else {
+            // A route may connect while the phone is playing an offline file. Keep that
+            // player and its controls live until the user chooses a receiver-accessible URL.
+            currentTrack = null
+            casting = false
+        }
     }
 
     private fun load(client: RemoteMediaClient, track: Track) {
         if (!isRemoteHttpUrl(track.url)) return
+        val generation = ++loadGeneration
         currentTrack = track
+        casting = true
+        localPlayer?.pause()
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK).apply {
             putString(MediaMetadata.KEY_TITLE, track.title)
             putString(MediaMetadata.KEY_ARTIST, track.artist)
@@ -179,7 +201,7 @@ internal object CastPlaybackController {
                 .setCurrentTime(track.positionMs)
                 .build(),
         ).setResultCallback { result ->
-            if (!result.status.isSuccess && remoteClient === client) {
+            if (!result.status.isSuccess && remoteClient === client && loadGeneration == generation) {
                 finishRemotePlayback(fallbackAutoplay = track.autoplay)
             }
         }
@@ -234,6 +256,7 @@ internal object CastPlaybackController {
     }
 
     private fun finishRemotePlayback(fallbackAutoplay: Boolean? = null) {
+        loadGeneration++
         val client = remoteClient
         val track = currentTrack
         val position = client?.approximateStreamPosition?.coerceAtLeast(0)
@@ -268,8 +291,12 @@ internal object CastPlaybackController {
     }
 
     private fun isRemoteHttpUrl(value: String): Boolean {
-        val scheme = runCatching { Uri.parse(value).scheme?.lowercase() }.getOrNull()
-        return scheme == "https" || scheme == "http"
+        val uri = runCatching { Uri.parse(value) }.getOrNull() ?: return false
+        val scheme = uri.scheme?.lowercase()
+        return uri.isHierarchical &&
+            (scheme == "https" || scheme == "http") &&
+            !uri.host.isNullOrBlank() &&
+            uri.userInfo == null
     }
 
     private fun titleFromUrl(url: String): String = Uri.parse(url).lastPathSegment ?: "Kur'an"

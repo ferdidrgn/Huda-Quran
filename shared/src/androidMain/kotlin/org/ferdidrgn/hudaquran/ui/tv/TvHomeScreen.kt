@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,14 +70,22 @@ fun TvHomeScreen(
     var reciters by remember { mutableStateOf<List<Reciter>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var catalogError by remember { mutableStateOf(false) }
+    var loadAttempt by remember { mutableStateOf(0) }
     var busy by remember { mutableStateOf(false) }
     var selectedReciterId by remember { mutableStateOf(preferences.selectedReciter) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(loadAttempt) {
+        loading = true
+        catalogError = false
+        error = null
         runCatching {
             surahs = repository.getSurahList()
             reciters = repository.getReciters()
-        }.onFailure { error = "Kur\u2019an listesi y\u00FCklenemedi. \u0130nternet ba\u011Flant\u0131n\u0131z\u0131 kontrol edin." }
+        }.onFailure {
+            catalogError = true
+            error = "Kur\u2019an listesi y\u00FCklenemedi. Ba\u011Flant\u0131n\u0131 kontrol edip yeniden deneyin."
+        }
         loading = false
     }
     LaunchedEffect(Unit) {
@@ -182,10 +191,30 @@ fun TvHomeScreen(
             }
         }
 
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium) }
+        error?.let { message ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                Text(
+                    message,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (catalogError) {
+                    TvFocusButton(
+                        label = if (loading) "Y\u00FCkleniyor\u2026" else "Yeniden dene",
+                        onClick = { loadAttempt++ },
+                        enabled = !loading,
+                    )
+                }
+            }
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("K\u0131raat\u00E7\u0131", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text("K\u0131raat\u00E7\u0131", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             if (reciters.isEmpty() && loading) {
                 CircularProgressIndicator(modifier = Modifier.size(28.dp))
             } else {
@@ -208,7 +237,7 @@ fun TvHomeScreen(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Sureler", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text("Sureler", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             if (busy) {
                 Spacer(Modifier.width(12.dp))
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
@@ -277,18 +306,18 @@ internal fun TvFocusButton(
         colors = CardDefaults.cardColors(containerColor = background),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxSize().defaultMinSize(minHeight = if (prominent) 76.dp else 64.dp).padding(horizontal = 18.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = label,
                 color = foreground,
-                fontSize = if (prominent) 20.sp else 17.sp,
+                fontSize = if (prominent) 22.sp else 20.sp,
                 fontWeight = if (focused || selected || prominent) FontWeight.Bold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            supporting?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) }
+            supporting?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 17.sp) }
         }
     }
 }

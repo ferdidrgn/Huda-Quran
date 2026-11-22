@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_prayer_location_placeholder">Prayer times</string>
+    <string name="widget_prayer_unavailable">Prayer times are not available yet</string>
+    <string name="widget_prayer_a11y_unavailable">Prayer times for %1$s are not available yet. Tap to open details.</string>
+    <string name="widget_prayer_a11y_next">The next prayer in %1$s is %2$s at %3$s. %4$s</string>
+    <string name="widget_prayer_remaining_minutes">%1$d min left</string>
+    <string name="widget_prayer_remaining_hours">%1$d hr %2$d min left</string>
+    <string name="widget_hijri_gregorian_date">Gregorian %1$s</string>
+    <string name="widget_dhikr_progress">%1$d / %2$d</string>
+    <string name="widget_dhikr_increment_accessibility_label">Increase %1$s count. Current count: %2$d of %3$d.</string>
+    <string name="widget_dhikr_reset_accessibility_label">Reset the %1$s counter.</string>
+    <string name="hijri_widget_month_fallback">Hijri date</string>
+</resources>
+

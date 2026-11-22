@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_daily_ayah">Günün ayeti</string>
+    <string name="widget_daily_dua">Günün duası</string>
+    <string name="widget_daily_hadith">Günün hadisi</string>
+    <string name="widget_daily_loading">Günlük içerik yükleniyor…</string>
+    <string name="widget_daily_unavailable">İçerik şu anda kullanılamıyor. Yenilemek için uygulamayı açın.</string>
+    <string name="widget_daily_selected_text_unavailable">Seçilen metin bu içerikte bulunmuyor.</string>
+    <string name="widget_daily_resize_hint">Arapça metni görmek için kutucuğu büyütün.</string>
+    <string name="widget_daily_source_accessibility">%1$s. Kaynak ayrıntılarını görmek için dokunun.</string>
+    <string name="widget_daily_author_unlisted">Yazar bilgisi kaynak kataloğunda yok</string>
+    <string name="widget_daily_license_unlisted">Lisans bilgisi kaynak kataloğunda yok</string>
+    <string name="widget_daily_hadith_grade">Derece: %1$s</string>
+    <string name="widget_quran_focus_title">Kur’an yolculuğun</string>
+    <string name="widget_quran_focus_description">Son okuma konumunu ve Kur’an sayfa ilerlemeni gösterir.</string>
+    <string name="widget_quran_focus_not_started">Okuma konumun henüz kaydedilmedi</string>
+    <string name="widget_quran_focus_last_read">%1$s · %2$d. ayetten okumaya devam et</string>
+    <string name="widget_quran_focus_progress">Hatim ilerlemesi · %1$d / %2$d sayfa</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_daily_ayah">Ayah of the day</string>
+    <string name="widget_daily_dua">Dua of the day</string>
+    <string name="widget_daily_hadith">Hadith of the day</string>
+    <string name="widget_daily_loading">Loading daily content…</string>
+    <string name="widget_daily_unavailable">Content is unavailable right now. Open the app to refresh.</string>
+    <string name="widget_daily_selected_text_unavailable">The selected text is unavailable for this item.</string>
+    <string name="widget_daily_resize_hint">Resize this widget to see the Arabic text.</string>
+    <string name="widget_daily_source_accessibility">%1$s. Tap to view the source details.</string>
+    <string name="widget_daily_author_unlisted">Author not listed in source catalogue</string>
+    <string name="widget_daily_license_unlisted">License not listed in source catalogue</string>
+    <string name="widget_daily_hadith_grade">Grade: %1$s</string>
+    <string name="widget_quran_focus_title">Your Quran journey</string>
+    <string name="widget_quran_focus_description">Shows your last reading position and Quran page progress.</string>
+    <string name="widget_quran_focus_not_started">Your reading position has not been saved yet</string>
+    <string name="widget_quran_focus_last_read">Continue from %1$s · ayah %2$d</string>
+    <string name="widget_quran_focus_progress">Khatm progress · %1$d of %2$d pages</string>
+</resources>

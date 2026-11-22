@@ -12,22 +12,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/widget_app_label"
-        android:textColor="#D4B36A"
-        android:textSize="10sp"
-        android:textStyle="bold" />
+        android:textColor="@color/sakura_blossom"
+        android:textSize="12sp" />
     <TextClock
         android:id="@+id/time_widget_clock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:format12Hour="HH:mm"
         android:format24Hour="HH:mm"
-        android:textColor="#F3EEDF"
-        android:textSize="32sp"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="36sp"
         android:textStyle="bold" />
     <TextView
         android:id="@+id/time_widget_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#A9B3A6"
-        android:textSize="12sp" />
+        android:textColor="@color/sakura_blossom"
+        android:textSize="14sp" />
 </LinearLayout>

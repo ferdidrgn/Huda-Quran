@@ -5,63 +5,40 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:contentDescription="@string/widget_description"
+    android:gravity="center_vertical"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/widget_eyebrow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:background="@drawable/widget_icon_bubble"
-            android:contentDescription="@null"
-            android:gravity="center"
-            android:text="📖"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/widget_eyebrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_app_label"
-            android:textColor="#D4B36A"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-    </LinearLayout>
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/widget_app_label"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/widget_title_placeholder"
-        android:textColor="#F3EEDF"
-        android:textSize="16sp"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="20sp"
         android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="28dp"
-        android:layout_height="2dp"
-        android:layout_marginTop="6dp"
-        android:background="#D4B36A" />
 
     <TextView
         android:id="@+id/widget_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="5dp"
         android:ellipsize="end"
         android:maxLines="2"
         android:text="@string/widget_subtitle_placeholder"
-        android:textColor="#A9B3A6"
-        android:textSize="13sp" />
-
+        android:textColor="@color/sakura_blossom"
+        android:textSize="14sp" />
 </LinearLayout>

@@ -1,9 +1,8 @@
 package org.ferdidrgn.hudaquran.wear
 
-import android.content.ComponentName
+import androidx.wear.protolayout.ActionBuilders
 import androidx.wear.protolayout.TimelineBuilders.Timeline
 import androidx.wear.protolayout.material3.MaterialScope
-import androidx.wear.protolayout.material3.launchAction
 import androidx.wear.protolayout.material3.primaryLayout
 import androidx.wear.protolayout.material3.text
 import androidx.wear.protolayout.material3.textEdgeButton
@@ -21,23 +20,29 @@ class WearQuranTileService : Material3TileService() {
                 Timeline.fromLayoutElement(
                     primaryLayout(
                         titleSlot = {
-                            text("Huda Kur'an".layoutString)
+                            text(getString(R.string.wear_quran_tile_label).layoutString)
                         },
                         mainSlot = {
-                            text("Telefondaki Kur'an oynatıcısına hızlıca dön.".layoutString)
+                            text(getString(R.string.wear_quran_tile_description).layoutString)
                         },
                         bottomSlot = {
                             textEdgeButton(
-                                labelContent = { text("Oynatıcıyı aç".layoutString) },
+                                labelContent = {
+                                    text(getString(R.string.wear_quran_tile_action).layoutString)
+                                },
                                 onClick =
                                     clickable(
                                         action =
-                                            launchAction(
-                                                ComponentName(
-                                                    packageName,
-                                                    "org.ferdidrgn.hudaquran.wear.WearPlaybackActivity",
+                                            ActionBuilders.LaunchAction.Builder()
+                                                .setAndroidActivity(
+                                                    ActionBuilders.AndroidActivity.Builder()
+                                                        .setPackageName(packageName)
+                                                        .setClassName(
+                                                            "org.ferdidrgn.hudaquran.wear.WearPlaybackActivity",
+                                                        )
+                                                        .build(),
                                                 )
-                                            )
+                                                .build()
                                     ),
                             )
                         },

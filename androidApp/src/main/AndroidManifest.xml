@@ -11,8 +11,6 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-feature android:name="android.software.leanback" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <!-- Required on Android 13+ for AdMob to read the advertising ID; without it the ID resets. -->
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
@@ -21,7 +19,6 @@
     <application
         android:name=".HudaQuranApplication"
         android:allowBackup="true"
-        android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -71,10 +68,6 @@
                 <data android:scheme="hudaquran" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
 
             <!--
               Android App Links (https://hudaquran.web.app/...). autoVerify requires a matching
@@ -94,6 +87,11 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
+
+        <!-- Launcher-owned configuration flow for each independently placed widget instance. -->
+        <activity
+            android:name="org.ferdidrgn.hudaquran.widget.WidgetConfigurationActivity"
+            android:exported="true" />
 
         <!--
           Theme-matched launcher icons. Exactly one of these three is enabled at a time —
@@ -212,6 +210,17 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_last_read_info" />
+        </receiver>
+
+        <receiver
+            android:name="org.ferdidrgn.hudaquran.widget.QuranFocusWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quran_focus_info" />
         </receiver>
 
         <receiver

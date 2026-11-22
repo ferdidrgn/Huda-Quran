@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_palette_sakura">Sakura alacakaranlığı</string>
+    <string name="widget_palette_emerald">Zümrüt bahçesi</string>
+    <string name="widget_palette_parchment">Mushaf kâğıdı</string>
+    <string name="widget_palette_azure">Gece mavisi</string>
+    <string name="widget_palette_rose">Gül ağacı</string>
+    <string name="widget_config_title">Widget ayarları</string>
+    <string name="widget_config_intro">Ana ekranına uygun görünümü ve içeriği seç.</string>
+    <string name="widget_config_palette">Renk düzeni</string>
+    <string name="widget_config_text_size">Yazı boyutu</string>
+    <string name="widget_config_text_size_value">%1$d%%</string>
+    <string name="widget_config_spacing">Yerleşim</string>
+    <string name="widget_config_compact">Sıkı</string>
+    <string name="widget_config_comfortable">Dengeli</string>
+    <string name="widget_config_roomy">Geniş</string>
+    <string name="widget_config_content">Günlük içerik</string>
+    <string name="widget_config_ayah">Günün ayeti</string>
+    <string name="widget_config_dua">Günün duası</string>
+    <string name="widget_config_hadith">Günün hadisi</string>
+    <string name="widget_config_show_arabic">Arapça göster</string>
+    <string name="widget_config_show_translation">Meali veya çeviriyi göster</string>
+    <string name="widget_config_location">Konum</string>
+    <string name="widget_config_app_location">Uygulamadaki konumu kullan</string>
+    <string name="widget_config_change">Değiştir</string>
+    <string name="widget_config_choose_location">Şehir seç</string>
+    <string name="widget_config_search_location">Şehirlerde ara</string>
+    <string name="widget_config_dhikr">Zikir</string>
+    <string name="widget_config_dhikr_text">Zikir metni</string>
+    <string name="widget_config_dhikr_goal">Hedef sayısı</string>
+    <string name="widget_config_save">Widget’ı kaydet</string>
+    <string name="widget_config_cancel">İptal</string>
+</resources>

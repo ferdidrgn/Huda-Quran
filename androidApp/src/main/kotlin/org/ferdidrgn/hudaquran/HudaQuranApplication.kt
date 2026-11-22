@@ -14,7 +14,9 @@ class HudaQuranApplication : Application() {
         AppContextHolder.init(this)
         // Only safe window to flip launcher aliases: process was fully dead, no live session.
         applyPendingLauncherIcon(this)
-        BillingManager.configure(BuildConfig.REVENUECAT_GOOGLE_KEY)
+        if (!BuildConfig.IS_TV_BUILD) {
+            BillingManager.configure(BuildConfig.REVENUECAT_GOOGLE_KEY)
+        }
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityResumed(activity: Activity) {
                 CurrentActivityHolder.activity = activity

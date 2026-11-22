@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="wear_quran_tile_label">Huda Kur'an</string>
-    <string name="wear_quran_tile_description">Telefondaki Kur'an oynatıcısını saatten açın</string>
+    <string name="wear_quran_tile_label">Huda Kur\'an</string>
+    <string name="wear_quran_tile_description">Eşleşmiş Android telefondaki Kur\'an kumandasını açın</string>
+    <string name="wear_quran_tile_action">Oynatıcıyı aç</string>
+    <string name="wear_player_brand">HUDA KUR\'AN</string>
+    <string name="wear_player_title">Kur\'an dinleme</string>
+    <string name="wear_reciter">Kıraatçı: %1$s</string>
+    <string name="wear_playback_position">%1$s / %2$s</string>
+    <string name="wear_previous">Önceki</string>
+    <string name="wear_back_15">15 sn geri</string>
+    <string name="wear_play">Oynat</string>
+    <string name="wear_pause">Duraklat</string>
+    <string name="wear_forward_15">15 sn ileri</string>
+    <string name="wear_next">Sonraki</string>
+    <string name="wear_connecting">Telefondaki oynatıcıya bağlanılıyor.</string>
+    <string name="wear_loading_state">Oynatıcı durumu alınıyor.</string>
+    <string name="wear_phone_required">Eşleşmiş Huda Quran Android telefonunu saate bağla.</string>
+    <string name="wear_phone_unavailable">Telefon şu anda yanıt vermiyor. Bağlantıyı kontrol et.</string>
+    <string name="wear_control_failed">Komut telefona ulaşmadı. Bağlantıyı kontrol et.</string>
+    <string name="wear_no_active_playback">Telefondaki oynatıcıda bir sure başlat.</string>
 </resources>

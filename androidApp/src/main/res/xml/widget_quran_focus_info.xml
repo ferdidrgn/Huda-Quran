@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/widget_quran_focus"
+    android:configure="org.ferdidrgn.hudaquran.widget.WidgetConfigurationActivity"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="120dp"
+    android:minResizeHeight="90dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:previewImage="@mipmap/ic_launcher"
+    android:previewLayout="@layout/widget_quran_focus"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable"
+    android:description="@string/widget_quran_focus_description" />

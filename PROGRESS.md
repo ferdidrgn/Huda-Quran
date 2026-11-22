@@ -18,9 +18,10 @@ Durumlar: `TODO` → `IN PROGRESS` → `REVIEW` → `DONE` / `BLOCKED`
 |---|---|---|
 | Proje panosu | IN PROGRESS | Bu dosya oluşturuldu |
 | Çoklu platform sesli Kur’an | IN PROGRESS | PLATFORM_AUDIO_RESEARCH.md: dört platform referansları, Huda mimarisi ve bekleyen REA APK kapısı belgelendi; HUDA-538 ilk kapı |
+| Cihaz paketleri ve boyut | IN PROGRESS | Telefon/Android Auto, TV, Automotive OS ve Wear çıktıları ayrıldı; dört Android debug varyantı derlendi, imzalı release/Play cihaz doğrulaması bekliyor |
 | Kitap modu ve yaşlı modu | IN PROGRESS | A−/A+ ve ölçekleme eklendi, kapsam genişletilecek |
 | Paylaşım sistemi | REVIEW | Ayet/hadis/Esma ortak kart formatı, ölçüm, tema ve çıktı seçenekleri eklendi; temiz derleme kapısı bekliyor |
-| Widget ailesi | REVIEW | Sıradaki namaz ve günün ayeti widget’ları eklendi; temiz derleme bekliyor |
+| Widget ailesi | REVIEW | Android widget’ları beş palet ve örnek başına ayarla yenilendi; ayet/dua/hadis ve Kur’an odağı eklendi; kaynak derlemesi başarılı, doğru upload imzasıyla AAB bekliyor |
 | Hadis/dua/Esma içerikleri | REVIEW | Favoriler ayrıştırıldı, hadis akışı sınırlandı; cihaz/ağ ekran testi bekliyor |
 | Ses ve hafızlar | REVIEW | Ağ belirsizliğinde katalog korunuyor; cihaz doğrulaması bekliyor |
 | Bildirim sesleri | REVIEW | Eski Android sürümlerinde kanal dışı ses/titreşim eklendi; test bildirimi izin/kanal kapalıysa sistem ayarına yönlendiriyor; cihazda ses doğrulaması bekliyor |
@@ -39,6 +40,43 @@ Amaç: Türkçe kullanımı, doğrulanmış kıraatçı seçkisi ve kaldığı y
 | P1 | Wear OS | Saatten telefondaki sesi kontrol etme; sonra isteğe bağlı saatten bağımsız offline oynatma |
 | P2 | Android TV / Google TV | Kumandayla gezinilen büyük ekran Kur’an dinleme/okuma deneyimi |
 | P2 | Cihazlar arası deneyim | Ortak oynatma/okuma konumu ve kullanıcı kontrollü eşleme; hesap/senkron kararı ayrı iş |
+
+### Cihazlara göre küçük Android paketleri (2026-11-22)
+
+Hedef: ortak Kuran/medya mantığını paylaş, her Android form faktörüne yalnızca gerekli giriş noktası, manifest ve servisleri dağıt. Telefon ve Android Auto aynı telefon paketinde kalır; TV, Automotive OS ve Wear ayrı varyant/modül olarak çıkar. Android App Bundle ayrıca cihazın ABI, yoğunluk ve dil bölünmelerini Play üzerinden sunar.
+
+- [x] HUDA-543 — Telefon ve Android Auto paketini ortak telefon varyantında tut
+  - Durum: DONE
+  - Sonuç: `phone` varyantı Android Auto medya servis/meta verisini, telefon UI'sini ve telefon widget'larını içeriyor; Leanback özelliği ve TV launcher filtresi bu varyanttan çıkarıldı. Aynı MediaSession/PlaybackManager kullanılıyor; ikinci player eklenmedi.
+  - Doğrulama: `:androidApp:assemblePhoneDebug` başarılı; birleştirilmiş telefon manifestinde Android Auto metadata ve MediaBrowserService var, TV Leanback girdisi yok.
+- [x] HUDA-544 — Android TV için yalnız TV yüzeyini paketle
+  - Durum: DONE
+  - Sonuç: Ayrı `tv` varyantı derleme sabitine göre yalnız `TvExperience()` girişini açıyor; Ads, Firebase, Wear Data Layer, widget/hatırlatma alıcıları ve Android Auto metadata'sı bu varyanttan çıkarılıyor. Cast UI/provider metadata'sı kaldırıldı ancak ortak `AudioPlayer` doğrudan Cast denetleyicisine bağlı olduğu için Cast playback SDK'sı tutuluyor. TV Leanback launcher zorunlu ve TV banner'ı kullanılıyor.
+  - Doğrulama: `:androidApp:assembleTvDebug` başarılı; birleşik TV manifestinde Leanback launcher var, Android Auto ve AD_ID bildirimi yok.
+- [x] HUDA-545 — Android Automotive OS için medya odaklı ayrı modül ekle
+  - Durum: DONE
+  - Sonuç: `automotiveApp` ayrı, activity/launcher içermeyen medya uygulaması olarak eklendi. `android.hardware.type.automotive`, `android:appCategory="audio"`, `com.android.automotive` medya tanımı ve ortak MediaBrowserService kullanılıyor. Reklam, Wear Data Layer, Firebase servis SDK'ları ve RevenueCat hariç; Cast UI/provider metadata'sı yok, fakat ortak `AudioPlayer` nedeniyle Cast playback SDK'sı ve yalnızca onun CCT transport bağımlılığının ihtiyaç duyduğu üç küçük encoder/protobuf yardımcı kütüphanesi tutuluyor.
+  - Doğrulama: `:automotiveApp:assembleDebug` başarılı; birleşik manifest Automotive OS medya kategorisini gösteriyor ve Android Auto `com.google.android.gms.car.application` metadata'sını içermiyor.
+- [x] HUDA-546 — Wear uygulamasında release küçültmesini etkinleştir
+  - Durum: DONE
+  - Sonuç: Wear release için R8 ve kaynak küçültme açıldı; Wear modülü telefondan ayrı kalıyor.
+  - Doğrulama: `:wearApp:assembleDebug` ve `:wearApp:minifyReleaseWithR8` başarılı. Telefon ve TV release R8 görevleri ile `:automotiveApp:minifyReleaseWithR8` da başarılı. R8 Kotlin metadata uyumsuzluğu uyarıları verdi; detay HUDA-550. Kaynak küçültme ve gerçek AAB indirme boyutu CI bundle adımında ölçülecek.
+- [ ] HUDA-547 — İmzalı dört cihaz AAB'sini CI'da üret ve ayırt et
+  - Durum: IN PROGRESS
+  - Sonuç: CI telefon, TV, Automotive OS ve Wear release bundle'larını üretip hepsinin mevcut Kotlin upload sertifikası `3E:93:…:41:BE` ile imzalandığını doğrulayacak. Dört AAB de Actions artefaktı olarak saklanır; yalnız telefon AAB'si mevcut Internal test adımına gönderilir.
+  - Açık kapı: Workflow henüz GitHub Actions'ta çalıştırılmadı; AAB imza/parmak izi ve release boyutları CI çıktısında doğrulanmalı.
+- [ ] HUDA-548 — Cihaz testleri ve Play form faktörü yayın kapıları
+  - Durum: TODO
+  - Kapsam: Telefon/DHU, Android TV, Android Automotive OS ve eşleşmiş Wear emülatör/cihazında ana akışlar; Play Console'da doğru form faktörü kanalları ve eski reddedilmiş sürümler 1/25'in kapsam dışına alınması.
+  - Ruflo: Yedi uzman ajan Ruflo swarm'ına kaydedildi; `agent_execute` sağlayıcı API anahtarı/yetkisi yapılandırılmadığı için görevleri çalıştıramadı. Bu turda uygulama ve build düzenlemeleri doğrudan yapıldı.
+- [ ] HUDA-549 — Cast runtime'ını telefon yüzeyine ayırarak TV/AAOS paketini küçült
+  - Durum: TODO
+  - Gerekçe: Ortak Android `AudioPlayer` doğrudan `CastPlaybackController`'a bağlı olduğu için TV ve AAOS'ta Cast UI kapalı olsa da playback SDK'sı taşınıyor. AAOS ayrıca Cast CCT transport'unun istediği üç encoder/protobuf yardımcı kütüphanesini tutuyor.
+  - Kabul: Telefonda Cast sender aynı oturum/metadata davranışını korurken TV ve AAOS minified runtime dependency graph'larında Cast Framework, CCT transport ve encoder yardımcıları bulunmuyor; tüm R8 release hedefleri başarılı.
+- [ ] HUDA-550 — R8/Kotlin metadata uyumluluk uyarılarını gider
+  - Durum: IN PROGRESS
+  - Bulgu: Dört release R8 görevi başarıyla tamamlandı ancak R8, Kotlin metadata sürümünü parser desteğinden yeni bulduğuna dair uyarılar verdi. Resmî Android uyumluluk tablosunda Kotlin 2.4 için gerekli R8 9.1.29 olarak listeleniyor. AGP 9.5.0 / Gradle 9.6.0 geçişi denendi; Gradle dağıtımı için ağ DNS'i (`UnknownHostException: services.gradle.org`) ve kullanıcı profilindeki Gradle kilidi erişim izni olmadığından yeni sürüm indirilemedi ve KMP projede uyumluluk doğrulanamadı. Doğrulanmamış araç zinciri değişikliği geri alındı; mevcut AGP 9.0.1 / Gradle 9.1.0 korundu.
+  - Kabul: Phone/TV/AAOS/Wear R8 çıktılarında metadata parse uyarısı yok; AAB paketleme ve mevcut Play upload sertifikası korunuyor.
 
 ### P0 - REA örnek uygulama incelemesi, ortak ses temeli ve Android Auto
 
@@ -104,17 +142,18 @@ Bu bölüm kaynak kodundaki mevcut giriş noktalarını, tamamlanmamış cihaz d
 
 | Platform | Depoda görülen uygulama temeli | Bu turdaki doğrulama | Play Console / cihaz işi |
 |---|---|---|---|
-| Android TV | Ana manifestte Leanback launcher filtresi, TV özelliği ve TV banner'ı; `MainActivity` TV deneyimine yönleniyor; `TvHomeScreen` ve `TvPlayerScreen` var. | TV emülatörü/cihazı ve D-pad akışları doğrulanmayı bekliyor; Android derlemesi eksik Play Services bağımlılıkları nedeniyle Kotlin derlemesine ulaşmadı. | Gerçek TV ekran görüntülerini tüm mağaza girişlerine ekle; TV dağıtımını etkinleştir ve inceleme politikasını kabul et; test paketi gerekirse test kanalına yükle. |
-| Wear OS | Ayrı `wearApp` modülü, `WearPlaybackActivity`, telefondaki Data Layer kontrol servisi ve oynatıcıya açılan hızlı erişim Tile'ı var. | Tile dahil Wear APK derlemesi, Gradle önbelleğinde olmayan Wear Compose/Play Services/Tile bağımlılıkları nedeniyle doğrulanamadı; eşlenmiş saat/emülatör testi bekliyor. | Saatten alınmış gerçek ekran görüntülerini tüm mağaza girişlerine ekle; Wear APK/AAB'yi test kanalına gönder; Wear dağıtımını etkinleştir ve inceleme politikasını kabul et. |
-| Android Auto / Automotive OS | `PlaybackNotificationService` `MediaBrowserServiceCompat` kataloğu, Devam Et/Son Dinlenen/Sureler/Kıraatçılar ve sure araması sunuyor; manifestte `automotive_app_desc.xml` bağlantısı var. | Android Auto DHU/araç ve Automotive OS cihaz testi; servis keşfi, arama, devam etme ve güvenli kontrol akışları doğrulanmayı bekliyor. Android kaynak derlemesi ağ/bağımlılık çözümleme hatasında durdu. | Otomotiv mağaza ekran görüntülerini kategori gerektiriyorsa ekle; Automotive OS paketini test kanalına gönder; inceleme politikasını kabul et. Kullanıcının konsolundaki 1/3 durumu ayrıca tekrar kontrol edilmeli. |
-| Google Cast / Chromecast | Android Cast route button ve `CastPlaybackController`; remote metadata/durum/komutlar, bağlantı kesilince yerel oynatmaya dönüş ve HTTP(S) URL kontrolü var. | Ortak JS derlemesi başarılı; Android Cast alıcısı doğrulanamadı, Android derlemesi Cast/Wearable AAR bağımlılıkları önbellekte bulunmadığı için başlamadı. | Cast cihazıyla uçtan uca test yap; alıcının erişebildiği ses URL'sini ve içerik atfını doğrula. Bu kontrol, Play Console'daki TV/Wear/Automotive dağıtım onaylarından ayrıdır. |
+| Android telefon + Auto | `phone` varyantı telefon UI/widget'larıyla Android Auto `MediaBrowserServiceCompat` kataloğunu sunuyor. | `:androidApp:assemblePhoneDebug` başarılı; birleştirilmiş manifest telefon/Auto için Auto metadata içeriyor, TV Leanback yok. Debug artefaktı Play'e yüklenmemeli. | CI'da aynı Kotlin upload anahtarıyla phone AAB üret; Internal test ve Android Auto/DHU cihaz doğrulaması yap. |
+| Android TV | `tv` varyantı `TvHomeScreen`/`TvPlayerScreen`, zorunlu Leanback özelliği ve TV banner'ı içeriyor; Ads/Cast/Firebase/Wear/widget bileşenleri çıkarılıyor. | `:androidApp:assembleTvDebug` başarılı; TV manifesti ayrı ve Android Auto metadata'sız. TV emülatörü/D-pad doğrulaması bekliyor. | TV AAB'sini CI artefaktından al; TV form faktörü track'ine yükle; ekran görüntüleri ve inceleme politikasını tamamla. |
+| Android Automotive OS | Ayrı `automotiveApp` medya-only modülü, `android:appCategory="audio"`, `com.android.automotive` ve ortak MediaBrowserService kullanıyor. | `:automotiveApp:assembleDebug` başarılı; AAOS manifestinde Auto metadata ve launcher activity yok. Araç emülatörü/cihaz testi bekliyor. | CI'daki Automotive AAB'yi AAOS dedicated track'e yükle; reddedilmiş code 1/25 artefaktlarını tüm ilgili track'lerde dışla ve politikayı yeniden incelet. |
+| Wear OS | Ayrı `wearApp` modülü, `WearPlaybackActivity`, telefondaki Data Layer kontrol servisi ve hızlı erişim Tile'ı var; release R8/kaynak küçültme açık. | `:wearApp:assembleDebug` başarılı. Eşlenmiş saat/emülatör testi ve küçültülmüş release boyutu bekliyor. | Aynı upload anahtarıyla CI Wear AAB'sini üret; Wear OS track'ine yükle; ekran görüntüsü ve inceleme politikasını tamamla. |
+| Google Cast / Chromecast | Android Cast route button ve `CastPlaybackController`; remote metadata/durum/komutlar, bağlantı kesilince yerel oynatmaya dönüş ve HTTP(S) URL kontrolü var. | Kotlin derlemesi başarılı; önceki yerel AAB debug anahtarıyla üretildi ve Play'e yüklenmemeli. Cast cihazıyla uçtan uca test bekliyor. | Doğru upload anahtarıyla yeniden paketle; Cast cihazıyla ses URL'si ve atıf doğrulaması yap. |
 
 ### Bu turda tamamlanmış sayılmaması gereken işlemler
 
 - Play Console'a ekran görüntüsü, APK veya AAB yükleme yapılmış olarak kaydedilmedi.
 - TV, Wear OS veya Automotive OS dağıtım anahtarlarının açıldığı ya da inceleme politikalarının kabul edildiği doğrulanmadı.
 - Cihaz/emülatör üzerinde platform akışlarının başarılı olduğu henüz kanıtlanmadı. Derleme başarısı da tek başına cihaz uyumluluğu kanıtı değildir.
-- Bu turda `:shared:compileKotlinJs --offline` başarılı oldu. Android/Wear derlemeleri eksik çevrimdışı Gradle bağımlılıkları ve erişilemeyen Maven/DNS nedeniyle tamamlanmadı; `adb devices` bağlı cihaz göstermedi.
+- Bu turda `:androidApp:assemblePhoneDebug`, `:androidApp:assembleTvDebug`, `:automotiveApp:assembleDebug` ve `:wearApp:assembleDebug` başarılı oldu. Debug APK boyutları release/Play indirme boyutlarını temsil etmez; gerçek cihaz listesi boş.
 - Mağaza görselleri için Huda Quran'ın gerçek uygulama ekranları alınmalı; görsel taslaklar veya başka projeye ait ekranlar kullanılmamalı.
 
 ### Sıradaki tamamlanma kapıları
@@ -230,7 +269,7 @@ Bu bölüm kaynak kodundaki mevcut giriş noktalarını, tamamlanmamış cihaz d
   - Sonuç: Ağ beklemeden yalnızca `PRAYER_WIDGET` türündeki gerçek vakti seçiyor; geri sayım her dakika veya bir sonraki vakit sınırında güvenli AlarmManager yenilemesiyle tazeleniyor. Exact alarm izni yoksa pencere tabanlı fallback kullanılıyor ve widget kaldırılınca alarm iptal ediliyor. Cihaz/launcher testi bekliyor.
 - [ ] HUDA-303 — Günün ayeti/hadisi widget’ı
   - Durum: REVIEW
-  - Sonuç: Aynı gün için geçerli cache okunuyor; cache yoksa veya boş/bozuksa 15 maddelik gömülü ayet fallback kataloğu kullanılıyor. Tarih ve saat dilimi değişiminde provider kendini yeniliyor; uygulama deep link’i korunuyor. Cihaz/launcher testi bekliyor.
+  - Sonuç: Tek widget örneği ayet, dua veya hadis olarak seçilebiliyor; Arapça/çeviri, kaynak atfı ve beş renk paleti örnek bazında ayarlanıyor. Doğrulanmış kaynağı olmayan içerik gösterilmiyor. Cihaz/launcher testi bekliyor.
 - [x] HUDA-304 — Kaldığın yerden devam et widget’ı revizyonu
   - Durum: DONE
 - [ ] HUDA-305 — Zikir sayacı widget’ı
@@ -244,7 +283,7 @@ Bu bölüm kaynak kodundaki mevcut giriş noktalarını, tamamlanmamış cihaz d
   - Sonuç: Gerçek PlaybackManager durumuna bağlı play/pause/stop/next/previous callback’leri, kuyruk güncellemesi ve aktif ayet deep link’i korunuyor. MediaButtonReceiver artık `MEDIA_BUTTON` servis eylemine bağlanıyor; sistemin donanım/kilit ekranı komutları servise ulaşabiliyor. Servis kapanırken MediaSession durdurulup stale lock-screen state temizleniyor; MediaStyle kompakt kontrol listesi üç aksiyonla sınırlı. Gerçek kilit ekranı testi bekliyor.
 - [ ] HUDA-308 — Widget boyut/launcher uyumluluk testi
   - Durum: REVIEW
-  - Sonuç: 6 widget metadata’sında min resize ölçüleri, preview, erişilebilir etiketler ve immutable PendingIntent kontrolleri tamamlandı. Widget receiver’ları `exported=false`; yalnızca MediaButtonReceiver sistem medya komutları için bilinçli olarak `exported=true`. Alarm yenilemesi widget varken kuruluyor, kaldırılınca iptal ediliyor. Gerçek launcher yerleştirme/yeniden boyutlandırma matrisi bekliyor.
+  - Sonuç: 7 widget sağlayıcısında yapılandırma, beş palet, yazı boyutu/yerleşim ayarı ve yeniden boyutlandırma yenilemesi var. Namaz geri sayımı yalnızca desteklenen şehir saat diliminde gösteriliyor. Kotlin kaynak derlemesi başarılı; doğru Kotlin upload anahtarıyla signed AAB ve gerçek launcher matrisi bekliyor.
 - [ ] HUDA-520 — Namaz widget’ında gerçek vakit kaynağını ayır
   - Durum: REVIEW
   - Sonuç: Bildirim planındaki önceden hatırlatma kayıtları widget verisinden ayrıldı. Widget yalnızca yaklaşan gerçek namaz kaydını okuyor; widget kayıtları Android/iOS bildirim scheduler’ına alarm olarak kurulmadı. ReminderPlanner testleri widget kaydının `scheduleNotification=false` olduğunu doğruluyor; launcher üzerinde gerçek yerleştirme testi HUDA-308 kapsamında bekliyor.

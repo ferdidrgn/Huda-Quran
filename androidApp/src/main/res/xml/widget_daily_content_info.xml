@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:initialLayout="@layout/widget_daily_content"
+    android:configure="org.ferdidrgn.hudaquran.widget.WidgetConfigurationActivity"
     android:minWidth="180dp"
     android:minHeight="90dp"
     android:minResizeWidth="180dp"
@@ -12,4 +13,5 @@
     android:previewLayout="@layout/widget_daily_content"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable"
     android:description="@string/daily_content_widget_description" />

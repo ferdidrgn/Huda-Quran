@@ -107,9 +107,22 @@ coverage/
 !.env.example
 
 # ====================================================================
+# YEREL ARAÇ DURUMU VE ARAŞTIRMA ÇIKTILARI
+# ====================================================================
+# Agent/Ruflo oturumları, bellek veritabanları ve yerel koordinasyon durumu
+.claude-flow/
+.swarm/
+
+# Tasarım denetimi sırasında üretilen yerel ekran görüntüleri ve yön dosyaları
+.taste-skill/
+
+# Firebase CLI önbelleği ve yerel referans APK arşivi
+.firebase/
+artifacts/reference-apks/
+
+# ====================================================================
 # NOT: gradlew, gradlew.bat ve gradle/wrapper/ ASLA ignore edilmemelidir.
 # ====================================================================
 androidApp/google-services.json
-.firebase/hosting.d2ViQXBwXGJ1aWxkXGRpc3Rcd2FzbUpzXHByb2R1Y3Rpb25FeGVjdXRhYmxl.cache
 iosApp/GoogleService-Info.plist
 # Project work tracking is versioned in PROGRESS.md.

@@ -9,34 +9,117 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/prayer_widget_eyebrow"
-        android:layout_width="wrap_content"
+        android:id="@+id/prayer_widget_location"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/prayer_widget_label"
-        android:textColor="#D4B36A"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/widget_prayer_location_placeholder"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/prayer_widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/prayer_widget_placeholder"
-        android:textColor="#F3EEDF"
-        android:textSize="17sp"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="22sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/prayer_widget_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="2dp"
         android:ellipsize="end"
-        android:maxLines="2"
+        android:maxLines="1"
         android:text="@string/prayer_widget_subtitle_placeholder"
-        android:textColor="#A9B3A6"
-        android:textSize="13sp" />
+        android:textColor="@color/sakura_blossom"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/prayer_widget_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="11sp" />
+
+    <GridLayout
+        android:id="@+id/prayer_widget_schedule"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:columnCount="2"
+        android:rowCount="3">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_marginEnd="8dp"
+            android:gravity="center_vertical"
+            android:minHeight="32dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/prayer_widget_name_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:textColor="@color/sakura_blossom" android:textSize="12sp" />
+            <TextView android:id="@+id/prayer_widget_time_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/sakura_blossom" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:gravity="center_vertical"
+            android:minHeight="32dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/prayer_widget_name_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:textColor="@color/sakura_blossom" android:textSize="12sp" />
+            <TextView android:id="@+id/prayer_widget_time_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/sakura_blossom" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_marginEnd="8dp"
+            android:gravity="center_vertical"
+            android:minHeight="32dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/prayer_widget_name_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:textColor="@color/sakura_blossom" android:textSize="12sp" />
+            <TextView android:id="@+id/prayer_widget_time_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/sakura_blossom" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:gravity="center_vertical"
+            android:minHeight="32dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/prayer_widget_name_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:textColor="@color/sakura_blossom" android:textSize="12sp" />
+            <TextView android:id="@+id/prayer_widget_time_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/sakura_blossom" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_marginEnd="8dp"
+            android:gravity="center_vertical"
+            android:minHeight="32dp"
+            android:orientation="horizontal">
+            <TextView android:id="@+id/prayer_widget_name_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:maxLines="1" android:textColor="@color/sakura_blossom" android:textSize="12sp" />
+            <TextView android:id="@+id/prayer_widget_time_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/sakura_blossom" android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_columnWeight="1" />
+    </GridLayout>
 </LinearLayout>

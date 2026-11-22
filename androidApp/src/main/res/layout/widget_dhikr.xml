@@ -15,21 +15,36 @@
         android:layout_weight="1"
         android:orientation="vertical">
         <TextView
+            android:id="@+id/dhikr_widget_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/dhikr_widget_title"
-            android:textColor="#D4B36A"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textColor="@color/sakura_blossom"
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/dhikr_widget_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:text="0"
-            android:textColor="#F3EEDF"
-            android:textSize="30sp"
+            android:textColor="@color/sakura_blossom"
+            android:textSize="32sp"
             android:textStyle="bold" />
+        <ProgressBar
+            android:id="@+id/dhikr_widget_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="5dp"
+            android:max="33"
+            android:progress="0" />
+        <TextView
+            android:id="@+id/dhikr_widget_goal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/sakura_blossom"
+            android:textSize="11sp" />
     </LinearLayout>
 
     <TextView
@@ -40,18 +55,18 @@
         android:contentDescription="@string/dhikr_widget_increment_accessibility"
         android:gravity="center"
         android:text="+1"
-        android:textColor="#F3EEDF"
+        android:textColor="@color/sakura_blossom"
         android:textSize="16sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/dhikr_widget_reset"
-        android:layout_width="48dp"
+        android:layout_width="56dp"
         android:layout_height="48dp"
         android:layout_marginStart="6dp"
         android:contentDescription="@string/dhikr_widget_reset_accessibility"
         android:gravity="center"
-        android:text="↺"
-        android:textColor="#A9B3A6"
-        android:textSize="22sp" />
+        android:text="Sıfırla"
+        android:textColor="@color/sakura_blossom"
+        android:textSize="12sp" />
 </LinearLayout>

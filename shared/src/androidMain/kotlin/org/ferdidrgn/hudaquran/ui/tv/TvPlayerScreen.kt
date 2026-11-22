@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,17 +52,31 @@ fun TvPlayerScreen(
     val speed by playback.speed.collectAsState()
     val language by preferences.appLanguage.collectAsState()
     val playPauseFocus = remember { FocusRequester() }
+    val backFocus = remember { FocusRequester() }
+    val current = nowPlaying
+    val statusNeedsBackFocus = current == null ||
+        playerState.status == PlaybackStatus.LOADING ||
+        playerState.status == PlaybackStatus.ERROR
 
-    LaunchedEffect(Unit) {
-        runCatching { playPauseFocus.requestFocus() }
+    LaunchedEffect(current?.surahNumber, statusNeedsBackFocus) {
+        runCatching {
+            if (statusNeedsBackFocus) {
+                backFocus.requestFocus()
+            } else {
+                playPauseFocus.requestFocus()
+            }
+        }
     }
 
-    val current = nowPlaying
     if (current == null) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 Text("\u015Eu anda \u00E7alan bir sure yok.", style = MaterialTheme.typography.headlineMedium)
-                TvFocusButton(label = "Geri d\u00F6n", onClick = onBack)
+                TvFocusButton(
+                    label = "Geri d\u00F6n",
+                    onClick = onBack,
+                    modifier = Modifier.focusRequester(backFocus),
+                )
             }
         }
         return
@@ -77,7 +97,7 @@ fun TvPlayerScreen(
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            TvFocusButton(label = "\u2190  Geri", onClick = onBack)
+            TvFocusButton(label = "\u2190  Geri", onClick = onBack, modifier = Modifier.focusRequester(backFocus))
         }
 
         Column(
@@ -93,24 +113,29 @@ fun TvPlayerScreen(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = current.surahName,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = when (playerState.status) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (playerState.status == PlaybackStatus.LOADING) {
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+                }
+                val statusMessage = when (playerState.status) {
                     PlaybackStatus.LOADING -> "Ses y\u00FCkleniyor\u2026"
-                    PlaybackStatus.ERROR -> "Ses a\u00E7\u0131lamad\u0131. Sureyi yeniden se\u00E7in."
+                    PlaybackStatus.ERROR -> "Ses a\u00E7\u0131lamad\u0131. Geri d\u00F6n\u00FCp sureyi yeniden se\u00E7in."
                     PlaybackStatus.PAUSED -> "Duraklat\u0131ld\u0131"
                     PlaybackStatus.PLAYING -> "Dinleniyor"
                     PlaybackStatus.COMPLETED -> "Tamamland\u0131"
                     PlaybackStatus.IDLE -> "Haz\u0131r"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                color = if (playerState.status == PlaybackStatus.ERROR) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+                }
+                Text(
+                    text = statusMessage,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (playerState.status == PlaybackStatus.ERROR) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
         }
 
         Column(
@@ -118,18 +143,24 @@ fun TvPlayerScreen(
             verticalArrangement = Arrangement.spacedBy(18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(formatTime(position), style = MaterialTheme.typography.titleMedium)
-                Text(formatTime(duration), style = MaterialTheme.typography.titleMedium)
+            if (duration > 0L) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(8.dp).semantics {
+                        contentDescription = "${formatTime(position)} / ${formatTime(duration)}"
+                    },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(formatTime(position), style = MaterialTheme.typography.titleLarge)
+                    Text(formatTime(duration), style = MaterialTheme.typography.titleLarge)
+                }
+            } else {
+                Text("S\u00FCre bilgisi bekleniyor", style = MaterialTheme.typography.titleMedium)
             }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -139,6 +170,7 @@ fun TvPlayerScreen(
                     label = "\u221215 sn",
                     onClick = { playback.seekTo((position - 15_000L).coerceAtLeast(0L)) },
                     modifier = Modifier.height(72.dp),
+                    enabled = duration > 0L,
                 )
                 TvFocusButton(
                     label = if (isPlaying) "Duraklat" else "Oynat",
@@ -151,6 +183,7 @@ fun TvPlayerScreen(
                     label = "+15 sn",
                     onClick = { playback.seekTo((position + 15_000L).coerceAtMost(duration.takeIf { it > 0 } ?: Long.MAX_VALUE)) },
                     modifier = Modifier.height(72.dp),
+                    enabled = duration > 0L,
                 )
                 Spacer(Modifier.width(8.dp))
                 TvFocusButton(

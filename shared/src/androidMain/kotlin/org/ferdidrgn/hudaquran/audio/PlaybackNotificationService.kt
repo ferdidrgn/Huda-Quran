@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
 import androidx.media.session.MediaButtonReceiver
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -78,6 +79,7 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
         private const val RECITERS_ID = "huda_auto_reciters"
         private const val RECENT_ID = "huda_auto_recent"
         private const val CONTINUE_ID = "huda_auto_continue"
+        private const val STATUS_PREFIX = "huda_auto_status:"
         private const val SURAH_PREFIX = "huda_auto_surah:"
         private const val RECITER_PREFIX = "huda_auto_reciter:"
         private const val LAST_AUDIO_PREFS = "huda_auto_media"
@@ -127,9 +129,8 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
         setSessionToken(session.sessionToken)
 
         scope.launch {
-            reciters = runCatching { AppContainer.repository.getReciters() }.getOrDefault(emptyList())
-            reciters.forEach { reciterNames[it.identifier] = it.displayName }
-            surahs = runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
+            loadReciters()
+            loadSurahs()
             // Re-render once names are known so the reciter shows up without waiting for the next state change.
             lastNotificationKey = null
         }
@@ -196,7 +197,13 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
     ) {
         result.detach()
         scope.launch {
-            val children = runCatching { loadCarChildren(parentId) }.getOrDefault(emptyList())
+            val children = try {
+                loadCarChildren(parentId)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                listOf(statusItem(AppContainer.preferences.appLanguage.value, "Katalog yüklenemedi", "Catalog could not be loaded"))
+            }
             result.sendResult(children)
         }
     }
@@ -208,7 +215,13 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
     ) {
         result.detach()
         scope.launch {
-            val matches = runCatching { searchSurahs(query) }.getOrDefault(emptyList())
+            val matches = try {
+                searchSurahs(query)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                listOf(statusItem(AppContainer.preferences.appLanguage.value, "Arama yapılamadı", "Search could not be completed"))
+            }
             result.sendResult(matches)
         }
     }
@@ -229,6 +242,8 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
                 val availableReciters = loadReciters()
                 availableReciters.map { reciter ->
                     browseItem(RECITER_PREFIX + reciter.identifier, reciter.displayName, browsable = true)
+                }.ifEmpty {
+                    listOf(statusItem(language, "Kıraatçılar yüklenemedi", "Reciters could not be loaded"))
                 }
             }
             parentId == RECENT_ID -> lastAudioTarget()?.let { target ->
@@ -251,8 +266,9 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
         language: AppLanguage,
         onlySurahNumber: Int? = null,
     ): List<MediaBrowserCompat.MediaItem> {
-        val availableSurahs = surahs.ifEmpty {
-            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
+        val availableSurahs = loadSurahs()
+        if (availableSurahs.isEmpty()) {
+            return listOf(statusItem(language, "Sure listesi yüklenemedi", "Surah list could not be loaded"))
         }
         val items = availableSurahs
             .filter { onlySurahNumber == null || it.number == onlySurahNumber }
@@ -264,17 +280,20 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
                     playable = true,
                 )
             }
-        return if (items.isNotEmpty()) items else (1..114)
-            .filter { onlySurahNumber == null || it == onlySurahNumber }
-            .map { number ->
-                browseItem(
-                    id = SURAH_PREFIX + number + ":" + reciterId,
-                    title = localizedSurahName(number, label(language, "Sure", "Surah") + " " + number, language),
-                    subtitle = reciterNames[reciterId] ?: reciterId,
-                    playable = true,
-                )
-            }
+        return items.ifEmpty {
+            listOf(statusItem(language, "Bu sure şu anda kullanılamıyor", "This surah is not available right now"))
+        }
     }
+
+    private fun statusItem(
+        language: AppLanguage,
+        turkishTitle: String,
+        englishTitle: String,
+    ): MediaBrowserCompat.MediaItem = browseItem(
+        id = STATUS_PREFIX + turkishTitle.hashCode(),
+        title = label(language, turkishTitle, englishTitle),
+        subtitle = label(language, "Bağlantı gelince klasörü yeniden açın", "Reopen this folder when the connection returns"),
+    )
 
     private fun browseItem(
         id: String,
@@ -298,7 +317,7 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
             mediaId == CONTINUE_ID -> resumeCurrentOrLast()
             mediaId.startsWith(SURAH_PREFIX) -> {
                 val parts = mediaId.removePrefix(SURAH_PREFIX).split(':', limit = 2)
-                val surahNumber = parts.getOrNull(0)?.toIntOrNull() ?: return
+                val surahNumber = parts.getOrNull(0)?.toIntOrNull()?.takeIf { it in 1..114 } ?: return
                 val requestedReciter = parts.getOrNull(1)
                 val reciterId = loadReciters().firstOrNull { it.identifier == requestedReciter }?.identifier
                     ?: AppContainer.preferences.selectedReciter
@@ -315,19 +334,19 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
         }
 
         loadReciters()
-        val target = lastAudioTarget() ?: AppContainer.preferences.lastRead.value?.let { lastRead ->
-            LastAudioTarget(lastRead.surahNumber, AppContainer.preferences.selectedReciter, lastRead.numberInSurah)
-        } ?: return
+        val target = lastAudioTarget() ?: return
         playSurah(target.surahNumber, target.reciterId, target.resumeAyah)
     }
 
     private suspend fun playSurah(surahNumber: Int, reciterId: String, resumeAyah: Int = 1) {
-        val surah = (surahs.ifEmpty {
-            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
-        }).firstOrNull { it.number == surahNumber } ?: return
-        val detail = runCatching {
+        val surah = loadSurahs().firstOrNull { it.number == surahNumber } ?: return
+        val detail = try {
             AppContainer.repository.getSurahDetail(surahNumber = surahNumber, reciterEdition = reciterId)
-        }.getOrNull() ?: return
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            return
+        }
 
         val playback = AppContainer.playbackManager
         if (reciterId.startsWith("qf.chapter.")) {
@@ -342,20 +361,22 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
     private suspend fun playSearchResult(query: String) {
         val match = searchSurahs(query).firstOrNull() ?: return
         val mediaId = match.description.mediaId ?: return
+        if (!mediaId.startsWith(SURAH_PREFIX)) return
         playFromMediaId(mediaId)
     }
 
     private suspend fun searchSurahs(query: String): List<MediaBrowserCompat.MediaItem> {
         val normalizedQuery = query.trim()
         if (normalizedQuery.isEmpty()) return emptyList()
-        val availableSurahs = surahs.ifEmpty {
-            runCatching { AppContainer.repository.getSurahList() }.getOrDefault(emptyList())
-        }
         val language = AppContainer.preferences.appLanguage.value
+        val availableSurahs = loadSurahs()
+        if (availableSurahs.isEmpty()) {
+            return listOf(statusItem(language, "Sure listesi yüklenemedi", "Surah list could not be loaded"))
+        }
         val reciterId = loadReciters()
             .firstOrNull { it.identifier == AppContainer.preferences.selectedReciter }?.identifier
             ?: AppContainer.preferences.selectedReciter
-        return availableSurahs.filter { surah ->
+        val matches = availableSurahs.filter { surah ->
             surah.name.contains(normalizedQuery, ignoreCase = true) ||
                 surah.englishName.contains(normalizedQuery, ignoreCase = true) ||
                 localizedSurahName(surah.number, surah.name, language)
@@ -367,6 +388,9 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
                 subtitle = reciterNames[reciterId] ?: reciterId,
                 playable = true,
             )
+        }
+        return matches.ifEmpty {
+            listOf(statusItem(language, "Eşleşen sure bulunamadı", "No matching surah was found"))
         }
     }
 
@@ -387,9 +411,7 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
     }
 
     private fun hasResumeTarget(): Boolean =
-        AppContainer.playbackManager.nowPlaying.value != null ||
-            lastAudioTarget() != null ||
-            AppContainer.preferences.lastRead.value != null
+        AppContainer.playbackManager.nowPlaying.value != null || lastAudioTarget() != null
 
     private fun rememberLastAudio(nowPlaying: NowPlaying) {
         val resumeAyah = if (nowPlaying.mode == PlaybackMode.AYAH_QUEUE) {
@@ -411,10 +433,28 @@ class PlaybackNotificationService : MediaBrowserServiceCompat() {
 
     private suspend fun loadReciters(): List<Reciter> {
         if (reciters.isEmpty()) {
-            reciters = runCatching { AppContainer.repository.getReciters() }.getOrDefault(emptyList())
+            reciters = try {
+                AppContainer.repository.getReciters()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                emptyList()
+            }
         }
         reciters.forEach { reciterNames[it.identifier] = it.displayName }
         return reciters
+    }
+
+    private suspend fun loadSurahs(): List<org.ferdidrgn.hudaquran.domain.model.Surah> {
+        if (surahs.isNotEmpty()) return surahs
+        surahs = try {
+            AppContainer.repository.getSurahList()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            emptyList()
+        }
+        return surahs
     }
 
     private fun label(language: AppLanguage, turkish: String, english: String): String =

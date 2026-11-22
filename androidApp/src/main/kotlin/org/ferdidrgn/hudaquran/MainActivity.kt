@@ -30,6 +30,7 @@ import org.ferdidrgn.hudaquran.ui.theme.rememberDisplayFontFamily
 import org.ferdidrgn.hudaquran.ui.tv.TvHomeScreen
 import org.ferdidrgn.hudaquran.ui.tv.TvPlayerScreen
 import org.ferdidrgn.hudaquran.widget.LastReadWidgetProvider
+import org.ferdidrgn.hudaquran.widget.QuranFocusWidgetProvider
 
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher =
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
         checkForMandatoryUpdate()
 
         setContent {
-            if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {
+            if (BuildConfig.IS_TV_BUILD) {
                 TvExperience()
             } else {
                 App()
@@ -96,6 +97,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         LastReadWidgetProvider.refreshAll(applicationContext)
+        QuranFocusWidgetProvider.refreshAll(applicationContext)
     }
 
     private fun checkForMandatoryUpdate() {
@@ -117,7 +119,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (BuildConfig.IS_TV_BUILD || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         if (!granted) {
