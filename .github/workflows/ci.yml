@@ -181,14 +181,13 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload to Google Play (internal testing)
-        if: steps.upload-key.outputs.play_compatible == 'true'
+      - name: Upload to Google Play (production)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.ferdidrgn.hudaquran
           releaseFiles: androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab
-          track: internal
+          track: production
           status: completed
 
       - name: Save upload certificate for Play key reset
