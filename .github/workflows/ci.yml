@@ -123,9 +123,15 @@ jobs:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          # Update this Actions variable only after Play Console accepts the upload-key reset.
+          PLAY_UPLOAD_CERT_SHA1: ${{ vars.PLAY_UPLOAD_CERT_SHA1 }}
         run: |
           actual="$(keytool -list -v -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" | awk -F': ' '/SHA1: / { print $2; exit }')"
-          expected="3E:93:2B:9B:4B:08:7E:C2:B0:E5:B7:B1:D4:7C:E4:24:97:FA:41:BE"
+          expected="$PLAY_UPLOAD_CERT_SHA1"
+          if [[ ! "$expected" =~ ^([A-Fa-f0-9]{2}:){19}[A-Fa-f0-9]{2}$ ]]; then
+            echo "::error::Set the Actions variable PLAY_UPLOAD_CERT_SHA1 to the certificate currently registered in Play Console."
+            exit 1
+          fi
           echo "sha1=$actual" >> "$GITHUB_OUTPUT"
           if [[ "$actual" != "$expected" ]]; then
             echo "play_compatible=false" >> "$GITHUB_OUTPUT"
