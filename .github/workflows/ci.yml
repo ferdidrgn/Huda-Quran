@@ -187,6 +187,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.ferdidrgn.hudaquran
           releaseFiles: androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab,automotiveApp/build/outputs/bundle/release/automotiveApp-release.aab
+          whatsNewDirectory: play-release-notes
           track: production
           status: completed
 
