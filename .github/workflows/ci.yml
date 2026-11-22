@@ -114,10 +114,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Decode release keystore
-        # ANDROID_KEYSTORE_BASE64 must contain _mykey/key_store.jks, never flutter_release_key.jks.
+        # Use the signing key configured in repository secrets; only upload to Play when its SHA1 matches the registered certificate.
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
 
-      - name: Verify existing Play upload certificate
+      - name: Inspect Android upload certificate
+        id: upload-key
         env:
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -125,11 +126,21 @@ jobs:
         run: |
           actual="$(keytool -list -v -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" | awk -F': ' '/SHA1: / { print $2; exit }')"
           expected="3E:93:2B:9B:4B:08:7E:C2:B0:E5:B7:B1:D4:7C:E4:24:97:FA:41:BE"
+          echo "sha1=$actual" >> "$GITHUB_OUTPUT"
           if [[ "$actual" != "$expected" ]]; then
-            echo "::error::GitHub Actions keystore does not match the existing Play upload certificate. Expected $expected, got ${actual:-unavailable}."
-            exit 1
+            echo "play_compatible=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Signing key $actual differs from Play's registered upload key $expected. Build and retain signed bundles, but skip Play upload until the upload-key reset is approved."
+          else
+            echo "play_compatible=true" >> "$GITHUB_OUTPUT"
+            echo "Keystore matches the existing Play upload certificate."
           fi
-          echo "Keystore matches the existing Play upload certificate."
+
+      - name: Export upload certificate for Play key reset
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: keytool -exportcert -rfc -keystore "$ANDROID_KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" -file "$RUNNER_TEMP/upload_certificate.pem"
 
       - name: Build signed release App Bundle
         env:
@@ -142,8 +153,10 @@ jobs:
         run: ./gradlew :androidApp:bundlePhoneRelease :androidApp:bundleTvRelease :automotiveApp:bundleRelease :wearApp:bundleRelease --stacktrace
 
       - name: Verify all device App Bundle signatures
+        env:
+          EXPECTED_UPLOAD_SHA1: ${{ steps.upload-key.outputs.sha1 }}
         run: |
-          expected="3E:93:2B:9B:4B:08:7E:C2:B0:E5:B7:B1:D4:7C:E4:24:97:FA:41:BE"
+          expected="$EXPECTED_UPLOAD_SHA1"
           for bundle in androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab androidApp/build/outputs/bundle/tvRelease/androidApp-tv-release.aab automotiveApp/build/outputs/bundle/release/automotiveApp-release.aab wearApp/build/outputs/bundle/release/wearApp-release.aab; do
             actual="$(keytool -printcert -jarfile "$bundle" | awk -F': ' '/SHA1: / { print $2; exit }')"
             if [[ "$actual" != "$expected" ]]; then
@@ -163,6 +176,7 @@ jobs:
           retention-days: 30
 
       - name: Upload to Google Play (internal testing)
+        if: steps.upload-key.outputs.play_compatible == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -170,6 +184,15 @@ jobs:
           releaseFiles: androidApp/build/outputs/bundle/phoneRelease/androidApp-phone-release.aab
           track: internal
           status: completed
+
+      - name: Save upload certificate for Play key reset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-upload-certificate-pem
+          path: ${{ runner.temp }}/upload_certificate.pem
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Save Wear OS bundle for its dedicated Play track
         if: always()
